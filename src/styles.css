@@ -41,13 +41,16 @@ button { cursor: pointer; }
 .brand { display: flex; align-items: center; gap: 12px; padding: 0; color: inherit; background: transparent; border: 0; font-family: 'Ma Shan Zheng', 'Noto Serif SC', serif; font-size: 32px; letter-spacing: 2px; }
 .brand i { width: 25px; height: 25px; display: grid; place-items: center; font-family: 'Noto Serif SC'; font-style: normal; font-size: 12px; color: #b74837; border: 1px solid #a84234; }
 .turn-label { font-family: 'Noto Serif SC', serif; font-weight: 600; font-size: 17px; letter-spacing: 2px; color: #e3d1a7; }
+.turn-label small { margin-left: 8px; padding: 3px 6px; color: #bda977; border: 1px solid rgba(201,170,101,.3); font-family: 'Noto Sans SC'; font-size: 9px; letter-spacing: 1px; }
 .header-actions { justify-self: end; display: flex; gap: 14px; }
 .header-actions button { height: 46px; display: flex; align-items: center; gap: 8px; padding: 0 20px; color: #e7d7b3; border-radius: 3px; }
 .ghost-button { background: rgba(12, 10, 8, .24); border: 1px solid rgba(206,169,96,.55); }
 .advance-button { background: linear-gradient(#9b4939, #713025); border: 1px solid #c17959; font-family: 'Noto Serif SC', serif; font-size: 18px; font-weight: 700; box-shadow: inset 0 0 0 2px rgba(53,20,13,.42); }
+.advance-button:disabled { opacity: .5; cursor: not-allowed; }
 
 .workspace { height: calc(100vh - 212px); min-height: 480px; display: grid; grid-template-columns: 210px minmax(560px, 1fr) 450px; gap: 0; }
 .metrics-rail { padding: 18px 17px 14px 22px; overflow-y: auto; color: #d9c38e; border-right: 1px solid rgba(218,183,112,.36); background: rgba(15,11,8,.42); scrollbar-width: thin; }
+.stage-objective { margin: 0 0 10px; padding: 10px; color: #d9c38e; background: rgba(183,140,69,.07); border: 1px solid rgba(211,173,94,.28); }.stage-objective > div { display: flex; justify-content: space-between; color: #d3b570; letter-spacing: 2px; }.stage-objective > div b { font-size: 10px; }.stage-objective p { display: flex; justify-content: space-between; margin: 7px 0 0; color: #a9956c; font-size: 9px; }.stage-objective p strong { color: #d86a55; }.stage-objective p.met strong { color: #72a47a; }.stage-objective footer { margin-top: 8px; padding-top: 7px; color: #9f8c68; border-top: 1px solid rgba(211,173,94,.18); font-size: 8px; line-height: 1.5; }.stage-objective.stage-defeat { border-color: rgba(199,70,52,.55); box-shadow: inset 3px 0 #9b3c31; }
 .metric { min-height: 106px; display: grid; grid-template-columns: 36px 1fr; gap: 12px; align-items: start; padding: 9px 8px 13px; border-bottom: 1px solid rgba(214,179,104,.27); }
 .metric > svg { margin-top: 3px; color: #b89654; }
 .metric-label { font-family: 'Noto Serif SC'; font-weight: 700; font-size: 17px; }
@@ -234,6 +237,7 @@ button { cursor: pointer; }
 .resolution-news small { color: #315946; letter-spacing: 3px; }.resolution-news h3 { margin: 5px 0; font-family: 'Noto Serif SC'; font-size: 20px; }.resolution-news p { margin: 0; color: #66533c; font-size: 12px; line-height: 1.7; }
 .resolution-aftereffect { display: grid; gap: 3px; margin: 10px 0 16px; color: #786348; font-size: 10px; }.resolution-aftereffect b { color: #8a3c30; font-family: 'Noto Serif SC'; font-size: 12px; }
 .resolution-intel { display: flex; align-items: center; gap: 6px; margin: -6px 0 12px; padding: 7px 9px; color: #315946; background: rgba(49,89,70,.07); border: 1px solid rgba(49,89,70,.22); font-size: 9px; }
+.resolution-stage-status { display: flex; justify-content: space-between; gap: 10px; margin: 0 0 12px; padding: 8px 9px; color: #66543c; background: rgba(112,77,36,.06); border: 1px solid rgba(112,77,36,.18); font-size: 9px; }.resolution-stage-status b { color: #315946; }.resolution-stage-status.state-defeat { color: #8b3b2e; border-color: rgba(139,59,46,.3); }.resolution-stage-status.state-defeat b { color: #8b3b2e; }
 .resolution-scroll > button { width: 100%; min-height: 44px; display: flex; align-items: center; justify-content: center; gap: 8px; color: #ead9aa; background: #315946; border: 1px solid #867349; font-family: 'Noto Serif SC'; font-weight: 700; }
 
 @keyframes resolution-fade { from { opacity: 0; } to { opacity: 1; } }

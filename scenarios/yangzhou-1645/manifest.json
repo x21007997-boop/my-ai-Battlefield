@@ -5,6 +5,10 @@
   "description": "在援军、粮饷与城防之间周旋，决定扬州最后三个月的命运。",
   "startTurn": 0,
   "chapterEndTurn": 3,
+  "objectives": {
+    "targets": { "support": 50, "defense": 70, "grain": 250 },
+    "collapse": { "support": 22, "defense": 25, "treasury": 140 }
+  },
   "turnLabels": ["正月", "二月", "三月", "四月"],
   "actionDefaults": { "grainSource": "南京", "grainTarget": "扬州", "armySource": "南京", "armyTarget": "扬州", "official": "史可法" },
   "cover": { "kicker": "援军 · 粮饷 · 城守", "status": "新剧本", "accent": "jade" },

@@ -5,6 +5,10 @@
   "description": "在粮荒、欠饷与朝争同时恶化前，稳住江北三个月。",
   "startTurn": 3,
   "chapterEndTurn": 6,
+  "objectives": {
+    "targets": { "support": 55, "defense": 65, "grain": 380 },
+    "collapse": { "support": 25, "defense": 28, "treasury": 180 }
+  },
   "turnLabels": ["五月", "六月", "七月", "八月", "九月", "十月", "十一月", "十二月"],
   "actionDefaults": { "grainSource": "南京", "grainTarget": "淮安", "armySource": "南京", "armyTarget": "扬州", "official": "史可法" },
   "cover": { "kicker": "粮荒 · 江防 · 廷争", "status": "可游玩", "accent": "cinnabar" },

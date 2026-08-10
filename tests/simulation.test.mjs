@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { ACTION_TYPES, createInitialWorld, DECISION_POSTURES, investigateReport, parseDecision, previewDecision, resolveTurn } from '../src/simulation.js';
-import { currentOutcome, reportsForWorld } from '../src/scenario.js';
+import { currentOutcome, reportsForWorld, stageStatus } from '../src/scenario.js';
 
 test('parses the three supported decision types', () => {
   const world = createInitialWorld();
@@ -96,6 +96,16 @@ test('resolved turns retain the selected posture', () => {
   const result = resolveTurn(createInitialWorld(), '从南京调拨二十万石粮草赈济淮安', 'aggressive');
   assert.equal(result.record.posture.id, 'aggressive');
   assert.equal(result.record.posture.label, '激进');
+});
+
+test('stage status exposes countdown, targets, and collapse lines', () => {
+  const world = createInitialWorld();
+  const status = stageStatus(world);
+  assert.equal(status.remainingTurns, 3);
+  assert.equal(status.targets.find((item) => item.key === 'support').target, 55);
+  world.metrics.support = 20;
+  assert.equal(stageStatus(world).state, 'defeat');
+  assert.equal(stageStatus(world).collapsed.key, 'support');
 });
 
 test('three turns form an auditable history with delayed effects', () => {

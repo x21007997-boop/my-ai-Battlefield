@@ -69,3 +69,23 @@ export function reportsForWorld(world, scenario = SCENARIO_PACKAGE) {
 export function currentOutcome(world) {
   return world.history.flatMap((record) => record.events).findLast((event) => event.type === 'chapter_outcome') ?? null;
 }
+
+export function stageStatus(world) {
+  const scenario = getScenario(world.scenarioId);
+  const objectives = scenario.manifest.objectives ?? { targets: { support: 55, defense: 65 }, collapse: { support: 25, defense: 25, treasury: 150 } };
+  const labels = { treasury: '国库', grain: '粮草', support: '民心', defense: '防务' };
+  const targets = Object.entries(objectives.targets).map(([key, target]) => ({ key, label: labels[key], target, value: world.metrics[key], met: world.metrics[key] >= target }));
+  const collapse = Object.entries(objectives.collapse).map(([key, minimum]) => ({ key, label: labels[key], minimum, value: world.metrics[key], breached: world.metrics[key] <= minimum }));
+  const remainingTurns = Math.max(0, scenario.manifest.chapterEndTurn - world.turn);
+  const collapsed = collapse.find((item) => item.breached) ?? null;
+  const chapterEnded = world.turn >= scenario.manifest.chapterEndTurn;
+  const allTargetsMet = targets.every((item) => item.met);
+  return {
+    remainingTurns,
+    targets,
+    collapse,
+    collapsed,
+    allTargetsMet,
+    state: collapsed ? 'defeat' : chapterEnded ? (allTargetsMet ? 'victory' : 'survived') : 'ongoing',
+  };
+}

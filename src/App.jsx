@@ -17,7 +17,7 @@ import {
   Grains,
 } from '@phosphor-icons/react';
 import { createInitialWorld, DECISION_POSTURES, investigateReport, metricsForView, previewDecision, resolveTurn, serializeSnapshot } from './simulation';
-import { currentOutcome, reportsForWorld } from './scenario';
+import { currentOutcome, reportsForWorld, stageStatus } from './scenario';
 import { askDeepSeekCouncil, generateTurnChronicle } from './ai';
 import { appendBranchNode, attachChronicle, buildManuscript, getBranchPath, initializeBranchTree, saveNamedSnapshot, updateBranchNodeWorld } from './storage';
 import { getScenario, SCENARIOS } from './scenarioRegistry';
@@ -143,6 +143,7 @@ export function App() {
   const focusedCondition = cityCondition(focusedCity);
   const activeIntel = world.intelligence?.reports?.[activeReport.region];
   const outcome = useMemo(() => currentOutcome(world), [world]);
+  const stage = useMemo(() => stageStatus(world), [world]);
   const currentBranchNode = useMemo(() => branchStore.nodes.find((node) => node.id === currentNodeId), [branchStore, currentNodeId]);
   const branchChapters = useMemo(() => getBranchPath(branchStore, currentNodeId).filter((node) => node.chronicle), [branchStore, currentNodeId]);
   const metrics = useMemo(() => metricsForView(world, {
@@ -202,6 +203,10 @@ export function App() {
   }
 
   function advanceTurn() {
+    if (stage.state !== 'ongoing') {
+      flash(stage.state === 'defeat' ? `局势已经崩溃：${stage.collapsed.label}跌破生存线。` : '本阶段已经结束，请查看阶段结局。');
+      return;
+    }
     if (!decision.trim() || !analysis) {
       flash('必须先下达并分析一项决策，才能推进回合。');
       return;
@@ -384,19 +389,24 @@ export function App() {
           <span>{scenario.manifest.title}</span>
           <i>局</i>
         </button>
-        <div className="turn-label">弘光元年　{dateLabel} · 第{world.turn + 1}回合</div>
+        <div className="turn-label">弘光元年　{dateLabel} · 第{world.turn + 1}回合 <small>{stage.remainingTurns > 0 ? `还余 ${stage.remainingTurns} 回合` : '阶段已结算'}</small></div>
         <div className="header-actions">
           <button className="ghost-button" onClick={saveSnapshot}>
             <FloppyDisk size={20} /> 保存快照
           </button>
-          <button className="advance-button" onClick={advanceTurn}>
-            推进一月 <CaretRight size={20} weight="bold" />
+          <button className="advance-button" onClick={advanceTurn} disabled={stage.state !== 'ongoing'}>
+            {stage.state === 'ongoing' ? '推进一月' : '阶段结束'} <CaretRight size={20} weight="bold" />
           </button>
         </div>
       </header>
 
       <section className="workspace">
         <aside className="metrics-rail" aria-label="天下指标">
+          <section className={`stage-objective stage-${stage.state}`}>
+            <div><small>阶段目标</small><b>{stage.remainingTurns} 回合</b></div>
+            {stage.targets.map((target) => <p key={target.key} className={target.met ? 'met' : ''}><span>{target.label} ≥ {target.target}</span><strong>{target.value}</strong></p>)}
+            <footer>{stage.collapsed ? `${stage.collapsed.label}已跌破生存线` : stage.allTargetsMet ? '当前已满足全部目标' : '守住底线，完成三项目标'}</footer>
+          </section>
           {metrics.map((metric) => <Metric key={metric.key} item={metric} />)}
           <button className="archive-link" onClick={() => setHistoryOpen(true)}><Archive size={20} /> 查看推演档案</button>
         </aside>
@@ -611,6 +621,10 @@ export function App() {
               </article>
               <div className="resolution-aftereffect"><span>后效将在下一阶段结算</span><b>{resolutionReport.preview.delayed.label}</b></div>
               {resolutionReport.record.intelligenceBonus > 0 && <div className="resolution-intel"><CheckCircle size={15} weight="fill" />目标情报已核验，本次执行成功率获得修正</div>}
+              <div className={`resolution-stage-status state-${stage.state}`}>
+                <span>{stage.remainingTurns > 0 ? `距阶段结算还剩 ${stage.remainingTurns} 回合` : '阶段已经结算'}</span>
+                <b>{stage.collapsed ? `${stage.collapsed.label}跌破生存线` : stage.targets.filter((item) => item.met).length === stage.targets.length ? '全部目标已达成' : `已达成 ${stage.targets.filter((item) => item.met).length}/${stage.targets.length} 项目标`}</b>
+              </div>
               <button onClick={() => setResolutionReport(null)}><CheckCircle size={19} weight="fill" /> 收入起居注，继续执政</button>
             </div>
           </section>
