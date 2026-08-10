@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { ACTION_TYPES, createInitialWorld, investigateReport, parseDecision, previewDecision, resolveTurn } from '../src/simulation.js';
+import { ACTION_TYPES, createInitialWorld, DECISION_POSTURES, investigateReport, parseDecision, previewDecision, resolveTurn } from '../src/simulation.js';
 import { currentOutcome, reportsForWorld } from '../src/scenario.js';
 
 test('parses the three supported decision types', () => {
@@ -81,6 +81,21 @@ test('verified target intelligence improves resolution odds', () => {
   world.intelligence.reports.淮安 = { verified: true, reportTitle: '核查结果' };
   const result = resolveTurn(world, '从南京调拨二十万石粮草赈济淮安');
   assert.equal(result.record.intelligenceBonus, 0.15);
+});
+
+test('decision postures change costs, benefits, and risk', () => {
+  const world = createInitialWorld();
+  const cautious = previewDecision(world, '从南京调动五万兵力增援扬州', 'cautious');
+  const aggressive = previewDecision(world, '从南京调动五万兵力增援扬州', 'aggressive');
+  assert.equal(cautious.posture, DECISION_POSTURES.cautious);
+  assert.ok(Math.abs(aggressive.immediate.treasury) > Math.abs(cautious.immediate.treasury));
+  assert.ok(aggressive.immediate.defense > cautious.immediate.defense);
+});
+
+test('resolved turns retain the selected posture', () => {
+  const result = resolveTurn(createInitialWorld(), '从南京调拨二十万石粮草赈济淮安', 'aggressive');
+  assert.equal(result.record.posture.id, 'aggressive');
+  assert.equal(result.record.posture.label, '激进');
 });
 
 test('three turns form an auditable history with delayed effects', () => {

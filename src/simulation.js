@@ -9,6 +9,13 @@ export const ACTION_TYPES = {
   APPOINT_OFFICIAL: 'appoint_official',
 };
 
+export const DECISION_POSTURES = {
+  cautious: { id: 'cautious', label: '稳妥', costMultiplier: 0.85, benefitMultiplier: 0.8, rollModifier: 0.18, riskLabel: '执行较慢，失败概率降低' },
+  balanced: { id: 'balanced', label: '常规', costMultiplier: 1, benefitMultiplier: 1, rollModifier: 0, riskLabel: '成本与收益均衡' },
+  aggressive: { id: 'aggressive', label: '激进', costMultiplier: 1.25, benefitMultiplier: 1.4, rollModifier: -0.12, riskLabel: '收益更高，失败代价增加' },
+  covert: { id: 'covert', label: '权谋', costMultiplier: 0.95, benefitMultiplier: 1.1, rollModifier: -0.04, riskLabel: '表面成本较低，但有败露风险' },
+};
+
 const METRIC_META = {
   treasury: { label: '国库', unit: '万两' },
   grain: { label: '粮草', unit: '万石' },
@@ -93,37 +100,46 @@ export function parseDecision(rawDecision, world = createInitialWorld()) {
   };
 }
 
-function calculateEffects(world, action) {
+function applyPosture(calculation, postureId) {
+  const posture = DECISION_POSTURES[postureId] ?? DECISION_POSTURES.balanced;
+  const scale = (effects) => Object.fromEntries(Object.entries(effects).map(([key, value]) => {
+    const multiplier = value < 0 ? posture.costMultiplier : posture.benefitMultiplier;
+    return [key, Math.sign(value) * Math.max(value === 0 ? 0 : 1, Math.round(Math.abs(value) * multiplier))];
+  }));
+  return { ...calculation, immediate: scale(calculation.immediate), posture, risk: `${calculation.risk} · ${posture.riskLabel}` };
+}
+
+function calculateEffects(world, action, postureId = 'balanced') {
   if (action.type === ACTION_TYPES.TRANSPORT_GRAIN) {
     const amount = action.amount;
-    return {
+    return applyPosture({
       immediate: { treasury: -Math.ceil(amount * 0.55), grain: -amount, support: 2 + Math.floor(amount / 10), defense: 0 },
       delayed: { dueTurn: world.turn + 2, effects: { treasury: -2, grain: 0, support: 2, defense: 0 }, label: `${action.target}赈粮后效` },
       title: `调运${amount}万石粮草赴${action.target}`,
       risk: world.cities[action.target]?.unrest > 55 ? '转运受阻：中' : '转运受阻：低',
-    };
+    }, postureId);
   }
   if (action.type === ACTION_TYPES.DEPLOY_ARMY) {
     const amount = action.amount;
-    return {
+    return applyPosture({
       immediate: { treasury: -Math.ceil(amount * 0.8), grain: -Math.ceil(amount * 0.45), support: -1, defense: 3 + Math.floor(amount / 8) },
       delayed: { dueTurn: world.turn + 2, effects: { treasury: -3, grain: -2, support: 0, defense: 2 }, label: `${action.target}驻防整编` },
       title: `调${amount}万兵力增援${action.target}`,
       risk: '军饷压力：中',
-    };
+    }, postureId);
   }
-  return {
+  return applyPosture({
     immediate: { treasury: -3, grain: 0, support: 1, defense: 1 },
     delayed: { dueTurn: world.turn + 2, effects: { treasury: 2, grain: 1, support: 0, defense: 0 }, label: `${action.official}履任成效` },
     title: `派遣${action.official}处置${action.target}事务`,
     risk: '官僚阻力：中',
-  };
+  }, postureId);
 }
 
-export function previewDecision(world, rawDecision) {
+export function previewDecision(world, rawDecision, postureId = 'balanced') {
   const parsed = parseDecision(rawDecision, world);
   if (!parsed.valid) return parsed;
-  const calculation = calculateEffects(world, parsed.action);
+  const calculation = calculateEffects(world, parsed.action, postureId);
   return { ...parsed, ...calculation };
 }
 
@@ -199,8 +215,8 @@ function buildTriggeredEvents(world, action, roll) {
   return events;
 }
 
-export function resolveTurn(world, rawDecision) {
-  const preview = previewDecision(world, rawDecision);
+export function resolveTurn(world, rawDecision, postureId = 'balanced') {
+  const preview = previewDecision(world, rawDecision, postureId);
   if (!preview.valid) throw new Error(preview.errors.join(' '));
 
   const next = clone(world);
@@ -239,8 +255,16 @@ export function resolveTurn(world, rawDecision) {
   }
 
   const intelligenceBonus = next.intelligence?.reports?.[preview.action.target]?.verified ? 0.15 : 0;
-  const roll = Math.min(1, seededRoll(next.seed, next.turn, rawDecision) + intelligenceBonus);
+  const baseRoll = seededRoll(next.seed, next.turn, rawDecision);
+  const roll = Math.min(1, Math.max(0, baseRoll + intelligenceBonus + preview.posture.rollModifier));
   const events = buildTriggeredEvents(next, preview.action, roll);
+  let postureEvent = null;
+  if (preview.posture.id === 'covert' && baseRoll < 0.38) {
+    postureEvent = { type: 'posture_consequence', tone: 'exposed', title: '权谋手段意外败露', detail: '私下运作被政敌捕捉，朝野对命令动机产生怀疑。', effects: { treasury: 0, grain: 0, support: -3, defense: 0 } };
+    next.metrics = applyEffects(next.metrics, postureEvent.effects);
+    combinedEffects.support = (combinedEffects.support ?? 0) - 3;
+    events.push(postureEvent);
+  }
   const adviserReaction = resolveAdviserReaction(next, preview.action);
   if (adviserReaction) {
     next.metrics = applyEffects(next.metrics, adviserReaction.effects);
@@ -275,6 +299,8 @@ export function resolveTurn(world, rawDecision) {
     factionEffects,
     factionShift,
     intelligenceBonus,
+    posture: preview.posture,
+    postureEvent,
     delayedResolved: due.map((item) => item.label),
     events,
   };

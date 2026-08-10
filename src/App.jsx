@@ -16,7 +16,7 @@ import {
   Warning,
   Grains,
 } from '@phosphor-icons/react';
-import { createInitialWorld, investigateReport, metricsForView, previewDecision, resolveTurn, serializeSnapshot } from './simulation';
+import { createInitialWorld, DECISION_POSTURES, investigateReport, metricsForView, previewDecision, resolveTurn, serializeSnapshot } from './simulation';
 import { currentOutcome, reportsForWorld } from './scenario';
 import { askDeepSeekCouncil, generateTurnChronicle } from './ai';
 import { appendBranchNode, attachChronicle, buildManuscript, getBranchPath, initializeBranchTree, saveNamedSnapshot, updateBranchNodeWorld } from './storage';
@@ -122,6 +122,7 @@ export function App() {
   const [activeRegion, setActiveRegion] = useState('淮安');
   const [focusedCityName, setFocusedCityName] = useState('淮安');
   const [decision, setDecision] = useState('');
+  const [postureId, setPostureId] = useState('balanced');
   const [analysis, setAnalysis] = useState(null);
   const [meetingOpen, setMeetingOpen] = useState(false);
   const [selectedAdviserId, setSelectedAdviserId] = useState(null);
@@ -171,6 +172,7 @@ export function App() {
     setActiveRegion(firstRegion);
     setFocusedCityName(firstRegion);
     setDecision('');
+    setPostureId('balanced');
     setAnalysis(null);
     setSelectedAdviserId(null);
     setResolutionReport(null);
@@ -179,7 +181,7 @@ export function App() {
   }
 
   function analyzeDecision() {
-    const preview = previewDecision(world, decision);
+    const preview = previewDecision(world, decision, postureId);
     if (!preview.valid) {
       flash(preview.errors[0], 3000);
       return;
@@ -205,7 +207,7 @@ export function App() {
       return;
     }
     try {
-      const result = resolveTurn(world, decision);
+      const result = resolveTurn(world, decision, postureId);
       const branch = appendBranchNode(currentNodeId, result.world, result.record);
       setWorld(result.world);
       setBranchStore(branch.store);
@@ -222,6 +224,7 @@ export function App() {
     }
     setDecision('');
     setAnalysis(null);
+    setPostureId('balanced');
   }
 
   function saveSnapshot() {
@@ -237,6 +240,7 @@ export function App() {
     setActiveRegion(reportsForWorld(node.world)[0].region);
     setFocusedCityName(reportsForWorld(node.world)[0].region);
     setDecision('');
+    setPostureId('balanced');
     setAnalysis(null);
     setResolutionReport(null);
     setHistoryOpen(false);
@@ -527,7 +531,12 @@ export function App() {
 
       <section className="decision-desk">
         <BookOpenText size={28} weight="duotone" aria-hidden="true" />
-        <textarea value={decision} onChange={(event) => { setDecision(event.target.value); setAnalysis(null); }} placeholder="下达你的诏令、政策或处置意见……" />
+        <div className="decision-compose">
+          <div className="posture-picker" aria-label="决策风险偏好">
+            {Object.values(DECISION_POSTURES).map((posture) => <button key={posture.id} className={postureId === posture.id ? 'active' : ''} onClick={() => { setPostureId(posture.id); setAnalysis(null); }} title={posture.riskLabel}>{posture.label}</button>)}
+          </div>
+          <textarea value={decision} onChange={(event) => { setDecision(event.target.value); setAnalysis(null); }} placeholder="下达你的诏令、政策或处置意见……" />
+        </div>
         <button onClick={analyzeDecision}><Sparkle size={22} weight="fill" />分析影响</button>
       </section>
 
@@ -557,6 +566,7 @@ export function App() {
             <div className="resolution-scroll">
               <small>第 {resolutionReport.record.turnAfter + 1} 回合 · 奉旨施行</small>
               <h2 id="resolution-title">{resolutionReport.preview.title}</h2>
+              <span className={`resolution-posture posture-${resolutionReport.record.posture?.id ?? 'balanced'}`}>{resolutionReport.record.posture?.label ?? '常规'}路线 · {resolutionReport.record.posture?.riskLabel}</span>
               <p className="resolution-command">“{resolutionReport.record.rawDecision}”</p>
               <div className="resolution-seal" aria-hidden="true">准</div>
               <div className="resolution-effects">
@@ -585,6 +595,13 @@ export function App() {
                   <small>幕僚主动反应</small>
                   <h3>{resolutionReport.record.adviserReaction.title}</h3>
                   <p>{resolutionReport.record.adviserReaction.detail}</p>
+                </article>
+              )}
+              {resolutionReport.record.postureEvent && (
+                <article className="resolution-reaction obstruction">
+                  <small>路线风险兑现</small>
+                  <h3>{resolutionReport.record.postureEvent.title}</h3>
+                  <p>{resolutionReport.record.postureEvent.detail}</p>
                 </article>
               )}
               <article className="resolution-news">

@@ -143,7 +143,9 @@ button { cursor: pointer; }
 
 .decision-desk { height: 132px; display: grid; grid-template-columns: 42px 1fr 270px; gap: 16px; align-items: center; padding: 11px 28px; background-color: #e9dec8; background-image: url('/assets/rice-paper.png'); background-size: 520px; border-top: 5px solid #4c321e; box-shadow: 0 -5px 14px rgba(24,13,7,.32); }
 .decision-desk > svg { color: #805c32; }
-.decision-desk textarea { height: 86px; resize: none; padding: 16px 20px; color: #493b2b; background: rgba(255,250,237,.5); border: 1px solid rgba(103,74,39,.38); outline: none; font-family: 'Noto Serif SC'; font-size: 16px; line-height: 1.7; }
+.decision-compose { height: 104px; display: grid; grid-template-rows: 25px 1fr; }
+.posture-picker { display: flex; align-items: stretch; gap: 4px; }.posture-picker button { min-width: 54px; padding: 0 10px; color: #725f47; background: rgba(255,250,237,.36); border: 1px solid rgba(103,74,39,.25); border-bottom: 0; font-size: 10px; }.posture-picker button.active { color: #f0ddb0; background: #71382d; border-color: #71382d; }
+.decision-desk textarea { height: 79px; resize: none; padding: 13px 20px; color: #493b2b; background: rgba(255,250,237,.5); border: 1px solid rgba(103,74,39,.38); outline: none; font-family: 'Noto Serif SC'; font-size: 15px; line-height: 1.7; }
 .decision-desk textarea:focus { border-color: #8a5536; box-shadow: 0 0 0 3px rgba(133,76,43,.12); }
 .decision-desk > button { height: 66px; display: flex; align-items: center; justify-content: center; gap: 10px; color: #e8d29a; background: #315946; border: 1px solid #8d7948; box-shadow: inset 0 0 0 3px rgba(14,45,30,.35); font-family: 'Noto Serif SC'; font-weight: 700; font-size: 20px; }
 
@@ -215,6 +217,7 @@ button { cursor: pointer; }
 .resolution-scroll { position: relative; padding: 38px 38px 30px; overflow-y: auto; color: #423527; background: #eadfc7 url('/assets/rice-paper.png') center / 520px; }
 .resolution-scroll > small { color: #8c3c30; letter-spacing: 3px; }
 .resolution-scroll h2 { margin: 9px 0 12px; padding-right: 54px; font-family: 'Noto Serif SC'; font-size: 28px; line-height: 1.35; }
+.resolution-posture { display: inline-block; margin: -4px 0 10px; padding: 4px 7px; color: #604e37; background: rgba(112,77,36,.08); border: 1px solid rgba(112,77,36,.2); font-size: 9px; }.posture-cautious { color: #315946; border-color: rgba(49,89,70,.28); }.posture-aggressive { color: #8b3b2e; border-color: rgba(139,59,46,.28); }.posture-covert { color: #58416f; border-color: rgba(88,65,111,.28); }
 .resolution-command { margin: 0; padding: 12px 14px; color: #66533c; border-left: 3px solid #9b7540; font-family: 'Noto Serif SC'; font-size: 13px; line-height: 1.8; }
 .resolution-seal { position: absolute; right: 34px; top: 39px; display: grid; place-items: center; width: 58px; height: 58px; color: rgba(139,47,36,.78); border: 3px double rgba(139,47,36,.78); font-family: 'Ma Shan Zheng'; font-size: 30px; transform: rotate(-9deg) scale(2); opacity: 0; animation: seal-land .45s .45s cubic-bezier(.2,1.5,.3,1) forwards; }
 .resolution-effects { display: grid; grid-template-columns: repeat(4,1fr); gap: 7px; margin: 20px 0 14px; }
