@@ -76,3 +76,19 @@ export async function handleDeepSeekChronicle(request, { apiKey, model = 'deepse
   const user = JSON.stringify({ worldAfter: compactWorld(payload.world), turnRecord: record, previousChronicle: payload.previousChronicle ? { chapterTitle: payload.previousChronicle.chapterTitle, foreshadowing: payload.previousChronicle.foreshadowing } : null });
   return requestDeepSeekJson({ apiKey, model, fetchImpl, system, user, maxTokens: 3200, temperature: 0.65, validate: (content) => content.chapterTitle && content.fullText?.length >= 700 && content.foreshadowing, failureMessage: 'DeepSeek 连续两次未返回达到篇幅要求的回合纪事，请稍后重试。' });
 }
+
+export async function handleDeepSeekNovel(request, { apiKey, model = 'deepseek-v4-flash', fetchImpl = fetch } = {}) {
+  if (request.method !== 'POST') return json({ error: '仅支持 POST 请求。' }, 405);
+  if (!apiKey) return json({ error: '服务端尚未配置 DEEPSEEK_API_KEY。' }, 503);
+  let payload;
+  try { payload = await request.json(); } catch { return json({ error: '请求内容不是有效 JSON。' }, 400); }
+  if (!payload?.world || !Array.isArray(payload?.records) || !payload.records.length) return json({ error: '缺少完整历史分支记录。' }, 400);
+  const system = `你是架空历史长篇小说的总撰稿人。只能依据给定的玩家决策、规则结算、人物关系、派系和结局写作，不得篡改正式结果。输出 json，严格包含 title、subtitle、prologue、chapters、characterEndings、epilogue。chapters 为数组，每项含 title、text，必须覆盖每一个回合并保持因果连续；characterEndings 为数组，每项含 name、ending。prologue 600至900字，每章1000至1500字，epilogue 700至1000字，整体采用克制可信的晚明历史小说风格，包含场景、行动与对话，不输出 markdown。`;
+  const user = JSON.stringify({
+    finalWorld: { ...compactWorld(payload.world), adviserRelations: payload.world.adviserRelations, factionInfluence: payload.world.factionInfluence },
+    outcome: payload.outcome,
+    records: payload.records,
+    existingChronicles: payload.chronicles ?? [],
+  });
+  return requestDeepSeekJson({ apiKey, model, fetchImpl, system, user, maxTokens: 7000, temperature: 0.7, validate: (content) => content.title && content.prologue?.length >= 300 && Array.isArray(content.chapters) && content.chapters.length > 0 && Array.isArray(content.characterEndings) && content.epilogue?.length >= 300, failureMessage: 'DeepSeek 连续两次未返回完整的结局小说，请稍后重试。' });
+}

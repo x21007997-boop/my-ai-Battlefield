@@ -18,7 +18,7 @@ import {
 } from '@phosphor-icons/react';
 import { createInitialWorld, DECISION_POSTURES, investigateReport, metricsForView, previewDecision, resolveTurn, serializeSnapshot } from './simulation';
 import { currentOutcome, reportsForWorld, stageStatus } from './scenario';
-import { askDeepSeekCouncil, generateTurnChronicle } from './ai';
+import { askDeepSeekCouncil, generateEndingNovel, generateTurnChronicle } from './ai';
 import { appendBranchNode, attachChronicle, buildManuscript, getBranchPath, initializeBranchTree, saveNamedSnapshot, updateBranchNodeWorld } from './storage';
 import { getScenario, SCENARIOS } from './scenarioRegistry';
 
@@ -135,6 +135,8 @@ export function App() {
   const [introStep, setIntroStep] = useState(0);
   const [resolutionReport, setResolutionReport] = useState(null);
   const [endingOpen, setEndingOpen] = useState(false);
+  const [endingNovel, setEndingNovel] = useState(null);
+  const [novelLoading, setNovelLoading] = useState(false);
 
   const scenario = useMemo(() => getScenario(world.scenarioId), [world.scenarioId]);
   const dateLabel = scenario.manifest.turnLabels?.[world.turn] ?? `第${world.turn + 1}月`;
@@ -179,6 +181,7 @@ export function App() {
     setSelectedAdviserId(null);
     setResolutionReport(null);
     setEndingOpen(false);
+    setEndingNovel(null);
     setIntroStep(0);
     setScreen('intro');
   }
@@ -251,6 +254,7 @@ export function App() {
     setAnalysis(null);
     setResolutionReport(null);
     setEndingOpen(false);
+    setEndingNovel(null);
     setHistoryOpen(false);
     flash(`已回到“${node.label}”，下一道决策将创建新的历史分支。`, 3600);
   }
@@ -316,6 +320,35 @@ export function App() {
       const { downloadBranchDocx } = await import('./docxExport');
       await downloadBranchDocx({ store: branchStore, nodeId: currentNodeId, world });
       flash(`Word 小说卷宗已生成，共 ${branchChapters.length} 章。`);
+    } catch (error) {
+      flash(error.message, 3800);
+    } finally {
+      setDocxLoading(false);
+    }
+  }
+
+  async function createEndingNovel() {
+    setNovelLoading(true);
+    try {
+      const records = world.history.map((record) => ({ turnAfter: record.turnAfter, decision: record.rawDecision, posture: record.posture?.label, effects: record.effects, events: record.events.map((event) => ({ title: event.title, detail: event.detail })) }));
+      const chronicles = branchChapters.map((node) => ({ chapterTitle: node.chronicle.chapterTitle, fullText: node.chronicle.fullText }));
+      const novel = await generateEndingNovel({ world, records, chronicles, outcome });
+      setEndingNovel(novel);
+      flash(`长篇小说《${novel.title}》已经完成。`, 4200);
+    } catch (error) {
+      flash(error.message, 4500);
+    } finally {
+      setNovelLoading(false);
+    }
+  }
+
+  async function downloadEndingNovel() {
+    if (!endingNovel) return;
+    setDocxLoading(true);
+    try {
+      const { downloadGeneratedNovelDocx } = await import('./docxExport');
+      await downloadGeneratedNovelDocx({ novel: endingNovel, world });
+      flash(`《${endingNovel.title}》Word 小说已经生成。`);
     } catch (error) {
       flash(error.message, 3800);
     } finally {
@@ -647,7 +680,13 @@ export function App() {
               <section className="ending-section"><h3>人物归心</h3><div className="ending-people">{advisers.map((adviser) => { const value = world.adviserRelations?.[adviser.id] ?? 50; return <span key={adviser.id}><b>{adviser.name}</b><i>{relationLabel(value)} · {value}</i></span>; })}</div></section>
               <section className="ending-section"><h3>朝局余波</h3><div className="ending-people">{factions.map((faction) => <span key={faction.id}><b>{faction.name}</b><i>影响力 {world.factionInfluence?.[faction.id] ?? 50}</i></span>)}</div></section>
               <section className="ending-section"><h3>关键诏令</h3><ol>{world.history.slice(-3).map((record) => <li key={record.id}><span>第 {record.turnAfter + 1} 回合</span><p>{record.rawDecision}</p><b>{record.events.at(-1).title}</b></li>)}</ol></section>
-              <div className="ending-actions"><button onClick={() => { setEndingOpen(false); setHistoryOpen(true); }}><Archive size={18} />查看完整档案</button><button onClick={() => { setEndingOpen(false); setScreen('library'); }}><BookOpenText size={18} />返回剧本库</button></div>
+              {endingNovel && <section className="ending-novel"><small>AI 长篇小说</small><h3>《{endingNovel.title}》</h3><p>{endingNovel.subtitle}</p><div><span>{endingNovel.chapters.length} 章正文</span><span>{endingNovel.characterEndings.length} 位人物结局</span></div><blockquote>{endingNovel.epilogue.slice(0, 140)}……</blockquote></section>}
+              <div className="ending-actions">
+                <button onClick={createEndingNovel} disabled={novelLoading}>{novelLoading ? 'DeepSeek 正在撰写……' : endingNovel ? '重新生成长篇' : '生成结局小说'}</button>
+                <button onClick={downloadEndingNovel} disabled={!endingNovel || docxLoading}><DownloadSimple size={18} />{docxLoading ? '正在排版……' : '下载小说 DOCX'}</button>
+                <button onClick={() => { setEndingOpen(false); setHistoryOpen(true); }}><Archive size={18} />查看完整档案</button>
+                <button onClick={() => { setEndingOpen(false); setScreen('library'); }}><BookOpenText size={18} />返回剧本库</button>
+              </div>
             </div>
           </section>
         </div>

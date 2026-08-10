@@ -117,10 +117,47 @@ export async function buildBranchDocx({ store, nodeId, world }) {
 export async function downloadBranchDocx({ store, nodeId, world }) {
   const chapters = getBranchPath(store, nodeId).filter((node) => node.chronicle);
   const blob = await buildBranchDocx({ store, nodeId, world });
+  const scenarioTitle = getScenario(world.scenarioId).manifest.title;
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
   link.download = `${scenarioTitle.replace('：', '-')}-${chapters.length}章.docx`;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+export async function buildGeneratedNovelDocx({ novel, world }) {
+  const scenarioTitle = getScenario(world.scenarioId).manifest.title;
+  const body = [
+    paragraph('历史推演长篇小说', { alignment: AlignmentType.CENTER, size: 20, color: COLORS.gold, before: 1700, after: 260 }),
+    paragraph(novel.title, { alignment: AlignmentType.CENTER, size: 54, color: COLORS.cinnabar, bold: true, after: 100 }),
+    paragraph(novel.subtitle ?? scenarioTitle, { alignment: AlignmentType.CENTER, size: 25, color: COLORS.jade, after: 1400 }),
+    new Paragraph({ children: [new PageBreak()] }),
+    heading('序章'),
+    ...String(novel.prologue).split(/\n+/).filter(Boolean).map((text) => paragraph(text, { line: 360 })),
+    ...novel.chapters.flatMap((chapter, index) => [
+      new Paragraph({ children: [new PageBreak()] }),
+      paragraph(`第 ${index + 1} 章`, { alignment: AlignmentType.CENTER, color: COLORS.gold, bold: true }),
+      paragraph(chapter.title, { alignment: AlignmentType.CENTER, size: 36, color: COLORS.cinnabar, bold: true, after: 340 }),
+      ...String(chapter.text).split(/\n+/).filter(Boolean).map((text) => paragraph(text, { line: 360 })),
+    ]),
+    new Paragraph({ children: [new PageBreak()] }),
+    heading('人物结局'),
+    ...novel.characterEndings.flatMap((person) => [heading(person.name, 2), paragraph(person.ending)]),
+    heading('尾声'),
+    ...String(novel.epilogue).split(/\n+/).filter(Boolean).map((text) => paragraph(text, { line: 360 })),
+    paragraph('—— 全卷终 ——', { alignment: AlignmentType.CENTER, color: COLORS.gold, before: 600 }),
+  ];
+  const doc = new Document({ creator: '弘光历史推演模拟器', title: novel.title, description: '由完整历史分支生成的架空历史小说', sections: [{ properties: { page: { size: { width: 12240, height: 15840 }, margin: { top: 1440, right: 1440, bottom: 1440, left: 1440 } } }, headers: { default: new Header({ children: [paragraph(`${novel.title} · ${scenarioTitle}`, { size: 17, color: COLORS.muted })] }) }, footers: { default: new Footer({ children: [new Paragraph({ children: [new TextRun({ children: [PageNumber.CURRENT], size: 17, color: COLORS.muted })], alignment: AlignmentType.RIGHT })] }) }, children: body }] });
+  return Packer.toBlob(doc);
+}
+
+export async function downloadGeneratedNovelDocx({ novel, world }) {
+  const blob = await buildGeneratedNovelDocx({ novel, world });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `${novel.title.replace(/[\\/:*?"<>|]/g, '-')}.docx`;
   link.click();
   URL.revokeObjectURL(url);
 }

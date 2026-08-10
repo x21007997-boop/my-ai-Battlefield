@@ -1,6 +1,6 @@
 import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
-import { handleDeepSeek, handleDeepSeekChronicle } from "./server/deepseek.js";
+import { handleDeepSeek, handleDeepSeekChronicle, handleDeepSeekNovel } from "./server/deepseek.js";
 
 function deepSeekDevApi(env) {
   return {
@@ -11,7 +11,7 @@ function deepSeekDevApi(env) {
         for await (const chunk of req) chunks.push(chunk);
         const pathname = `/api/ai${req.url?.split('?')[0] ?? ''}`;
         const request = new Request(`http://localhost${pathname}`, { method: req.method, headers: req.headers, body: chunks.length ? Buffer.concat(chunks) : undefined });
-        const handler = pathname === '/api/ai/chronicle' ? handleDeepSeekChronicle : handleDeepSeek;
+        const handler = pathname === '/api/ai/chronicle' ? handleDeepSeekChronicle : pathname === '/api/ai/novel' ? handleDeepSeekNovel : handleDeepSeek;
         const response = await handler(request, { apiKey: env.DEEPSEEK_API_KEY, model: env.DEEPSEEK_MODEL });
         res.statusCode = response.status;
         response.headers.forEach((value, key) => res.setHeader(key, value));

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { handleDeepSeek, handleDeepSeekChronicle } from '../server/deepseek.js';
+import { handleDeepSeek, handleDeepSeekChronicle, handleDeepSeekNovel } from '../server/deepseek.js';
 
 test('DeepSeek proxy rejects requests when the server key is missing', async () => {
   const response = await handleDeepSeek(new Request('http://local/api/ai/council', { method: 'POST', body: '{}' }));
@@ -28,4 +28,14 @@ test('chronicle proxy accepts a structured chapter', async () => {
   const result = await response.json();
   assert.equal(response.status, 200);
   assert.equal(result.chapterTitle, '粮船入淮');
+});
+
+test('novel proxy accepts a complete structured manuscript', async () => {
+  const fetchImpl = async () => Response.json({ model: 'deepseek-v4-flash', choices: [{ message: { content: JSON.stringify({ title: '江北残卷', subtitle: '弘光元年纪事', prologue: '序'.repeat(400), chapters: [{ title: '第一章', text: '正文'.repeat(500) }], characterEndings: [{ name: '史可法', ending: '仍守江北。' }], epilogue: '尾声'.repeat(350) }) } }] });
+  const request = new Request('http://local/api/ai/novel', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ world: { turn: 6, metrics: {}, cities: {}, flags: [], history: [] }, records: [{ rawDecision: '调粮' }], chronicles: [], outcome: { outcome: '江北暂安' } }) });
+  const response = await handleDeepSeekNovel(request, { apiKey: 'test-key', fetchImpl });
+  const result = await response.json();
+  assert.equal(response.status, 200);
+  assert.equal(result.title, '江北残卷');
+  assert.equal(result.chapters.length, 1);
 });

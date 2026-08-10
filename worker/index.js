@@ -1,4 +1,4 @@
-import { handleDeepSeek, handleDeepSeekChronicle } from '../server/deepseek.js';
+import { handleDeepSeek, handleDeepSeekChronicle, handleDeepSeekNovel } from '../server/deepseek.js';
 
 export default {
   async fetch(request, env) {
@@ -8,6 +8,9 @@ export default {
     }
     if (url.pathname === '/api/ai/chronicle') {
       return handleDeepSeekChronicle(request, { apiKey: env.DEEPSEEK_API_KEY, model: env.DEEPSEEK_MODEL });
+    }
+    if (url.pathname === '/api/ai/novel') {
+      return handleDeepSeekNovel(request, { apiKey: env.DEEPSEEK_API_KEY, model: env.DEEPSEEK_MODEL });
     }
     const response = await env.ASSETS.fetch(request);
     const acceptsHtml = request.headers.get("accept")?.includes("text/html");

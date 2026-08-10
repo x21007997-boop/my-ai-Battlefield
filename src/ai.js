@@ -19,3 +19,10 @@ export async function generateTurnChronicle({ world, record, previousChronicle =
   if (!response.ok) throw new Error(data.error ?? '回合纪事生成失败。');
   return data;
 }
+
+export async function generateEndingNovel({ world, records, chronicles, outcome }) {
+  const response = await fetch('/api/ai/novel', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ world, records, chronicles, outcome }) });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.error ?? '结局小说生成失败。');
+  return data;
+}
