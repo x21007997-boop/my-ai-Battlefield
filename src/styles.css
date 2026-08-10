@@ -112,6 +112,7 @@ button { cursor: pointer; }
 .adviser-row { width: 100%; display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 7px 2px; text-align: left; color: var(--ink); background: transparent; border: 0; border-bottom: 1px solid rgba(76,54,31,.18); }
 .adviser-row:hover { background: rgba(121,81,39,.06); }
 .adviser-row.selected { background: rgba(49,89,70,.1); box-shadow: inset 3px 0 #315946; }
+.adviser-row.reacting { background: rgba(155,117,64,.1); }
 .adviser-row img { width: 46px; height: 46px; object-fit: cover; object-position: center top; border-radius: 50%; border: 1px solid #8d734e; background: #dbc9a8; }
 .adviser-copy > div { display: flex; align-items: baseline; gap: 7px; }
 .adviser-copy strong { font-family: 'Noto Serif SC'; font-size: 14px; }
@@ -121,6 +122,8 @@ button { cursor: pointer; }
 .adviser-copy p { margin: 3px 0 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: 'Noto Serif SC'; font-size: 11px; color: #5b4a38; }
 .relation-meter { position: relative; height: 12px; display: block; margin-top: 4px; overflow: hidden; color: #695942; background: rgba(91,67,39,.08); font-size: 8px; font-style: normal; line-height: 12px; }
 .relation-meter i { position: absolute; inset: 0 auto 0 0; background: rgba(49,89,70,.17); transition: width .45s ease; }.relation-meter span { position: relative; padding-left: 5px; }
+.reaction-badge { display: inline-block; margin-top: 4px; padding: 2px 5px; color: #315946; background: rgba(49,89,70,.09); border: 1px solid rgba(49,89,70,.25); font-size: 8px; font-style: normal; }
+.reaction-badge.obstruction { color: #8b3b2e; background: rgba(139,59,46,.08); border-color: rgba(139,59,46,.25); }
 .selected-adviser-opinion { margin: 7px 0 2px; padding: 10px 12px; color: #4b3c2c; background: rgba(255,250,237,.48); border: 1px solid rgba(71,94,71,.32); border-left: 3px solid #315946; }
 .selected-adviser-opinion > div { display: flex; align-items: center; justify-content: space-between; }
 .selected-adviser-opinion strong { color: #315946; font-family: 'Noto Serif SC'; font-size: 12px; }
@@ -214,6 +217,8 @@ button { cursor: pointer; }
 .resolution-effects span { color: #74634d; font-size: 10px; }.resolution-effects strong { font-size: 20px; }
 .resolution-relations { margin: 4px 0 12px; padding: 9px 11px; background: rgba(112,77,36,.06); border: 1px solid rgba(92,67,39,.18); opacity: 0; animation: effect-rise .45s 1.95s forwards; }
 .resolution-relations > small { color: #7d633e; letter-spacing: 2px; }.resolution-relations > div { display: flex; gap: 8px; margin-top: 6px; }.resolution-relations span { flex: 1; display: flex; justify-content: space-between; color: #594735; font-size: 10px; }.resolution-relations b { font-size: 11px; }
+.resolution-reaction { margin: 8px 0 12px; padding: 12px 14px; color: #405141; background: rgba(49,89,70,.08); border-left: 3px solid #315946; opacity: 0; animation: effect-rise .45s 2.15s forwards; }
+.resolution-reaction.obstruction { color: #71392f; background: rgba(139,59,46,.08); border-left-color: #8b3b2e; }.resolution-reaction small { letter-spacing: 2px; }.resolution-reaction h3 { margin: 4px 0; font-family: 'Noto Serif SC'; font-size: 16px; }.resolution-reaction p { margin: 0; font-size: 10px; line-height: 1.65; }
 .resolution-news { margin-top: 12px; padding: 15px 17px; background: rgba(255,250,237,.5); border-top: 3px solid #315946; opacity: 0; animation: effect-rise .6s 2.25s forwards; }
 .resolution-news small { color: #315946; letter-spacing: 3px; }.resolution-news h3 { margin: 5px 0; font-family: 'Noto Serif SC'; font-size: 20px; }.resolution-news p { margin: 0; color: #66533c; font-size: 12px; line-height: 1.7; }
 .resolution-aftereffect { display: grid; gap: 3px; margin: 10px 0 16px; color: #786348; font-size: 10px; }.resolution-aftereffect b { color: #8a3c30; font-family: 'Noto Serif SC'; font-size: 12px; }
@@ -270,7 +275,7 @@ button { cursor: pointer; }
 @keyframes city-arrival { 50% { box-shadow: 0 0 0 13px rgba(190,146,65,.28), 0 8px 18px rgba(50,31,15,.4); } }
 
 @media (prefers-reduced-motion: reduce) {
-  .opening-map, .opening-copy, .city-marker.critical::after, .city-marker.strained::after, .city-marker.recent, .resolution-backdrop, .resolution-map > img, .supply-route, .route-cargo, .resolution-seal, .resolution-effects div, .resolution-relations, .resolution-news { animation: none; opacity: 1; }
+  .opening-map, .opening-copy, .city-marker.critical::after, .city-marker.strained::after, .city-marker.recent, .resolution-backdrop, .resolution-map > img, .supply-route, .route-cargo, .resolution-seal, .resolution-effects div, .resolution-relations, .resolution-reaction, .resolution-news { animation: none; opacity: 1; }
 }
 
 @media (max-width: 1280px) {

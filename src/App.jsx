@@ -145,6 +145,7 @@ export function App() {
   }), [world]);
   const selectedAdviser = advisers.find((item) => item.id === selectedAdviserId) ?? null;
   const resolutionVisual = resolutionReport ? resolutionVisualFor(resolutionReport.record.action) : null;
+  const latestAdviserReaction = world.history.at(-1)?.adviserReaction ?? null;
 
   function flash(message, duration = 2600) {
     setNotice(message);
@@ -457,7 +458,7 @@ export function App() {
             <div className="section-title"><span />幕僚会商<span /></div>
             {advisers.map((adviser) => (
               <button
-                className={`adviser-row ${selectedAdviserId === adviser.id ? 'selected' : ''}`}
+                className={`adviser-row ${selectedAdviserId === adviser.id ? 'selected' : ''} ${latestAdviserReaction?.adviserId === adviser.id ? 'reacting' : ''}`}
                 key={adviser.id}
                 aria-pressed={selectedAdviserId === adviser.id}
                 onClick={() => setSelectedAdviserId(adviser.id)}
@@ -467,6 +468,7 @@ export function App() {
                   <div><strong>{adviser.name}</strong><small>{adviser.office}</small><b className={adviser.tone}>{adviser.stance}</b></div>
                   <p>{adviser.text}</p>
                   <em className="relation-meter"><i style={{ width: `${world.adviserRelations?.[adviser.id] ?? 50}%` }} /><span>{relationLabel(world.adviserRelations?.[adviser.id] ?? 50)} {world.adviserRelations?.[adviser.id] ?? 50}</span></em>
+                  {latestAdviserReaction?.adviserId === adviser.id && <em className={`reaction-badge ${latestAdviserReaction.tone}`}>{latestAdviserReaction.title}</em>}
                 </div>
               </button>
             ))}
@@ -535,6 +537,13 @@ export function App() {
                   return <span key={adviser.id}>{adviser.name}<b className={delta >= 0 ? 'positive' : 'negative'}>{delta >= 0 ? '+' : ''}{delta}</b></span>;
                 })}</div>
               </div>
+              {resolutionReport.record.adviserReaction && (
+                <article className={`resolution-reaction ${resolutionReport.record.adviserReaction.tone}`}>
+                  <small>幕僚主动反应</small>
+                  <h3>{resolutionReport.record.adviserReaction.title}</h3>
+                  <p>{resolutionReport.record.adviserReaction.detail}</p>
+                </article>
+              )}
               <article className="resolution-news">
                 <small>{resolutionVisual.outcomeLabel}</small>
                 <h3>{resolutionReport.record.events.at(-1).title}</h3>

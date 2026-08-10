@@ -141,6 +141,20 @@ function relationEffectsFor(action) {
   return { shi: action.official === '史可法' ? 3 : -1, hubu: 2, local: -4 };
 }
 
+function resolveAdviserReaction(world, action) {
+  const relations = world.adviserRelations;
+  if (relations.hubu <= 35) {
+    return { adviserId: 'hubu', tone: 'obstruction', title: '户部封驳诏令', detail: '户部以钱粮无着为由拖延发文，执行成本继续增加。', effects: { treasury: -3, grain: 0, support: 0, defense: 0 } };
+  }
+  if (relations.local <= 35) {
+    return { adviserId: 'local', tone: 'obstruction', title: '地方阳奉阴违', detail: '地方官员表面奉旨，实际拖延筹措，引发新的民间猜疑。', effects: { treasury: 0, grain: 0, support: -2, defense: 0 } };
+  }
+  if (relations.shi >= 80 && action.type !== ACTION_TYPES.APPOINT_OFFICIAL) {
+    return { adviserId: 'shi', tone: 'support', title: '史可法补陈方略', detail: '史可法主动补齐军民协同章程，使本次命令执行得更为稳妥。', effects: { treasury: 0, grain: 0, support: 1, defense: 2 } };
+  }
+  return null;
+}
+
 function buildTriggeredEvents(world, action, roll) {
   const events = [{ type: 'decision_resolved', title: '诏令已经颁行', detail: action.raw }];
   if (action.type === ACTION_TYPES.TRANSPORT_GRAIN) {
@@ -189,6 +203,14 @@ export function resolveTurn(world, rawDecision) {
 
   const roll = seededRoll(next.seed, next.turn, rawDecision);
   const events = buildTriggeredEvents(next, preview.action, roll);
+  const adviserReaction = resolveAdviserReaction(next, preview.action);
+  if (adviserReaction) {
+    next.metrics = applyEffects(next.metrics, adviserReaction.effects);
+    Object.entries(adviserReaction.effects).forEach(([key, value]) => {
+      combinedEffects[key] = (combinedEffects[key] ?? 0) + value;
+    });
+    events.push({ type: 'adviser_reaction', ...adviserReaction });
+  }
   const scenarioEvent = resolveScenarioEvent(next, preview.action, roll);
   if (scenarioEvent) {
     next.metrics = applyEffects(next.metrics, scenarioEvent.effects);
@@ -209,6 +231,7 @@ export function resolveTurn(world, rawDecision) {
     action: preview.action,
     effects: combinedEffects,
     relationEffects,
+    adviserReaction,
     delayedResolved: due.map((item) => item.label),
     events,
   };

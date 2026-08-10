@@ -32,6 +32,24 @@ test('decisions update adviser relations and retain delayed consequences', () =>
   assert.equal(result.world.pendingEffects.at(-1).label, '淮安赈粮后效');
 });
 
+test('high trust unlocks an active adviser intervention', () => {
+  const world = createInitialWorld();
+  world.adviserRelations.shi = 78;
+  const result = resolveTurn(world, '从南京调动五万兵力增援扬州');
+  assert.equal(result.record.adviserReaction.title, '史可法补陈方略');
+  assert.equal(result.record.adviserReaction.tone, 'support');
+  assert.ok(result.record.effects.defense >= 2);
+});
+
+test('low trust can obstruct execution', () => {
+  const world = createInitialWorld();
+  world.adviserRelations.hubu = 34;
+  const result = resolveTurn(world, '从南京调拨二十万石粮草赈济淮安');
+  assert.equal(result.record.adviserReaction.title, '户部封驳诏令');
+  assert.equal(result.record.adviserReaction.tone, 'obstruction');
+  assert.ok(result.record.effects.treasury <= -14);
+});
+
 test('three turns form an auditable history with delayed effects', () => {
   let world = createInitialWorld();
   world = resolveTurn(world, '调拨二十万石粮草赈济淮安').world;
