@@ -19,7 +19,7 @@ import {
 import { createInitialWorld, DECISION_POSTURES, investigateReport, metricsForView, previewDecision, resolveTurn, serializeSnapshot } from './simulation';
 import { currentOutcome, reportsForWorld, stageStatus } from './scenario';
 import { askDeepSeekCouncil, generateEndingNovel, generateTurnChronicle } from './ai';
-import { appendBranchNode, attachChronicle, buildManuscript, getBranchPath, initializeBranchTree, saveNamedSnapshot, updateBranchNodeWorld } from './storage';
+import { appendBranchNode, attachChronicle, buildManuscript, createCampaign, deleteCampaign, duplicateCampaign, getBranchPath, initializeBranchTree, listCampaigns, renameCampaign, saveNamedSnapshot, updateBranchNodeWorld } from './storage';
 import { getScenario, SCENARIOS } from './scenarioRegistry';
 
 const advisers = [
@@ -137,6 +137,8 @@ export function App() {
   const [endingOpen, setEndingOpen] = useState(false);
   const [endingNovel, setEndingNovel] = useState(null);
   const [novelLoading, setNovelLoading] = useState(false);
+  const [saveManagerScenarioId, setSaveManagerScenarioId] = useState(null);
+  const [campaignNames, setCampaignNames] = useState({});
 
   const scenario = useMemo(() => getScenario(world.scenarioId), [world.scenarioId]);
   const dateLabel = scenario.manifest.turnLabels?.[world.turn] ?? `第${world.turn + 1}月`;
@@ -184,6 +186,17 @@ export function App() {
     setEndingNovel(null);
     setIntroStep(0);
     setScreen('intro');
+  }
+
+  function beginNewCampaign(scenarioId) {
+    const nextWorld = createInitialWorld(scenarioId);
+    const created = createCampaign(nextWorld, `新推演 · ${new Intl.DateTimeFormat('zh-CN', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date())}`);
+    setWorld(nextWorld); setBranchStore(created.store); setCurrentNodeId(created.id); setActiveRegion(reportsForWorld(nextWorld)[0].region); setFocusedCityName(reportsForWorld(nextWorld)[0].region); setSaveManagerScenarioId(null); setIntroStep(0); setScreen('intro');
+  }
+
+  function continueCampaign(campaign) {
+    const node = campaign.latest;
+    setWorld(node.world); setCurrentNodeId(node.id); setActiveRegion(reportsForWorld(node.world)[0].region); setFocusedCityName(reportsForWorld(node.world)[0].region); setSaveManagerScenarioId(null); setScreen('simulation');
   }
 
   function analyzeDecision() {
@@ -377,13 +390,32 @@ export function App() {
                 <div className="scenario-meta"><span>{item.cities.length} 座城池</span><span>{item.events.length} 个阶段事件</span><span>{item.endings.length} 种结局</span></div>
                 <footer>
                   <div><b>{item.manifest.cover.status}</b><span>{latest && latest.world.turn > item.manifest.startTurn ? `已有存档 · 第${latest.world.turn + 1}回合` : '尚未开局'}</span></div>
-                  <button onClick={() => startScenario(item.manifest.id)}>{latest && latest.world.turn > item.manifest.startTurn ? '继续推演' : '进入此局'}<CaretRight size={18} /></button>
+                  <div className="scenario-card-actions"><button onClick={() => beginNewCampaign(item.manifest.id)}>新建</button><button onClick={() => setSaveManagerScenarioId(item.manifest.id)}>存档</button><button className="primary" onClick={() => startScenario(item.manifest.id)}>{latest && latest.world.turn > item.manifest.startTurn ? '继续推演' : '进入此局'}<CaretRight size={18} /></button></div>
                 </footer>
               </article>
             );
           })}
         </section>
         <div className="library-note">剧本数据已经与规则引擎分离 · 新历史片段无需改动核心结算</div>
+        {saveManagerScenarioId && (
+          <div className="modal-backdrop save-manager-backdrop" onMouseDown={() => setSaveManagerScenarioId(null)}>
+            <section className="meeting-modal save-manager" role="dialog" aria-modal="true" aria-labelledby="save-manager-title" onMouseDown={(event) => event.stopPropagation()}>
+              <div className="meeting-heading"><div><small>推演存档</small><h2 id="save-manager-title">{getScenario(saveManagerScenarioId).manifest.title}</h2></div><button onClick={() => setSaveManagerScenarioId(null)}>关闭</button></div>
+              <button className="new-campaign-button" onClick={() => beginNewCampaign(saveManagerScenarioId)}>＋ 新建一局推演</button>
+              <div className="campaign-list">
+                {listCampaigns(branchStore, saveManagerScenarioId).map((campaign) => (
+                  <article key={campaign.id}>
+                    <div><input value={campaignNames[campaign.id] ?? campaign.name} onChange={(event) => setCampaignNames({ ...campaignNames, [campaign.id]: event.target.value })} /><button onClick={() => { const store = renameCampaign(campaign.id, campaignNames[campaign.id] ?? campaign.name); setBranchStore(store); flash('存档名称已更新。'); }}>改名</button></div>
+                    <p>第 {campaign.latest.world.turn + 1} 回合 · {campaign.nodeCount} 个历史节点</p>
+                    <small>更新于 {new Intl.DateTimeFormat('zh-CN', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(campaign.updatedAt))}</small>
+                    <footer><button onClick={() => continueCampaign(campaign)}>继续</button><button onClick={() => { const copied = duplicateCampaign(campaign.id); setBranchStore(copied.store); }}>复制分支</button><button className="danger" onClick={() => { if (window.confirm(`确定删除“${campaign.name}”及其全部历史分支吗？`)) setBranchStore(deleteCampaign(campaign.id)); }}>删除</button></footer>
+                  </article>
+                ))}
+                {!listCampaigns(branchStore, saveManagerScenarioId).length && <p className="empty-history">尚无存档，可以新建第一局推演。</p>}
+              </div>
+            </section>
+          </div>
+        )}
       </main>
     );
   }

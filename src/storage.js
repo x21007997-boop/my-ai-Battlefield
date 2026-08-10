@@ -15,11 +15,72 @@ function writeStore(store) {
   return store;
 }
 
+function campaignIdFor(scenarioId) {
+  const suffix = globalThis.crypto?.randomUUID?.() ?? `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 9)}`;
+  return `campaign-${scenarioId}-${suffix}`;
+}
+
 export function initializeBranchTree(world) {
   const store = readStore();
   if (store.nodes.some((node) => node.world?.scenarioId === world.scenarioId)) return store;
   const root = { id: `root-${world.scenarioId}`, parentId: null, label: '剧本初始局势', createdAt: new Date().toISOString(), world };
   store.nodes.push(root);
+  return writeStore(store);
+}
+
+function descendantsOf(store, rootId) {
+  const ids = new Set([rootId]);
+  let changed = true;
+  while (changed) {
+    changed = false;
+    store.nodes.forEach((node) => { if (node.parentId && ids.has(node.parentId) && !ids.has(node.id)) { ids.add(node.id); changed = true; } });
+  }
+  return ids;
+}
+
+export function listCampaigns(store, scenarioId) {
+  return store.nodes
+    .filter((node) => !node.parentId && node.world?.scenarioId === scenarioId)
+    .map((root) => {
+      const ids = descendantsOf(store, root.id);
+      const nodes = store.nodes.filter((node) => ids.has(node.id));
+      const latest = nodes.toSorted((a, b) => String(a.createdAt).localeCompare(String(b.createdAt))).at(-1) ?? root;
+      return { id: root.id, name: root.campaignName ?? root.label ?? '未命名推演', createdAt: root.createdAt, updatedAt: latest.createdAt, latest, nodeCount: nodes.length };
+    })
+    .toSorted((a, b) => String(b.updatedAt).localeCompare(String(a.updatedAt)));
+}
+
+export function createCampaign(world, name = '新推演') {
+  const store = readStore();
+  const id = campaignIdFor(world.scenarioId);
+  store.nodes.push({ id, parentId: null, label: '剧本初始局势', campaignName: name, createdAt: new Date().toISOString(), world });
+  writeStore(store);
+  return { store, id };
+}
+
+export function renameCampaign(campaignId, name) {
+  const store = readStore();
+  const root = store.nodes.find((node) => node.id === campaignId && !node.parentId);
+  if (!root) throw new Error('未找到这份推演存档。');
+  root.campaignName = name.trim() || '未命名推演';
+  return writeStore(store);
+}
+
+export function duplicateCampaign(campaignId) {
+  const store = readStore();
+  const root = store.nodes.find((node) => node.id === campaignId && !node.parentId);
+  if (!root) throw new Error('未找到这份推演存档。');
+  const source = listCampaigns(store, root.world.scenarioId).find((campaign) => campaign.id === campaignId)?.latest ?? root;
+  const id = campaignIdFor(root.world.scenarioId);
+  store.nodes.push({ id, parentId: null, label: '复制的历史分支', campaignName: `${root.campaignName ?? '推演'} · 副本`, createdAt: new Date().toISOString(), world: JSON.parse(JSON.stringify(source.world)) });
+  writeStore(store);
+  return { store, id };
+}
+
+export function deleteCampaign(campaignId) {
+  const store = readStore();
+  const ids = descendantsOf(store, campaignId);
+  store.nodes = store.nodes.filter((node) => !ids.has(node.id));
   return writeStore(store);
 }
 
