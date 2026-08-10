@@ -52,6 +52,12 @@ const advisers = [
   },
 ];
 
+const cityPositions = {
+  淮安: { left: '44%', top: '25%' },
+  扬州: { left: '57%', top: '48%' },
+  南京: { left: '53%', top: '68%' },
+};
+
 function Metric({ item }) {
   const Icon = item.icon;
   return (
@@ -87,6 +93,7 @@ export function App() {
   const [chronicleLoading, setChronicleLoading] = useState(false);
   const [docxLoading, setDocxLoading] = useState(false);
   const [notice, setNotice] = useState('');
+  const [introStep, setIntroStep] = useState(0);
 
   const scenario = useMemo(() => getScenario(world.scenarioId), [world.scenarioId]);
   const dateLabel = scenario.manifest.turnLabels?.[world.turn] ?? `第${world.turn + 1}月`;
@@ -117,7 +124,8 @@ export function App() {
     setActiveRegion(reportsForWorld(latestNode?.world ?? nextWorld)[0].region);
     setDecision('');
     setAnalysis(null);
-    setScreen('simulation');
+    setIntroStep(0);
+    setScreen('intro');
   }
 
   function analyzeDecision() {
@@ -266,6 +274,35 @@ export function App() {
     );
   }
 
+  if (screen === 'intro') {
+    const introCards = [
+      { eyebrow: '弘光元年 · 五月', title: '北都既覆，江山只余半壁', body: '清军沿运河南下，江北各镇互不统属。南京朝堂仍在争论名分，而军粮已经见底。' },
+      { eyebrow: '急递 · 淮安', title: '粮仓告急，饥民聚于城下', body: '官仓只够支应数日。开仓，可能断绝前线军粮；不开仓，民变或将在今夜发生。' },
+      { eyebrow: '御前 · 等候裁决', title: '历史不会等待准备周全的人', body: '银子、粮草、民心与军力彼此牵动。你下达的每一道命令，都将成为后来史书中的一句话。' },
+    ];
+    const card = introCards[introStep];
+    return (
+      <main className={`opening-cinematic opening-step-${introStep}`}>
+        <div className="opening-map" aria-hidden="true" />
+        <div className="opening-vignette" aria-hidden="true" />
+        <button className="opening-back" onClick={() => setScreen('library')}><ArrowLeft size={18} /> 返回选局</button>
+        <section className="opening-copy" key={introStep}>
+          <small>{card.eyebrow}</small>
+          <h1>{card.title}</h1>
+          <p>{card.body}</p>
+          <div className="opening-progress">{introCards.map((_, index) => <i key={index} className={index <= introStep ? 'active' : ''} />)}</div>
+          <div className="opening-actions">
+            <button className="opening-skip" onClick={() => setScreen('simulation')}>跳过序章</button>
+            <button className="opening-next" onClick={() => introStep < introCards.length - 1 ? setIntroStep(introStep + 1) : setScreen('simulation')}>
+              {introStep < introCards.length - 1 ? '继续' : '入局执政'} <CaretRight size={19} />
+            </button>
+          </div>
+        </section>
+        <div className="opening-seal">弘<br />光</div>
+      </main>
+    );
+  }
+
   return (
     <main className="simulator-shell">
       <header className="topbar">
@@ -294,15 +331,28 @@ export function App() {
         <section className="map-panel" aria-label="江南江北态势图">
           <img src="/assets/jiangnan-map.png" alt="江南与江北历史区域态势图" />
           <div className="map-wash" />
-          <button className="marker marker-huai" onClick={() => setActiveRegion('淮安')} aria-label="查看淮安奏报">
-            <MapPin size={26} weight="fill" />
-            <span>淮安</span>
-          </button>
-          <button className="marker marker-yang" onClick={() => setActiveRegion('扬州')} aria-label="查看扬州奏报">
-            <Warning size={23} weight="fill" />
-            <span>扬州</span>
-          </button>
-          <div className="selected-region"><span>扬州</span><small>赈粮压力</small></div>
+          <div className="frontline frontline-north"><span>清军南下压力</span></div>
+          {scenario.cities.map((city) => {
+            const selected = city.name === activeReport.region;
+            const danger = city.unrest >= 50 || city.garrison < 35;
+            return (
+              <button
+                className={`marker city-marker ${selected ? 'selected' : ''} ${danger ? 'danger' : ''}`}
+                style={cityPositions[city.name]}
+                key={city.id}
+                onClick={() => setActiveRegion(city.name)}
+                aria-label={`查看${city.name}态势`}
+              >
+                {danger ? <Warning size={22} weight="fill" /> : <MapPin size={22} weight="fill" />}
+                <span><b>{city.name}</b><small>粮 {city.grain} · 军 {city.garrison}</small></span>
+              </button>
+            );
+          })}
+          <div className="map-focus-card">
+            <small>当前关注</small>
+            <strong>{activeReport.region}</strong>
+            <span>{activeReport.title}</span>
+          </div>
           <div className="map-legend">
             <span><i className="legend-dot ours" />我方治所</span>
             <span><i className="legend-dot event" />事件</span>
