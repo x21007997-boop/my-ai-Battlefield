@@ -87,6 +87,7 @@ export function App() {
   const [decision, setDecision] = useState('');
   const [analysis, setAnalysis] = useState(null);
   const [meetingOpen, setMeetingOpen] = useState(false);
+  const [selectedAdviserId, setSelectedAdviserId] = useState(null);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [aiCouncil, setAiCouncil] = useState(null);
   const [aiLoading, setAiLoading] = useState(false);
@@ -108,6 +109,7 @@ export function App() {
     support: UsersThree,
     defense: ShieldChevron,
   }), [world]);
+  const selectedAdviser = advisers.find((item) => item.id === selectedAdviserId) ?? null;
 
   function flash(message, duration = 2600) {
     setNotice(message);
@@ -124,6 +126,7 @@ export function App() {
     setActiveRegion(reportsForWorld(latestNode?.world ?? nextWorld)[0].region);
     setDecision('');
     setAnalysis(null);
+    setSelectedAdviserId(null);
     setIntroStep(0);
     setScreen('intro');
   }
@@ -189,7 +192,9 @@ export function App() {
         world,
         report: activeReport,
         decision,
-        question: decision.trim() ? '评议这道拟议诏令，并给出可执行修订。' : '根据本月奏报，会商下一步最应优先处理的事务。',
+        question: selectedAdviser
+          ? `重点回应${selectedAdviser.name}提出的“${selectedAdviser.stance}”主张，分析其依据、风险并给出可执行修订。`
+          : decision.trim() ? '评议这道拟议诏令，并给出可执行修订。' : '根据本月奏报，会商下一步最应优先处理的事务。',
       });
       setAiCouncil(result);
     } catch (error) {
@@ -394,7 +399,12 @@ export function App() {
           <section className="council">
             <div className="section-title"><span />幕僚会商<span /></div>
             {advisers.map((adviser) => (
-              <button className="adviser-row" key={adviser.id} onClick={() => setNotice(`${adviser.name}：${adviser.text}`)}>
+              <button
+                className={`adviser-row ${selectedAdviserId === adviser.id ? 'selected' : ''}`}
+                key={adviser.id}
+                aria-pressed={selectedAdviserId === adviser.id}
+                onClick={() => setSelectedAdviserId(adviser.id)}
+              >
                 <img src={adviser.image} alt={`${adviser.name}画像`} />
                 <div className="adviser-copy">
                   <div><strong>{adviser.name}</strong><small>{adviser.office}</small><b className={adviser.tone}>{adviser.stance}</b></div>
@@ -402,9 +412,19 @@ export function App() {
                 </div>
               </button>
             ))}
+            {selectedAdviser && (
+              <div className="selected-adviser-opinion" role="status">
+                <div><strong>{selectedAdviser.name}的完整意见</strong><button onClick={() => setSelectedAdviserId(null)}>收起</button></div>
+                <p>{selectedAdviser.text}</p>
+              </div>
+            )}
             <div className="council-actions">
-              <button onClick={() => setNotice('请选择一位幕僚继续追问。')}>追问幕僚</button>
-              <button className="meeting-button" onClick={() => setMeetingOpen(true)}><UsersThree size={18} />召集会议</button>
+              <button
+                className={selectedAdviser ? 'ready' : ''}
+                disabled={!selectedAdviser}
+                onClick={() => { setAiCouncil(null); setMeetingOpen(true); }}
+              >{selectedAdviser ? `追问${selectedAdviser.name}` : '先选择一位幕僚'}</button>
+              <button className="meeting-button" onClick={() => { setSelectedAdviserId(null); setAiCouncil(null); setMeetingOpen(true); }}><UsersThree size={18} />召集会议</button>
             </div>
           </section>
         </aside>
@@ -432,10 +452,10 @@ export function App() {
         <div className="modal-backdrop" role="presentation" onMouseDown={() => setMeetingOpen(false)}>
           <section className="meeting-modal" role="dialog" aria-modal="true" aria-labelledby="meeting-title" onMouseDown={(event) => event.stopPropagation()}>
             <div className="meeting-heading">
-              <div><small>御前会议</small><h2 id="meeting-title">江北赈粮处置</h2></div>
+              <div><small>{selectedAdviser ? '单独奏对' : '御前会议'}</small><h2 id="meeting-title">{selectedAdviser ? `追问${selectedAdviser.name}` : '江北赈粮处置'}</h2></div>
               <button onClick={() => setMeetingOpen(false)}>关闭</button>
             </div>
-            <p className="meeting-intro">三位幕僚意见相左。你可以综合意见，在下方形成最终裁决。</p>
+            <p className="meeting-intro">{selectedAdviser ? `${selectedAdviser.name}主张“${selectedAdviser.stance}”。你可以让其进一步解释依据、风险与执行细节。` : '三位幕僚意见相左。你可以综合意见，在下方形成最终裁决。'}</p>
             <div className="meeting-people">
               {advisers.map((adviser) => <div key={adviser.id}><img src={adviser.image} alt="" /><strong>{adviser.name}</strong><span>{adviser.stance}</span></div>)}
             </div>
