@@ -8,6 +8,10 @@ test('parses the three supported decision types', () => {
   assert.equal(parseDecision('调拨二十万石粮草赈济淮安', world).action.type, ACTION_TYPES.TRANSPORT_GRAIN);
   assert.equal(parseDecision('调动五万兵力增援扬州', world).action.type, ACTION_TYPES.DEPLOY_ARMY);
   assert.equal(parseDecision('派遣史可法前往淮安查办', world).action.type, ACTION_TYPES.APPOINT_OFFICIAL);
+  assert.deepEqual(
+    (({ source, target }) => ({ source, target }))(parseDecision('从南京调动五万兵力增援扬州', world).action),
+    { source: '南京', target: '扬州' },
+  );
 });
 
 test('rejects unsupported or empty decisions', () => {

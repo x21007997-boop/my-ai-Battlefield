@@ -52,8 +52,15 @@ function readAmount(text, fallback) {
   return chinese.find(([word]) => text.includes(`${word}万`))?.[1] ?? fallback;
 }
 
-function readPlace(text, candidates, fallback) {
-  return candidates.find((place) => text.includes(place)) ?? fallback;
+function readRoute(text, cities, defaultSource, defaultTarget) {
+  const mentioned = cities
+    .map((city) => ({ city, index: text.indexOf(city) }))
+    .filter((item) => item.index >= 0)
+    .sort((a, b) => a.index - b.index)
+    .map((item) => item.city);
+  const target = mentioned.at(-1) ?? defaultTarget;
+  const source = mentioned.length > 1 ? mentioned[0] : defaultSource;
+  return { source: source === target ? cities.find((city) => city !== target) ?? defaultSource : source, target };
 }
 
 export function parseDecision(rawDecision, world = createInitialWorld()) {
@@ -72,9 +79,9 @@ export function parseDecision(rawDecision, world = createInitialWorld()) {
   const cities = Object.keys(world.cities);
   const scenario = getScenario(world.scenarioId);
   const defaults = scenario.manifest.actionDefaults;
-  const target = readPlace(text, cities, type === ACTION_TYPES.TRANSPORT_GRAIN ? defaults.grainTarget : defaults.armyTarget);
-  const sourceCandidates = cities.filter((city) => city !== target);
-  const source = readPlace(text, sourceCandidates, type === ACTION_TYPES.TRANSPORT_GRAIN ? defaults.grainSource : defaults.armySource);
+  const defaultSource = type === ACTION_TYPES.TRANSPORT_GRAIN ? defaults.grainSource : defaults.armySource;
+  const defaultTarget = type === ACTION_TYPES.TRANSPORT_GRAIN ? defaults.grainTarget : defaults.armyTarget;
+  const { source, target } = readRoute(text, cities, defaultSource, defaultTarget);
   const amount = readAmount(text, type === ACTION_TYPES.APPOINT_OFFICIAL ? 1 : 20);
   const official = Object.keys(world.officials).find((name) => text.includes(name))
     ?? (text.includes('钦差') ? '巡粮钦差' : defaults.official);

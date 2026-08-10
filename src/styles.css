@@ -186,10 +186,14 @@ button { cursor: pointer; }
 .resolution-map { position: relative; overflow: hidden; border-right: 4px solid #4b301d; }
 .resolution-map > img { width: 100%; height: 100%; object-fit: cover; filter: sepia(.28) saturate(.68) brightness(.68) contrast(1.06); transform: scale(1.08); animation: resolution-map-in 1.7s ease-out both; }
 .resolution-map::after { content: ''; position: absolute; inset: 0; box-shadow: inset 0 0 80px rgba(29,17,9,.55); pointer-events: none; }
-.route-origin, .route-target { position: absolute; z-index: 3; min-width: 70px; padding: 8px 12px; color: #f0ddb0; text-align: center; background: #71382d; border: 1px solid #c08b58; border-radius: 20px; font-family: 'Noto Serif SC'; font-weight: 700; }
-.route-origin { left: 30%; top: 70%; }.route-target { left: 57%; top: 29%; }
-.supply-route { position: absolute; z-index: 2; left: 38%; top: 37%; width: 3px; height: 37%; overflow: hidden; background: repeating-linear-gradient(to bottom,#d0a153 0 8px,transparent 8px 14px); transform: rotate(29deg); transform-origin: bottom; animation: route-reveal 1.25s .55s ease both; }
-.route-cargo { position: absolute; z-index: 4; left: 37%; top: 66%; display: grid; place-items: center; width: 38px; height: 38px; color: #4f652f; background: #e5d19f; border: 2px solid #92703d; border-radius: 50%; box-shadow: 0 5px 15px rgba(0,0,0,.35); animation: cargo-travel 2.6s 1s cubic-bezier(.3,.7,.3,1) both; }
+.route-caption { position: absolute; z-index: 3; left: 24px; top: 22px; padding: 7px 11px; color: #e9d6a6; background: rgba(50,31,18,.75); border-left: 3px solid #c69a51; font-family: 'Noto Serif SC'; font-size: 12px; letter-spacing: 3px; }
+.route-origin, .route-target { position: absolute; z-index: 3; min-width: 70px; padding: 8px 12px; color: #f0ddb0; text-align: center; background: #71382d; border: 1px solid #c08b58; border-radius: 20px; font-family: 'Noto Serif SC'; font-weight: 700; transform: translate(-50%,-50%); }
+.supply-route { position: absolute; z-index: 2; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.supply-route path { fill: none; stroke: #d0a153; stroke-width: .5; stroke-dasharray: 1.5 1.2; vector-effect: non-scaling-stroke; filter: drop-shadow(0 0 2px rgba(70,43,20,.8)); stroke-dashoffset: 30; animation: route-reveal 1.5s .45s ease forwards; }
+.route-cargo { position: absolute; z-index: 4; left: var(--origin-x); top: var(--origin-y); display: grid; place-items: center; width: 38px; height: 38px; color: #4f652f; background: #e5d19f; border: 2px solid #92703d; border-radius: 50%; box-shadow: 0 5px 15px rgba(0,0,0,.35); transform: translate(-50%,-50%); animation: cargo-travel 2.6s 1s cubic-bezier(.3,.7,.3,1) both; }
+.route-cargo b { font-family: 'Ma Shan Zheng'; font-size: 21px; }
+.resolution-army .route-origin, .resolution-army .route-target { background: #5c2c26; }.resolution-army .route-cargo { color: #f0d8aa; background: #7c332c; border-color: #d09b5d; }
+.resolution-official .route-origin, .resolution-official .route-target { background: #315946; }.resolution-official .route-cargo { color: #315946; background: #e6d9b8; border-color: #557761; }
 .resolution-scroll { position: relative; padding: 38px 38px 30px; overflow-y: auto; color: #423527; background: #eadfc7 url('/assets/rice-paper.png') center / 520px; }
 .resolution-scroll > small { color: #8c3c30; letter-spacing: 3px; }
 .resolution-scroll h2 { margin: 9px 0 12px; padding-right: 54px; font-family: 'Noto Serif SC'; font-size: 28px; line-height: 1.35; }
@@ -206,8 +210,8 @@ button { cursor: pointer; }
 
 @keyframes resolution-fade { from { opacity: 0; } to { opacity: 1; } }
 @keyframes resolution-map-in { from { transform: scale(1.18); filter: sepia(.5) saturate(.45) brightness(.45); } to { transform: scale(1.08); filter: sepia(.28) saturate(.68) brightness(.68); } }
-@keyframes route-reveal { from { clip-path: inset(100% 0 0); } to { clip-path: inset(0); } }
-@keyframes cargo-travel { 0% { left: 35%; top: 66%; opacity: 0; } 12% { opacity: 1; } 88% { opacity: 1; } 100% { left: 57%; top: 34%; opacity: 0; } }
+@keyframes route-reveal { from { stroke-dashoffset: 30; } to { stroke-dashoffset: 0; } }
+@keyframes cargo-travel { 0% { left: var(--origin-x); top: var(--origin-y); opacity: 0; } 12% { opacity: 1; } 88% { opacity: 1; } 100% { left: var(--target-x); top: var(--target-y); opacity: 0; } }
 @keyframes seal-land { to { opacity: 1; transform: rotate(-9deg) scale(1); } }
 @keyframes effect-rise { from { opacity: 0; transform: translateY(9px); } to { opacity: 1; transform: translateY(0); } }
 

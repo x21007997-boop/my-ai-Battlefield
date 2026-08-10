@@ -58,6 +58,23 @@ const cityPositions = {
   南京: { left: '53%', top: '68%' },
 };
 
+const cinematicCityPositions = {
+  淮安: { x: 59, y: 29 },
+  扬州: { x: 67, y: 52 },
+  南京: { x: 43, y: 75 },
+};
+
+function resolutionVisualFor(action) {
+  const kinds = {
+    transport_grain: { glyph: '粮', theme: 'grain', routeLabel: '漕粮启运', outcomeLabel: '粮道回报' },
+    deploy_army: { glyph: '兵', theme: 'army', routeLabel: '大军开拔', outcomeLabel: '军报抵京' },
+    appoint_official: { glyph: '使', theme: 'official', routeLabel: '持节赴任', outcomeLabel: '履任回奏' },
+  };
+  const origin = cinematicCityPositions[action.source] ?? cinematicCityPositions.南京;
+  const target = cinematicCityPositions[action.target] ?? cinematicCityPositions.淮安;
+  return { ...kinds[action.type], origin, target, path: `M ${origin.x} ${origin.y} L ${target.x} ${target.y}` };
+}
+
 function Metric({ item }) {
   const Icon = item.icon;
   return (
@@ -111,6 +128,7 @@ export function App() {
     defense: ShieldChevron,
   }), [world]);
   const selectedAdviser = advisers.find((item) => item.id === selectedAdviserId) ?? null;
+  const resolutionVisual = resolutionReport ? resolutionVisualFor(resolutionReport.record.action) : null;
 
   function flash(message, duration = 2600) {
     setNotice(message);
@@ -454,13 +472,14 @@ export function App() {
 
       {resolutionReport && (
         <div className="resolution-backdrop" role="presentation">
-          <section className={`resolution-stage resolution-${resolutionReport.record.action.type}`} role="dialog" aria-modal="true" aria-labelledby="resolution-title">
+          <section className={`resolution-stage resolution-${resolutionVisual.theme}`} role="dialog" aria-modal="true" aria-labelledby="resolution-title">
             <div className="resolution-map" aria-hidden="true">
               <img src="/assets/jiangnan-map.png" alt="" />
-              <span className="route-origin">{resolutionReport.record.action.source}</span>
-              <i className="supply-route" />
-              <span className="route-cargo"><Grains size={22} weight="fill" /></span>
-              <span className="route-target">{resolutionReport.record.action.target}</span>
+              <span className="route-caption">{resolutionVisual.routeLabel}</span>
+              <span className="route-origin" style={{ left: `${resolutionVisual.origin.x}%`, top: `${resolutionVisual.origin.y}%` }}>{resolutionReport.record.action.source}</span>
+              <svg className="supply-route" viewBox="0 0 100 100" preserveAspectRatio="none"><path d={resolutionVisual.path} /></svg>
+              <span className="route-cargo" style={{ '--origin-x': `${resolutionVisual.origin.x}%`, '--origin-y': `${resolutionVisual.origin.y}%`, '--target-x': `${resolutionVisual.target.x}%`, '--target-y': `${resolutionVisual.target.y}%` }}><b>{resolutionVisual.glyph}</b></span>
+              <span className="route-target" style={{ left: `${resolutionVisual.target.x}%`, top: `${resolutionVisual.target.y}%` }}>{resolutionReport.record.action.target}</span>
             </div>
             <div className="resolution-scroll">
               <small>第 {resolutionReport.record.turnAfter + 1} 回合 · 奉旨施行</small>
@@ -474,7 +493,7 @@ export function App() {
                 })}
               </div>
               <article className="resolution-news">
-                <small>新奏报</small>
+                <small>{resolutionVisual.outcomeLabel}</small>
                 <h3>{resolutionReport.record.events.at(-1).title}</h3>
                 <p>{resolutionReport.record.events.at(-1).detail}</p>
               </article>
