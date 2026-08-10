@@ -95,6 +95,7 @@ export function App() {
   const [docxLoading, setDocxLoading] = useState(false);
   const [notice, setNotice] = useState('');
   const [introStep, setIntroStep] = useState(0);
+  const [resolutionReport, setResolutionReport] = useState(null);
 
   const scenario = useMemo(() => getScenario(world.scenarioId), [world.scenarioId]);
   const dateLabel = scenario.manifest.turnLabels?.[world.turn] ?? `第${world.turn + 1}月`;
@@ -127,6 +128,7 @@ export function App() {
     setDecision('');
     setAnalysis(null);
     setSelectedAdviserId(null);
+    setResolutionReport(null);
     setIntroStep(0);
     setScreen('intro');
   }
@@ -153,6 +155,7 @@ export function App() {
       setCurrentNodeId(branch.id);
       window.localStorage.setItem('hongguang-autosave', serializeSnapshot(result.world));
       setActiveRegion(reportsForWorld(result.world)[0].region);
+      setResolutionReport({ record: result.record, preview: result.preview });
       flash(`第${result.world.turn + 1}回合结算完成：${result.record.events.at(-1).title}`);
     } catch (error) {
       flash(error.message, 3200);
@@ -175,6 +178,7 @@ export function App() {
     setActiveRegion(reportsForWorld(node.world)[0].region);
     setDecision('');
     setAnalysis(null);
+    setResolutionReport(null);
     setHistoryOpen(false);
     flash(`已回到“${node.label}”，下一道决策将创建新的历史分支。`, 3600);
   }
@@ -446,6 +450,39 @@ export function App() {
           <span>{analysis.risk}</span>
           <button onClick={advanceTurn}><CheckCircle size={18} />确认执行</button>
         </section>
+      )}
+
+      {resolutionReport && (
+        <div className="resolution-backdrop" role="presentation">
+          <section className={`resolution-stage resolution-${resolutionReport.record.action.type}`} role="dialog" aria-modal="true" aria-labelledby="resolution-title">
+            <div className="resolution-map" aria-hidden="true">
+              <img src="/assets/jiangnan-map.png" alt="" />
+              <span className="route-origin">{resolutionReport.record.action.source}</span>
+              <i className="supply-route" />
+              <span className="route-cargo"><Grains size={22} weight="fill" /></span>
+              <span className="route-target">{resolutionReport.record.action.target}</span>
+            </div>
+            <div className="resolution-scroll">
+              <small>第 {resolutionReport.record.turnAfter + 1} 回合 · 奉旨施行</small>
+              <h2 id="resolution-title">{resolutionReport.preview.title}</h2>
+              <p className="resolution-command">“{resolutionReport.record.rawDecision}”</p>
+              <div className="resolution-seal" aria-hidden="true">准</div>
+              <div className="resolution-effects">
+                {Object.entries(resolutionReport.record.effects).map(([key, value]) => {
+                  const labels = { treasury: '国库', grain: '粮草', support: '民心', defense: '防务' };
+                  return <div key={key}><span>{labels[key]}</span><strong className={value >= 0 ? 'positive' : 'negative'}>{value >= 0 ? '+' : ''}{value}</strong></div>;
+                })}
+              </div>
+              <article className="resolution-news">
+                <small>新奏报</small>
+                <h3>{resolutionReport.record.events.at(-1).title}</h3>
+                <p>{resolutionReport.record.events.at(-1).detail}</p>
+              </article>
+              <div className="resolution-aftereffect"><span>后效将在下一阶段结算</span><b>{resolutionReport.preview.delayed.label}</b></div>
+              <button onClick={() => setResolutionReport(null)}><CheckCircle size={19} weight="fill" /> 收入起居注，继续执政</button>
+            </div>
+          </section>
+        </div>
       )}
 
       {meetingOpen && (
