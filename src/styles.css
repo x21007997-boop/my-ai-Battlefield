@@ -67,7 +67,9 @@ button { cursor: pointer; }
 .city-marker span { display: grid; text-align: left; }
 .city-marker b { font-family: 'Noto Serif SC'; font-size: 14px; }
 .city-marker small { color: #745b3d; font-size: 9px; }
-.city-marker.danger::after { content: ''; position: absolute; inset: -8px; z-index: -1; border: 1px solid rgba(139,54,39,.7); border-radius: 30px; animation: map-pulse 2.2s infinite; }
+.city-marker.critical::after, .city-marker.strained::after { content: ''; position: absolute; inset: -8px; z-index: -1; border: 1px solid rgba(139,54,39,.7); border-radius: 30px; animation: map-pulse 2.2s infinite; }
+.city-marker.strained::after { border-color: rgba(164,116,47,.72); animation-duration: 3s; }
+.city-marker.recent { animation: city-arrival 1.1s 3; }
 .city-marker.selected { color: #f4e3ba; background: #78392d; border-color: #d0a35c; box-shadow: 0 0 0 8px rgba(145,72,48,.17), 0 8px 18px rgba(50,31,15,.35); }
 .city-marker.selected svg, .city-marker.selected small { color: #efd7a1; }
 .frontline { position: absolute; z-index: 2; left: 25%; right: 18%; top: 12%; height: 80px; border-bottom: 2px dashed rgba(118,43,35,.58); border-radius: 50%; transform: rotate(-4deg); pointer-events: none; }
@@ -76,6 +78,8 @@ button { cursor: pointer; }
 .map-focus-card small { display: block; color: #8b3b2e; letter-spacing: 3px; }
 .map-focus-card strong { display: block; margin-top: 5px; font-family: 'Noto Serif SC'; font-size: 23px; }
 .map-focus-card span { display: block; margin-top: 2px; color: #725d43; font-size: 11px; line-height: 1.5; }
+.map-focus-card > div { display: flex; gap: 5px; margin-top: 8px; }
+.map-focus-card i { padding: 3px 5px; color: #654a2d; background: rgba(105,72,34,.08); border: 1px solid rgba(95,62,29,.16); font-size: 9px; font-style: normal; }
 .map-legend { position: absolute; left: 22px; bottom: 20px; display: flex; gap: 18px; padding: 8px 12px; background: rgba(239,225,194,.82); border: 1px solid rgba(76,51,26,.34); font-size: 12px; }
 .map-legend span { display: flex; align-items: center; gap: 5px; }
 .legend-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
@@ -256,9 +260,10 @@ button { cursor: pointer; }
 @keyframes opening-drift { from { transform: scale(1.17); } to { transform: scale(1.08); } }
 @keyframes opening-copy-in { from { opacity: 0; transform: translate(-20px,-45%); filter: blur(4px); } to { opacity: 1; transform: translate(0,-48%); filter: blur(0); } }
 @keyframes map-pulse { 0%,100% { opacity: .25; transform: scale(.92); } 50% { opacity: .85; transform: scale(1.08); } }
+@keyframes city-arrival { 50% { box-shadow: 0 0 0 13px rgba(190,146,65,.28), 0 8px 18px rgba(50,31,15,.4); } }
 
 @media (prefers-reduced-motion: reduce) {
-  .opening-map, .opening-copy, .city-marker.danger::after, .resolution-backdrop, .resolution-map > img, .supply-route, .route-cargo, .resolution-seal, .resolution-effects div, .resolution-news { animation: none; opacity: 1; }
+  .opening-map, .opening-copy, .city-marker.critical::after, .city-marker.strained::after, .city-marker.recent, .resolution-backdrop, .resolution-map > img, .supply-route, .route-cargo, .resolution-seal, .resolution-effects div, .resolution-news { animation: none; opacity: 1; }
 }
 
 @media (max-width: 1280px) {

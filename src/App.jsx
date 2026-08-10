@@ -75,6 +75,12 @@ function resolutionVisualFor(action) {
   return { ...kinds[action.type], origin, target, path: `M ${origin.x} ${origin.y} L ${target.x} ${target.y}` };
 }
 
+function cityCondition(city) {
+  if (city.unrest >= 65) return { key: 'critical', label: '局势危急' };
+  if (city.unrest >= 45 || city.garrison < 35) return { key: 'strained', label: '局势紧张' };
+  return { key: 'stable', label: '局势尚稳' };
+}
+
 function Metric({ item }) {
   const Icon = item.icon;
   return (
@@ -101,6 +107,7 @@ export function App() {
     return store.nodes.findLast((node) => node.world?.scenarioId === initial.scenarioId)?.id;
   });
   const [activeRegion, setActiveRegion] = useState('淮安');
+  const [focusedCityName, setFocusedCityName] = useState('淮安');
   const [decision, setDecision] = useState('');
   const [analysis, setAnalysis] = useState(null);
   const [meetingOpen, setMeetingOpen] = useState(false);
@@ -118,6 +125,8 @@ export function App() {
   const dateLabel = scenario.manifest.turnLabels?.[world.turn] ?? `第${world.turn + 1}月`;
   const currentReports = useMemo(() => reportsForWorld(world), [world]);
   const activeReport = currentReports.find((report) => report.region === activeRegion) ?? currentReports[0];
+  const focusedCity = world.cities[focusedCityName] ?? world.cities[activeReport.region];
+  const focusedCondition = cityCondition(focusedCity);
   const outcome = useMemo(() => currentOutcome(world), [world]);
   const currentBranchNode = useMemo(() => branchStore.nodes.find((node) => node.id === currentNodeId), [branchStore, currentNodeId]);
   const branchChapters = useMemo(() => getBranchPath(branchStore, currentNodeId).filter((node) => node.chronicle), [branchStore, currentNodeId]);
@@ -142,7 +151,9 @@ export function App() {
     setWorld(latestNode?.world ?? nextWorld);
     setBranchStore(store);
     setCurrentNodeId(latestNode?.id ?? `root-${scenarioId}`);
-    setActiveRegion(reportsForWorld(latestNode?.world ?? nextWorld)[0].region);
+    const firstRegion = reportsForWorld(latestNode?.world ?? nextWorld)[0].region;
+    setActiveRegion(firstRegion);
+    setFocusedCityName(firstRegion);
     setDecision('');
     setAnalysis(null);
     setSelectedAdviserId(null);
@@ -172,7 +183,9 @@ export function App() {
       setBranchStore(branch.store);
       setCurrentNodeId(branch.id);
       window.localStorage.setItem('hongguang-autosave', serializeSnapshot(result.world));
-      setActiveRegion(reportsForWorld(result.world)[0].region);
+      const nextRegion = reportsForWorld(result.world)[0].region;
+      setActiveRegion(nextRegion);
+      setFocusedCityName(result.record.action.target);
       setResolutionReport({ record: result.record, preview: result.preview });
       flash(`第${result.world.turn + 1}回合结算完成：${result.record.events.at(-1).title}`);
     } catch (error) {
@@ -194,6 +207,7 @@ export function App() {
     setWorld(node.world);
     setCurrentNodeId(node.id);
     setActiveRegion(reportsForWorld(node.world)[0].region);
+    setFocusedCityName(reportsForWorld(node.world)[0].region);
     setDecision('');
     setAnalysis(null);
     setResolutionReport(null);
@@ -359,26 +373,31 @@ export function App() {
           <img src="/assets/jiangnan-map.png" alt="江南与江北历史区域态势图" />
           <div className="map-wash" />
           <div className="frontline frontline-north"><span>清军南下压力</span></div>
-          {scenario.cities.map((city) => {
-            const selected = city.name === activeReport.region;
-            const danger = city.unrest >= 50 || city.garrison < 35;
+          {Object.entries(world.cities).map(([name, city]) => {
+            const selected = name === focusedCityName;
+            const condition = cityCondition(city);
+            const recent = world.history.at(-1)?.action.target === name;
             return (
               <button
-                className={`marker city-marker ${selected ? 'selected' : ''} ${danger ? 'danger' : ''}`}
-                style={cityPositions[city.name]}
-                key={city.id}
-                onClick={() => setActiveRegion(city.name)}
-                aria-label={`查看${city.name}态势`}
+                className={`marker city-marker ${selected ? 'selected' : ''} ${condition.key} ${recent ? 'recent' : ''}`}
+                style={cityPositions[name]}
+                key={name}
+                onClick={() => {
+                  setFocusedCityName(name);
+                  if (currentReports.some((report) => report.region === name)) setActiveRegion(name);
+                }}
+                aria-label={`查看${name}态势`}
               >
-                {danger ? <Warning size={22} weight="fill" /> : <MapPin size={22} weight="fill" />}
-                <span><b>{city.name}</b><small>粮 {city.grain} · 军 {city.garrison}</small></span>
+                {condition.key !== 'stable' ? <Warning size={22} weight="fill" /> : <MapPin size={22} weight="fill" />}
+                <span><b>{name}</b><small>粮 {city.grain} · 军 {city.garrison} · 乱 {city.unrest}</small></span>
               </button>
             );
           })}
           <div className="map-focus-card">
             <small>当前关注</small>
-            <strong>{activeReport.region}</strong>
-            <span>{activeReport.title}</span>
+            <strong>{focusedCityName}</strong>
+            <span>{focusedCondition.label} · {focusedCity.controller}</span>
+            <div><i>粮 {focusedCity.grain}</i><i>军 {focusedCity.garrison}</i><i>乱 {focusedCity.unrest}</i></div>
           </div>
           <div className="map-legend">
             <span><i className="legend-dot ours" />我方治所</span>
@@ -391,7 +410,7 @@ export function App() {
           <div className="scroll-head"><span>本月奏报</span></div>
           <div className="report-tabs">
             {currentReports.map((report) => (
-              <button key={report.id} className={activeReport.id === report.id ? 'active' : ''} onClick={() => setActiveRegion(report.region)}>
+              <button key={report.id} className={activeReport.id === report.id ? 'active' : ''} onClick={() => { setActiveRegion(report.region); setFocusedCityName(report.region); }}>
                 {report.region}
               </button>
             ))}
