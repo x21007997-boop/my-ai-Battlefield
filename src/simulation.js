@@ -155,6 +155,19 @@ function resolveAdviserReaction(world, action) {
   return null;
 }
 
+function factionEffectsFor(action) {
+  if (action.type === ACTION_TYPES.TRANSPORT_GRAIN) return { jiangbei: 4, finance: -4, gentry: 3 };
+  if (action.type === ACTION_TYPES.DEPLOY_ARMY) return { jiangbei: 5, finance: -4, gentry: -1 };
+  return { jiangbei: action.official === '史可法' ? 3 : 1, finance: 2, gentry: -3 };
+}
+
+function resolveFactionShift(influence) {
+  if (influence.jiangbei >= 75) return { factionId: 'jiangbei', tone: 'ascendant', title: '江北军政声势日隆', detail: '督师体系逐渐掌握议程，朝廷对前线的依赖继续加深。' };
+  if (influence.finance <= 30) return { factionId: 'finance', tone: 'weakened', title: '户部财权难以为继', detail: '连续支出削弱了户部的调度能力，后续命令可能遭遇钱粮掣肘。' };
+  if (influence.gentry <= 30) return { factionId: 'gentry', tone: 'weakened', title: '地方士绅转趋离心', detail: '地方利益持续受损，州县配合度开始下降。' };
+  return null;
+}
+
 function buildTriggeredEvents(world, action, roll) {
   const events = [{ type: 'decision_resolved', title: '诏令已经颁行', detail: action.raw }];
   if (action.type === ACTION_TYPES.TRANSPORT_GRAIN) {
@@ -191,6 +204,11 @@ export function resolveTurn(world, rawDecision) {
   Object.entries(relationEffects).forEach(([id, delta]) => {
     next.adviserRelations[id] = clamp((next.adviserRelations[id] ?? 50) + delta, 0, 100);
   });
+  const factionEffects = factionEffectsFor(preview.action);
+  next.factionInfluence ??= { jiangbei: 58, finance: 56, gentry: 52 };
+  Object.entries(factionEffects).forEach(([id, delta]) => {
+    next.factionInfluence[id] = clamp((next.factionInfluence[id] ?? 50) + delta, 0, 100);
+  });
 
   if (preview.action.type === ACTION_TYPES.TRANSPORT_GRAIN) {
     next.cities[preview.action.target].grain += Math.round(preview.action.amount * 0.7);
@@ -211,6 +229,8 @@ export function resolveTurn(world, rawDecision) {
     });
     events.push({ type: 'adviser_reaction', ...adviserReaction });
   }
+  const factionShift = resolveFactionShift(next.factionInfluence);
+  if (factionShift) events.push({ type: 'faction_shift', ...factionShift });
   const scenarioEvent = resolveScenarioEvent(next, preview.action, roll);
   if (scenarioEvent) {
     next.metrics = applyEffects(next.metrics, scenarioEvent.effects);
@@ -232,6 +252,8 @@ export function resolveTurn(world, rawDecision) {
     effects: combinedEffects,
     relationEffects,
     adviserReaction,
+    factionEffects,
+    factionShift,
     delayedResolved: due.map((item) => item.label),
     events,
   };

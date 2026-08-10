@@ -103,6 +103,9 @@ button { cursor: pointer; }
 .pending-consequences { margin: 8px 0; padding: 9px 10px; background: rgba(132,91,42,.06); border: 1px dashed rgba(111,76,38,.32); }
 .pending-consequences > div { display: flex; justify-content: space-between; color: #8a3c30; letter-spacing: 2px; }.pending-consequences > div span { color: #806b4c; font-size: 10px; }
 .pending-consequences p { display: flex; justify-content: space-between; gap: 8px; margin: 6px 0 0; font-size: 10px; }.pending-consequences p b { color: #574632; }.pending-consequences p span { color: #8b7454; white-space: nowrap; }
+.faction-balance { margin: 8px 0; padding: 9px 10px; background: rgba(49,89,70,.05); border: 1px solid rgba(49,89,70,.2); }
+.faction-balance > div { display: flex; justify-content: space-between; color: #315946; letter-spacing: 2px; }.faction-balance > div span { max-width: 180px; overflow: hidden; color: #8a3c30; font-size: 9px; letter-spacing: 0; text-overflow: ellipsis; white-space: nowrap; }
+.faction-balance p { display: grid; grid-template-columns: 65px 1fr 20px; align-items: center; gap: 6px; margin: 6px 0 0; color: #5e4d39; font-size: 9px; }.faction-balance p i { height: 5px; overflow: hidden; background: rgba(73,55,34,.1); }.faction-balance p em { display: block; height: 100%; background: linear-gradient(90deg,#8a6b3d,#315946); transition: width .45s ease; }.faction-balance p span { text-align: right; }
 .outcome-card { margin: 10px 0; padding: 12px 14px; color: #efe0b8; background: linear-gradient(135deg, #71352b, #422a20); border: 1px solid #a7824d; box-shadow: inset 0 0 0 2px rgba(226,190,116,.12); }
 .outcome-card small { display: block; color: #d3b675; letter-spacing: 2px; }
 .outcome-card strong { display: block; margin-top: 4px; font-family: 'Noto Serif SC'; font-size: 20px; }
@@ -217,6 +220,8 @@ button { cursor: pointer; }
 .resolution-effects span { color: #74634d; font-size: 10px; }.resolution-effects strong { font-size: 20px; }
 .resolution-relations { margin: 4px 0 12px; padding: 9px 11px; background: rgba(112,77,36,.06); border: 1px solid rgba(92,67,39,.18); opacity: 0; animation: effect-rise .45s 1.95s forwards; }
 .resolution-relations > small { color: #7d633e; letter-spacing: 2px; }.resolution-relations > div { display: flex; gap: 8px; margin-top: 6px; }.resolution-relations span { flex: 1; display: flex; justify-content: space-between; color: #594735; font-size: 10px; }.resolution-relations b { font-size: 11px; }
+.resolution-factions { margin: 4px 0 12px; padding: 9px 11px; background: rgba(49,89,70,.05); border: 1px solid rgba(49,89,70,.18); opacity: 0; animation: effect-rise .45s 2.1s forwards; }
+.resolution-factions > small { color: #315946; letter-spacing: 2px; }.resolution-factions > div { display: flex; gap: 8px; margin-top: 6px; }.resolution-factions span { flex: 1; display: flex; justify-content: space-between; color: #594735; font-size: 10px; }.resolution-factions p { margin: 7px 0 0; padding-top: 6px; color: #7d4034; border-top: 1px solid rgba(93,62,32,.18); font-size: 9px; line-height: 1.55; }
 .resolution-reaction { margin: 8px 0 12px; padding: 12px 14px; color: #405141; background: rgba(49,89,70,.08); border-left: 3px solid #315946; opacity: 0; animation: effect-rise .45s 2.15s forwards; }
 .resolution-reaction.obstruction { color: #71392f; background: rgba(139,59,46,.08); border-left-color: #8b3b2e; }.resolution-reaction small { letter-spacing: 2px; }.resolution-reaction h3 { margin: 4px 0; font-family: 'Noto Serif SC'; font-size: 16px; }.resolution-reaction p { margin: 0; font-size: 10px; line-height: 1.65; }
 .resolution-news { margin-top: 12px; padding: 15px 17px; background: rgba(255,250,237,.5); border-top: 3px solid #315946; opacity: 0; animation: effect-rise .6s 2.25s forwards; }
@@ -275,7 +280,7 @@ button { cursor: pointer; }
 @keyframes city-arrival { 50% { box-shadow: 0 0 0 13px rgba(190,146,65,.28), 0 8px 18px rgba(50,31,15,.4); } }
 
 @media (prefers-reduced-motion: reduce) {
-  .opening-map, .opening-copy, .city-marker.critical::after, .city-marker.strained::after, .city-marker.recent, .resolution-backdrop, .resolution-map > img, .supply-route, .route-cargo, .resolution-seal, .resolution-effects div, .resolution-relations, .resolution-reaction, .resolution-news { animation: none; opacity: 1; }
+  .opening-map, .opening-copy, .city-marker.critical::after, .city-marker.strained::after, .city-marker.recent, .resolution-backdrop, .resolution-map > img, .supply-route, .route-cargo, .resolution-seal, .resolution-effects div, .resolution-relations, .resolution-factions, .resolution-reaction, .resolution-news { animation: none; opacity: 1; }
 }
 
 @media (max-width: 1280px) {

@@ -52,6 +52,12 @@ const advisers = [
   },
 ];
 
+const factions = [
+  { id: 'jiangbei', name: '江北军政', short: '军政' },
+  { id: 'finance', name: '户部财政', short: '财权' },
+  { id: 'gentry', name: '地方士绅', short: '乡望' },
+];
+
 const cityPositions = {
   淮安: { left: '44%', top: '25%' },
   扬州: { left: '57%', top: '48%' },
@@ -146,6 +152,7 @@ export function App() {
   const selectedAdviser = advisers.find((item) => item.id === selectedAdviserId) ?? null;
   const resolutionVisual = resolutionReport ? resolutionVisualFor(resolutionReport.record.action) : null;
   const latestAdviserReaction = world.history.at(-1)?.adviserReaction ?? null;
+  const latestFactionShift = world.history.at(-1)?.factionShift ?? null;
 
   function flash(message, duration = 2600) {
     setNotice(message);
@@ -446,6 +453,14 @@ export function App() {
             </section>
           )}
 
+          <section className="faction-balance">
+            <div><small>朝局势力</small>{latestFactionShift && <span>{latestFactionShift.title}</span>}</div>
+            {factions.map((faction) => {
+              const value = world.factionInfluence?.[faction.id] ?? 50;
+              return <p key={faction.id}><b>{faction.name}</b><i><em style={{ width: `${value}%` }} /></i><span>{value}</span></p>;
+            })}
+          </section>
+
           {outcome && (
             <section className="outcome-card">
               <small>三月阶段结局</small>
@@ -536,6 +551,14 @@ export function App() {
                   const delta = resolutionReport.record.relationEffects?.[adviser.id] ?? 0;
                   return <span key={adviser.id}>{adviser.name}<b className={delta >= 0 ? 'positive' : 'negative'}>{delta >= 0 ? '+' : ''}{delta}</b></span>;
                 })}</div>
+              </div>
+              <div className="resolution-factions">
+                <small>派系力量变化</small>
+                <div>{factions.map((faction) => {
+                  const delta = resolutionReport.record.factionEffects?.[faction.id] ?? 0;
+                  return <span key={faction.id}>{faction.short}<b className={delta >= 0 ? 'positive' : 'negative'}>{delta >= 0 ? '+' : ''}{delta}</b></span>;
+                })}</div>
+                {resolutionReport.record.factionShift && <p>{resolutionReport.record.factionShift.title}：{resolutionReport.record.factionShift.detail}</p>}
               </div>
               {resolutionReport.record.adviserReaction && (
                 <article className={`resolution-reaction ${resolutionReport.record.adviserReaction.tone}`}>

@@ -50,6 +50,20 @@ test('low trust can obstruct execution', () => {
   assert.ok(result.record.effects.treasury <= -14);
 });
 
+test('decisions move faction influence in competing directions', () => {
+  const result = resolveTurn(createInitialWorld(), '从南京调拨二十万石粮草赈济淮安');
+  assert.deepEqual(result.record.factionEffects, { jiangbei: 4, finance: -4, gentry: 3 });
+  assert.deepEqual(result.world.factionInfluence, { jiangbei: 62, finance: 52, gentry: 55 });
+});
+
+test('dominant factions create political shift events', () => {
+  const world = createInitialWorld();
+  world.factionInfluence.jiangbei = 72;
+  const result = resolveTurn(world, '从南京调动五万兵力增援扬州');
+  assert.equal(result.record.factionShift.title, '江北军政声势日隆');
+  assert.ok(result.record.events.some((event) => event.type === 'faction_shift'));
+});
+
 test('three turns form an auditable history with delayed effects', () => {
   let world = createInitialWorld();
   world = resolveTurn(world, '调拨二十万石粮草赈济淮安').world;
