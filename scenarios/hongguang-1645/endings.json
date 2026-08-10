@@ -1,0 +1,22 @@
+[
+  {
+    "id": "stable-frontier", "turn": 6, "priority": 10,
+    "conditions": [{ "path": "world.metrics.support", "op": "gte", "value": 55 }, { "path": "world.metrics.defense", "op": "gte", "value": 66 }, { "path": "world.metrics.treasury", "op": "gte", "value": 760 }],
+    "type": "chapter_outcome", "title": "阶段结局：江北暂安", "outcome": "江北暂安", "detail": "粮道与江防同时稳住，南京朝廷获得了难得的喘息之机。",
+    "effects": { "treasury": 0, "grain": 0, "support": 0, "defense": 0 }, "addFlags": ["outcome_stable_frontier"],
+    "report": { "region": "南京", "title": "江北三月局势总报", "sender": "内阁值房", "confidence": "高", "summary": "淮安粮价回落，扬州防线暂稳，各地仍需防范财政透支。", "contradiction": "朝中有人据此主张北伐，督师却称兵粮只够固守。" }
+  },
+  {
+    "id": "military-rule", "turn": 6, "priority": 20,
+    "conditions": [{ "path": "world.metrics.defense", "op": "gte", "value": 68 }],
+    "type": "chapter_outcome", "title": "阶段结局：强兵弱政", "outcome": "强兵弱政", "detail": "江防看似稳固，但财赋与民心承受重压，军镇权力迅速扩大。",
+    "effects": { "treasury": 0, "grain": 0, "support": -2, "defense": 0 }, "addFlags": ["outcome_military_rule"],
+    "report": { "region": "南京", "title": "军镇权重引发廷争", "sender": "给事中密疏", "confidence": "中", "summary": "督师控制江北军粮调度，朝臣担忧尾大不掉，请求收回部分兵权。", "contradiction": "前线称集权方能守江，朝中却指其借敌情扩权。" }
+  },
+  {
+    "id": "fractured-jiangbei", "turn": 6, "priority": 99, "conditions": [],
+    "type": "chapter_outcome", "title": "阶段结局：江北离心", "outcome": "江北离心", "detail": "粮荒、欠饷与朝争相互激化，各地开始各自筹措生路。",
+    "effects": { "treasury": 0, "grain": 0, "support": -3, "defense": -2 }, "addFlags": ["outcome_fractured_jiangbei"],
+    "report": { "region": "南京", "title": "江北州县渐生离心", "sender": "都察院汇报", "confidence": "高", "summary": "地方截留税粮、私募乡勇，朝廷诏令执行日益迟缓。", "contradiction": "户部账面仍称钱粮可支半年，与各地告急明显不符。" }
+  }
+]

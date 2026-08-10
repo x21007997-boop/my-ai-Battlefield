@@ -1,0 +1,24 @@
+[
+  {
+    "id": "yangzhou-grain-stocked", "turn": 1, "priority": 10,
+    "conditions": [{ "path": "action.type", "op": "eq", "value": "transport_grain" }, { "path": "action.target", "op": "eq", "value": "扬州" }],
+    "type": "scenario_event", "title": "扬州军民粮仓充实", "detail": "粮船趁夜入城，军民配给重新核定。", "effects": { "treasury": 0, "grain": 0, "support": 2, "defense": 1 }, "addFlags": ["yangzhou_grain_stocked"],
+    "report": { "region": "扬州", "title": "首批粮船抵城", "sender": "扬州府仓大使", "confidence": "高", "summary": "新粮已经入仓，城中抢购稍止，但船队返程可能遭到截击。", "contradiction": "仓册称足支两月，各营按人数核算却只能支应四十日。" }
+  },
+  {
+    "id": "yangzhou-panic", "turn": 1, "priority": 99, "conditions": [],
+    "type": "scenario_event", "title": "城中米价骤涨", "detail": "援粮迟迟未至，富户闭门囤积，流言开始蔓延。", "effects": { "treasury": 0, "grain": 0, "support": -4, "defense": -1 }, "addFlags": ["yangzhou_panic"],
+    "report": { "region": "扬州", "title": "城中争粮渐起", "sender": "扬州府急报", "confidence": "高", "summary": "米铺闭门，百姓聚集于府衙外，请求开仓平粜。", "contradiction": "地方绅商称存粮充裕，市面却已连续三日无米可售。" }
+  },
+  {
+    "id": "reinforcements-arrive", "turn": 2, "priority": 10,
+    "conditions": [{ "path": "action.type", "op": "eq", "value": "deploy_army" }],
+    "type": "scenario_event", "title": "援军进入扬州守区", "detail": "新军接管北门与钞关，城防纵深得以补足。", "effects": { "treasury": -3, "grain": -2, "support": 1, "defense": 4 }, "addFlags": ["reinforcements_arrived"],
+    "report": { "region": "扬州", "title": "援军抵达北门", "sender": "总兵刘肇基", "confidence": "高", "summary": "援军已经入城，但长途行军疲惫，须尽快补足饷粮。", "contradiction": "兵部名册载兵八千，实际点验仅五千六百。" }
+  },
+  {
+    "id": "outer-forts-lost", "turn": 2, "priority": 99, "conditions": [],
+    "type": "scenario_event", "title": "城外堡寨相继撤守", "detail": "兵力不足，守军被迫放弃外围据点。", "effects": { "treasury": 0, "grain": 0, "support": -2, "defense": -4 }, "addFlags": ["outer_forts_lost"],
+    "report": { "region": "扬州", "title": "外围守军退入城中", "sender": "江北督师幕府", "confidence": "高", "summary": "三处堡寨已经焚毁，守军携伤员退入扬州，城外道路尽失。", "contradiction": "守军称奉令撤退，幕府却否认发出弃守命令。" }
+  }
+]

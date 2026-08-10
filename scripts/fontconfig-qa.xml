@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<!DOCTYPE fontconfig SYSTEM "fonts.dtd">
+<fontconfig>
+  <dir>/System/Library/Fonts</dir>
+  <dir>/System/Library/Fonts/Supplemental</dir>
+  <dir>/Library/Fonts</dir>
+  <cachedir>/private/tmp/fontconfig-cache-hongguang</cachedir>
+  <match target="pattern">
+    <test name="family" qual="any"><string>Hiragino Sans GB</string></test>
+    <edit name="family" mode="prepend" binding="strong"><string>Hiragino Sans GB</string></edit>
+  </match>
+</fontconfig>

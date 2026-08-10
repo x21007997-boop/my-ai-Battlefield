@@ -1,0 +1,19 @@
+[
+  {
+    "id": "city-ready", "turn": 3, "priority": 10,
+    "conditions": [{ "path": "world.metrics.defense", "op": "gte", "value": 64 }, { "path": "world.metrics.support", "op": "gte", "value": 55 }],
+    "type": "chapter_outcome", "title": "阶段结局：军民同守", "outcome": "军民同守", "detail": "粮仓与守区暂时稳定，扬州获得迎接大战的准备时间。", "effects": { "treasury": 0, "grain": 0, "support": 1, "defense": 1 }, "addFlags": ["outcome_city_ready"],
+    "report": { "region": "扬州", "title": "军民誓守扬州", "sender": "江北督师幕府", "confidence": "高", "summary": "各门守将已经具结，城中民夫编队运送军械粮草。", "contradiction": "公开榜文称援军将至，密报却称南京已无兵可派。" }
+  },
+  {
+    "id": "armed-camp", "turn": 3, "priority": 20,
+    "conditions": [{ "path": "world.metrics.defense", "op": "gte", "value": 62 }],
+    "type": "chapter_outcome", "title": "阶段结局：孤军守城", "outcome": "孤军守城", "detail": "防务尚可一战，但民心和粮道未稳，扬州只能独自承受压力。", "effects": { "treasury": 0, "grain": 0, "support": -1, "defense": 0 }, "addFlags": ["outcome_armed_camp"],
+    "report": { "region": "扬州", "title": "援绝粮紧仍决意守城", "sender": "史可法手书", "confidence": "高", "summary": "督师下令整肃营伍，任何将领不得擅自离城。", "contradiction": "城头号令严整，城内富户却已秘密安排家眷南渡。" }
+  },
+  {
+    "id": "city-divided", "turn": 3, "priority": 99, "conditions": [],
+    "type": "chapter_outcome", "title": "阶段结局：城中离心", "outcome": "城中离心", "detail": "粮饷与援军皆无着落，将领和士绅开始各谋退路。", "effects": { "treasury": 0, "grain": 0, "support": -3, "defense": -2 }, "addFlags": ["outcome_city_divided"],
+    "report": { "region": "扬州", "title": "城内议和流言四起", "sender": "督师亲兵密报", "confidence": "中", "summary": "部分士绅私下议论开门条件，军中也有人准备舟船。", "contradiction": "众官公开誓死守城，夜间却不断有人托关系索取出城文书。" }
+  }
+]

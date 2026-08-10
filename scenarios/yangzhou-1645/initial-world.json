@@ -1,0 +1,6 @@
+{
+  "seed": 164504,
+  "metrics": { "treasury": 610, "grain": 280, "support": 58, "defense": 54 },
+  "previousEffects": { "treasury": -30, "grain": -22, "support": -1, "defense": 1 },
+  "flags": ["yangzhou_under_threat"]
+}

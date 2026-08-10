@@ -1,0 +1,20 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Local development
+.vite/
+*.local
+.env*
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+
+# Operating system and editors
+.DS_Store
+.idea/
+.vscode/

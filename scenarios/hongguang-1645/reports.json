@@ -1,0 +1,26 @@
+{
+  "initial": {
+    "region": "淮安",
+    "title": "江北赈粮未达",
+    "sender": "淮安知县 周廷辅",
+    "confidence": "中",
+    "summary": "近来江北诸郡赈粮未能按期抵达，地方囤结，米价持续走高，饥民增多，恐生骚动。",
+    "contradiction": "镇江奏称粮价平稳，与淮安所报不符。"
+  },
+  "defenseWeak": {
+    "region": "扬州",
+    "title": "江防军饷拖欠",
+    "sender": "江北督师幕府",
+    "confidence": "高",
+    "summary": "江防诸营已有两月未足额支饷，若再迟延，恐生逃散。",
+    "contradiction": "户部账册显示军饷已拨，前线却称仅收到六成。"
+  },
+  "defenseStable": {
+    "region": "扬州",
+    "title": "江防换哨完成",
+    "sender": "江北督师幕府",
+    "confidence": "中",
+    "summary": "沿江要津已经重新布防，军心稍定，但粮饷不可中断。",
+    "contradiction": "点验册与兵部援军名册仍相差两千余人。"
+  }
+}

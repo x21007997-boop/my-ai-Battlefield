@@ -1,0 +1,28 @@
+[
+  {
+    "id": "huaian-relief-arrives", "turn": 4, "priority": 10,
+    "conditions": [{ "path": "action.type", "op": "eq", "value": "transport_grain" }, { "path": "action.target", "op": "eq", "value": "淮安" }],
+    "type": "scenario_event", "title": "淮安粥厂重新开灶", "detail": "首批官粮入城，城外流民开始登记领粥，米价略有回落。",
+    "effects": { "treasury": 0, "grain": 0, "support": 2, "defense": 0 }, "addFlags": ["huaian_relief_stable"],
+    "report": { "region": "淮安", "title": "首批赈粮抵淮", "sender": "淮安知县 周廷辅", "confidence": "高", "summary": "官粮已由清江浦入仓，粥厂恢复施赈，但沿途耗损仍高于旧例。", "contradiction": "押运官称全数交割，仓吏清点却少了一千六百石。" }
+  },
+  {
+    "id": "huaian-riot", "turn": 4, "priority": 99, "conditions": [],
+    "type": "scenario_event", "title": "淮安饥民冲仓", "detail": "赈济继续延误，数百饥民冲击义仓，地方差役不敢弹压。",
+    "effects": { "treasury": 0, "grain": 0, "support": -5, "defense": -1 }, "addFlags": ["huaian_unrest_escalated"],
+    "report": { "region": "淮安", "title": "饥民聚集冲仓", "sender": "漕运衙门急报", "confidence": "高", "summary": "城北义仓遭冲击，饥民与脚夫合流，地方官请求立即增援粮食与兵役。", "contradiction": "知县称仅数十人滋事，驻军探报却称已有上千人聚集。" }
+  },
+  {
+    "id": "yangzhou-line-secured", "turn": 5, "priority": 10,
+    "match": "any", "conditions": [{ "path": "action.type", "op": "eq", "value": "deploy_army" }, { "path": "world.metrics.defense", "op": "gte", "value": 66 }],
+    "type": "scenario_event", "title": "扬州江防完成换哨", "detail": "沿江要津重新编定守区，逃兵得到补充，前线军心暂稳。",
+    "effects": { "treasury": -4, "grain": 0, "support": 0, "defense": 3 }, "addFlags": ["yangzhou_line_secured"],
+    "report": { "region": "扬州", "title": "江防营伍重新整编", "sender": "江北督师幕府", "confidence": "高", "summary": "瓜洲、仪真各营已完成换防，但军饷仍只够支应半月。", "contradiction": "兵部称援军一万，督师点验仅得七千余人。" }
+  },
+  {
+    "id": "yangzhou-desertion", "turn": 5, "priority": 99, "conditions": [],
+    "type": "scenario_event", "title": "江防营兵夜逃", "detail": "欠饷与谣言蔓延，两个营头出现成队逃亡。",
+    "effects": { "treasury": 0, "grain": 0, "support": -2, "defense": -5 }, "addFlags": ["yangzhou_desertion"],
+    "report": { "region": "扬州", "title": "江防营兵逃散", "sender": "瓜洲守备急报", "confidence": "中", "summary": "昨夜有营兵携械离营，督师已封锁渡口并请求补足军饷。", "contradiction": "守备称逃兵不足百人，地方乡绅却见数百散兵沿江索食。" }
+  }
+]

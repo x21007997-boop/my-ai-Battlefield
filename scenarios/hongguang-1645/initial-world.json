@@ -1,0 +1,6 @@
+{
+  "seed": 164405,
+  "metrics": { "treasury": 820, "grain": 460, "support": 52, "defense": 61 },
+  "previousEffects": { "treasury": -45, "grain": -28, "support": -3, "defense": 2 },
+  "flags": ["jiangbei_grain_crisis"]
+}

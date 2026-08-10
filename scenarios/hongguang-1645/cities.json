@@ -1,0 +1,5 @@
+[
+  { "id": "huaian", "name": "淮安", "controller": "南明", "grain": 24, "garrison": 32, "unrest": 68 },
+  { "id": "yangzhou", "name": "扬州", "controller": "南明", "grain": 72, "garrison": 58, "unrest": 31 },
+  { "id": "nanjing", "name": "南京", "controller": "南明", "grain": 110, "garrison": 46, "unrest": 22 }
+]

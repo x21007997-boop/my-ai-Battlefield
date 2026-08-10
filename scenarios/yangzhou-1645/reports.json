@@ -1,0 +1,5 @@
+{
+  "initial": { "region": "扬州", "title": "城外敌骑渐集", "sender": "江北督师幕府", "confidence": "高", "summary": "斥候连日报称北岸兵马南下，扬州城垣多处待修，援军仍无确切行期。", "contradiction": "兵部称各镇援兵已启程，沿途驿站却未见大军过境。" },
+  "defenseWeak": { "region": "南京", "title": "援军与军械尚未齐备", "sender": "南京兵部", "confidence": "中", "summary": "火药、箭矢与援军仍在筹措，能否按期送抵扬州尚无定数。", "contradiction": "兵部称军械已经发运，扬州清点却不足四成。" },
+  "defenseStable": { "region": "南京", "title": "朝廷再议江北增援", "sender": "南京兵部", "confidence": "中", "summary": "朝廷拟再抽调一军北上，但各镇均以本地防务吃紧为由推诿。", "contradiction": "兵部称援军即日启程，督师私信却称尚未见一兵一卒。" }
+}
