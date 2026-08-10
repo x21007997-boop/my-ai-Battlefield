@@ -16,10 +16,10 @@ import {
   Warning,
   Grains,
 } from '@phosphor-icons/react';
-import { createInitialWorld, metricsForView, previewDecision, resolveTurn, serializeSnapshot } from './simulation';
+import { createInitialWorld, investigateReport, metricsForView, previewDecision, resolveTurn, serializeSnapshot } from './simulation';
 import { currentOutcome, reportsForWorld } from './scenario';
 import { askDeepSeekCouncil, generateTurnChronicle } from './ai';
-import { appendBranchNode, attachChronicle, buildManuscript, getBranchPath, initializeBranchTree, saveNamedSnapshot } from './storage';
+import { appendBranchNode, attachChronicle, buildManuscript, getBranchPath, initializeBranchTree, saveNamedSnapshot, updateBranchNodeWorld } from './storage';
 import { getScenario, SCENARIOS } from './scenarioRegistry';
 
 const advisers = [
@@ -140,6 +140,7 @@ export function App() {
   const activeReport = currentReports.find((report) => report.region === activeRegion) ?? currentReports[0];
   const focusedCity = world.cities[focusedCityName] ?? world.cities[activeReport.region];
   const focusedCondition = cityCondition(focusedCity);
+  const activeIntel = world.intelligence?.reports?.[activeReport.region];
   const outcome = useMemo(() => currentOutcome(world), [world]);
   const currentBranchNode = useMemo(() => branchStore.nodes.find((node) => node.id === currentNodeId), [branchStore, currentNodeId]);
   const branchChapters = useMemo(() => getBranchPath(branchStore, currentNodeId).filter((node) => node.chronicle), [branchStore, currentNodeId]);
@@ -184,6 +185,18 @@ export function App() {
       return;
     }
     setAnalysis(preview);
+  }
+
+  function investigateActiveReport() {
+    try {
+      const checked = investigateReport(world, activeReport);
+      setWorld(checked.world);
+      setBranchStore(updateBranchNodeWorld(currentNodeId, checked.world));
+      window.localStorage.setItem('hongguang-autosave', serializeSnapshot(checked.world));
+      flash(checked.reused ? '这份奏报已经完成核查。' : `核查完成：${checked.result.verdict}`);
+    } catch (error) {
+      flash(error.message, 3200);
+    }
   }
 
   function advanceTurn() {
@@ -438,6 +451,13 @@ export function App() {
             <p className="sender">上报官员：{activeReport.sender}</p>
             <p>{activeReport.summary}</p>
             <div className="contradiction"><Warning size={17} weight="fill" /> 矛盾提示：{activeReport.contradiction}</div>
+            <div className="intel-actions">
+              <button onClick={investigateActiveReport} disabled={activeIntel?.reportTitle === activeReport.title}>
+                {activeIntel?.reportTitle === activeReport.title ? '已完成核查' : `派员核查 · 情报点 ${world.intelligence?.points ?? 3}`}
+              </button>
+              {activeIntel?.reportTitle === activeReport.title && <span className={`intel-verdict verdict-${activeIntel.verdict}`}>{activeIntel.verdict}</span>}
+            </div>
+            {activeIntel?.reportTitle === activeReport.title && <p className="intel-detail">{activeIntel.detail}</p>}
           </article>
 
           <div className="causal-line">
@@ -573,6 +593,7 @@ export function App() {
                 <p>{resolutionReport.record.events.at(-1).detail}</p>
               </article>
               <div className="resolution-aftereffect"><span>后效将在下一阶段结算</span><b>{resolutionReport.preview.delayed.label}</b></div>
+              {resolutionReport.record.intelligenceBonus > 0 && <div className="resolution-intel"><CheckCircle size={15} weight="fill" />目标情报已核验，本次执行成功率获得修正</div>}
               <button onClick={() => setResolutionReport(null)}><CheckCircle size={19} weight="fill" /> 收入起居注，继续执政</button>
             </div>
           </section>

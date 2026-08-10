@@ -48,6 +48,15 @@ export function attachChronicle(nodeId, chronicle) {
   return store;
 }
 
+export function updateBranchNodeWorld(nodeId, world) {
+  const store = readStore();
+  const node = store.nodes.find((item) => item.id === nodeId);
+  if (!node) throw new Error('未找到对应的历史节点。');
+  node.world = world;
+  writeStore(store);
+  return store;
+}
+
 export function getBranchPath(store, nodeId) {
   const path = [];
   let node = store.nodes.find((item) => item.id === nodeId);

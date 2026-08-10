@@ -98,6 +98,9 @@ button { cursor: pointer; }
 .sender { margin: 7px 0 !important; color: #67513b; font-size: 12px; }
 .report-content p:not(.sender) { margin: 8px 0; font-family: 'Noto Serif SC'; font-size: 13px; line-height: 1.75; }
 .contradiction { display: flex; align-items: flex-start; gap: 6px; margin-top: 9px; padding: 8px 9px; color: #7e2d22; background: rgba(131,49,36,.07); border-left: 3px solid #8d3b2d; font-size: 12px; }
+.intel-actions { display: flex; align-items: center; gap: 8px; margin-top: 8px; }.intel-actions button { padding: 6px 9px; color: #315946; background: rgba(49,89,70,.06); border: 1px solid rgba(49,89,70,.4); font-size: 10px; }.intel-actions button:disabled { color: #7a6b55; border-color: rgba(96,72,42,.22); cursor: default; }
+.intel-verdict { padding: 4px 7px; color: #f0dfb7; background: #315946; font-size: 9px; letter-spacing: 1px; }.verdict-存在隐瞒 { background: #8b3b2e; }.verdict-部分夸大 { background: #9a7135; }
+.report-content .intel-detail { margin: 7px 0 0 !important; padding: 7px 9px; color: #4c4938; background: rgba(49,89,70,.05); border: 1px dashed rgba(49,89,70,.26); font-size: 10px !important; line-height: 1.65 !important; }
 .causal-line { display: flex; align-items: center; justify-content: space-between; gap: 4px; margin: 10px 0 8px; padding: 8px; color: #4c5d40; border: 1px solid rgba(77,91,61,.3); font-size: 11px; }
 .causal-line svg { width: 14px; flex: 0 0 auto; }
 .pending-consequences { margin: 8px 0; padding: 9px 10px; background: rgba(132,91,42,.06); border: 1px dashed rgba(111,76,38,.32); }
@@ -227,6 +230,7 @@ button { cursor: pointer; }
 .resolution-news { margin-top: 12px; padding: 15px 17px; background: rgba(255,250,237,.5); border-top: 3px solid #315946; opacity: 0; animation: effect-rise .6s 2.25s forwards; }
 .resolution-news small { color: #315946; letter-spacing: 3px; }.resolution-news h3 { margin: 5px 0; font-family: 'Noto Serif SC'; font-size: 20px; }.resolution-news p { margin: 0; color: #66533c; font-size: 12px; line-height: 1.7; }
 .resolution-aftereffect { display: grid; gap: 3px; margin: 10px 0 16px; color: #786348; font-size: 10px; }.resolution-aftereffect b { color: #8a3c30; font-family: 'Noto Serif SC'; font-size: 12px; }
+.resolution-intel { display: flex; align-items: center; gap: 6px; margin: -6px 0 12px; padding: 7px 9px; color: #315946; background: rgba(49,89,70,.07); border: 1px solid rgba(49,89,70,.22); font-size: 9px; }
 .resolution-scroll > button { width: 100%; min-height: 44px; display: flex; align-items: center; justify-content: center; gap: 8px; color: #ead9aa; background: #315946; border: 1px solid #867349; font-family: 'Noto Serif SC'; font-weight: 700; }
 
 @keyframes resolution-fade { from { opacity: 0; } to { opacity: 1; } }

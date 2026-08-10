@@ -127,6 +127,25 @@ export function previewDecision(world, rawDecision) {
   return { ...parsed, ...calculation };
 }
 
+export function investigateReport(world, report) {
+  const next = clone(world);
+  next.intelligence ??= { points: 3, reports: {} };
+  const existing = next.intelligence.reports[report.region];
+  if (existing?.reportTitle === report.title) return { world: next, result: existing, reused: true };
+  if (next.intelligence.points < 1) throw new Error('本阶段情报点已经用尽。');
+  next.intelligence.points -= 1;
+  const roll = seededRoll(next.seed, next.turn, `${report.region}:${report.title}:investigate`);
+  const verdict = roll < 0.34 ? '存在隐瞒' : roll < 0.67 ? '部分夸大' : '基本可信';
+  const details = {
+    '存在隐瞒': `核查发现${report.sender}遗漏了不利细节，原奏报只能作为最低风险估计。`,
+    '部分夸大': `多方口供表明灾情属实，但${report.sender}为争取资源放大了紧迫程度。`,
+    '基本可信': `驿站记录、仓册与地方口供大体吻合，可以据此制定命令。`,
+  };
+  const result = { region: report.region, reportTitle: report.title, verdict, detail: details[verdict], verified: true, checkedAtTurn: next.turn };
+  next.intelligence.reports[report.region] = result;
+  return { world: next, result, reused: false };
+}
+
 function applyEffects(metrics, effects) {
   const next = { ...metrics };
   Object.entries(effects).forEach(([key, delta]) => {
@@ -219,7 +238,8 @@ export function resolveTurn(world, rawDecision) {
     next.officials[preview.action.official] = { office: '奉旨差官', location: preview.action.target, loyalty: 70, ability: 65 };
   }
 
-  const roll = seededRoll(next.seed, next.turn, rawDecision);
+  const intelligenceBonus = next.intelligence?.reports?.[preview.action.target]?.verified ? 0.15 : 0;
+  const roll = Math.min(1, seededRoll(next.seed, next.turn, rawDecision) + intelligenceBonus);
   const events = buildTriggeredEvents(next, preview.action, roll);
   const adviserReaction = resolveAdviserReaction(next, preview.action);
   if (adviserReaction) {
@@ -254,6 +274,7 @@ export function resolveTurn(world, rawDecision) {
     adviserReaction,
     factionEffects,
     factionShift,
+    intelligenceBonus,
     delayedResolved: due.map((item) => item.label),
     events,
   };

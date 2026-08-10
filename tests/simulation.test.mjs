@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { ACTION_TYPES, createInitialWorld, parseDecision, previewDecision, resolveTurn } from '../src/simulation.js';
+import { ACTION_TYPES, createInitialWorld, investigateReport, parseDecision, previewDecision, resolveTurn } from '../src/simulation.js';
 import { currentOutcome, reportsForWorld } from '../src/scenario.js';
 
 test('parses the three supported decision types', () => {
@@ -62,6 +62,25 @@ test('dominant factions create political shift events', () => {
   const result = resolveTurn(world, '从南京调动五万兵力增援扬州');
   assert.equal(result.record.factionShift.title, '江北军政声势日隆');
   assert.ok(result.record.events.some((event) => event.type === 'faction_shift'));
+});
+
+test('investigations consume intelligence points and persist a verdict', () => {
+  const world = createInitialWorld();
+  const report = reportsForWorld(world)[0];
+  const checked = investigateReport(world, report);
+  assert.equal(checked.world.intelligence.points, 2);
+  assert.equal(checked.result.verified, true);
+  assert.equal(checked.world.intelligence.reports[report.region].reportTitle, report.title);
+  const reused = investigateReport(checked.world, report);
+  assert.equal(reused.reused, true);
+  assert.equal(reused.world.intelligence.points, 2);
+});
+
+test('verified target intelligence improves resolution odds', () => {
+  const world = createInitialWorld();
+  world.intelligence.reports.淮安 = { verified: true, reportTitle: '核查结果' };
+  const result = resolveTurn(world, '从南京调拨二十万石粮草赈济淮安');
+  assert.equal(result.record.intelligenceBonus, 0.15);
 });
 
 test('three turns form an auditable history with delayed effects', () => {
