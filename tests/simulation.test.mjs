@@ -25,6 +25,13 @@ test('same snapshot and decision resolve identically', () => {
   assert.deepEqual(resolveTurn(world, command), resolveTurn(world, command));
 });
 
+test('decisions update adviser relations and retain delayed consequences', () => {
+  const result = resolveTurn(createInitialWorld(), '从南京调拨二十万石粮草赈济淮安');
+  assert.deepEqual(result.record.relationEffects, { shi: 5, hubu: -2, local: 2 });
+  assert.equal(result.world.adviserRelations.shi, 73);
+  assert.equal(result.world.pendingEffects.at(-1).label, '淮安赈粮后效');
+});
+
 test('three turns form an auditable history with delayed effects', () => {
   let world = createInitialWorld();
   world = resolveTurn(world, '调拨二十万石粮草赈济淮安').world;

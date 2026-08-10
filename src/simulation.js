@@ -135,6 +135,12 @@ function applyEffects(metrics, effects) {
   return next;
 }
 
+function relationEffectsFor(action) {
+  if (action.type === ACTION_TYPES.TRANSPORT_GRAIN) return { shi: 5, hubu: -2, local: 2 };
+  if (action.type === ACTION_TYPES.DEPLOY_ARMY) return { shi: 4, hubu: -3, local: -1 };
+  return { shi: action.official === '史可法' ? 3 : -1, hubu: 2, local: -4 };
+}
+
 function buildTriggeredEvents(world, action, roll) {
   const events = [{ type: 'decision_resolved', title: '诏令已经颁行', detail: action.raw }];
   if (action.type === ACTION_TYPES.TRANSPORT_GRAIN) {
@@ -166,6 +172,11 @@ export function resolveTurn(world, rawDecision) {
   next.previousEffects = combinedEffects;
   next.pendingEffects = next.pendingEffects.filter((item) => item.dueTurn !== next.turn);
   next.pendingEffects.push(preview.delayed);
+  const relationEffects = relationEffectsFor(preview.action);
+  next.adviserRelations ??= { shi: 68, hubu: 56, local: 52 };
+  Object.entries(relationEffects).forEach(([id, delta]) => {
+    next.adviserRelations[id] = clamp((next.adviserRelations[id] ?? 50) + delta, 0, 100);
+  });
 
   if (preview.action.type === ACTION_TYPES.TRANSPORT_GRAIN) {
     next.cities[preview.action.target].grain += Math.round(preview.action.amount * 0.7);
@@ -197,6 +208,7 @@ export function resolveTurn(world, rawDecision) {
     rawDecision,
     action: preview.action,
     effects: combinedEffects,
+    relationEffects,
     delayedResolved: due.map((item) => item.label),
     events,
   };

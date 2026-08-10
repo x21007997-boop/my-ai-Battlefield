@@ -81,6 +81,13 @@ function cityCondition(city) {
   return { key: 'stable', label: '局势尚稳' };
 }
 
+function relationLabel(value) {
+  if (value >= 75) return '倚重';
+  if (value >= 55) return '信任';
+  if (value >= 35) return '观望';
+  return '离心';
+}
+
 function Metric({ item }) {
   const Icon = item.icon;
   return (
@@ -429,6 +436,15 @@ export function App() {
             <span>粮运受阻</span><ArrowRight /><span>粮价上涨</span><ArrowRight /><span>民心下降</span>
           </div>
 
+          {world.pendingEffects.length > 0 && (
+            <section className="pending-consequences">
+              <div><small>待发后效</small><span>{world.pendingEffects.length} 项</span></div>
+              {world.pendingEffects.slice(0, 2).map((item) => (
+                <p key={`${item.dueTurn}-${item.label}`}><b>{item.label}</b><span>第 {item.dueTurn + 1} 回合揭晓</span></p>
+              ))}
+            </section>
+          )}
+
           {outcome && (
             <section className="outcome-card">
               <small>三月阶段结局</small>
@@ -450,6 +466,7 @@ export function App() {
                 <div className="adviser-copy">
                   <div><strong>{adviser.name}</strong><small>{adviser.office}</small><b className={adviser.tone}>{adviser.stance}</b></div>
                   <p>{adviser.text}</p>
+                  <em className="relation-meter"><i style={{ width: `${world.adviserRelations?.[adviser.id] ?? 50}%` }} /><span>{relationLabel(world.adviserRelations?.[adviser.id] ?? 50)} {world.adviserRelations?.[adviser.id] ?? 50}</span></em>
                 </div>
               </button>
             ))}
@@ -510,6 +527,13 @@ export function App() {
                   const labels = { treasury: '国库', grain: '粮草', support: '民心', defense: '防务' };
                   return <div key={key}><span>{labels[key]}</span><strong className={value >= 0 ? 'positive' : 'negative'}>{value >= 0 ? '+' : ''}{value}</strong></div>;
                 })}
+              </div>
+              <div className="resolution-relations">
+                <small>人物态度变化</small>
+                <div>{advisers.map((adviser) => {
+                  const delta = resolutionReport.record.relationEffects?.[adviser.id] ?? 0;
+                  return <span key={adviser.id}>{adviser.name}<b className={delta >= 0 ? 'positive' : 'negative'}>{delta >= 0 ? '+' : ''}{delta}</b></span>;
+                })}</div>
               </div>
               <article className="resolution-news">
                 <small>{resolutionVisual.outcomeLabel}</small>
