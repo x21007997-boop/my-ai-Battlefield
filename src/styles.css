@@ -45,6 +45,7 @@ button { cursor: pointer; }
 .header-actions { justify-self: end; display: flex; gap: 14px; }
 .header-actions button { height: 46px; display: flex; align-items: center; gap: 8px; padding: 0 20px; color: #e7d7b3; border-radius: 3px; }
 .ghost-button { background: rgba(12, 10, 8, .24); border: 1px solid rgba(206,169,96,.55); }
+.guide-button { padding-inline: 12px !important; font-size: 11px; }
 .advance-button { background: linear-gradient(#9b4939, #713025); border: 1px solid #c17959; font-family: 'Noto Serif SC', serif; font-size: 18px; font-weight: 700; box-shadow: inset 0 0 0 2px rgba(53,20,13,.42); }
 .advance-button:disabled { opacity: .5; cursor: not-allowed; }
 
@@ -203,6 +204,9 @@ button { cursor: pointer; }
 .branch-tree button.current i { background: #315946; }
 .branch-tree span { display: grid; gap: 2px; }.branch-tree small { color: #78654e; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.branch-tree b { color: #7b4b2d; font-size: 11px; }
 .toast { position: fixed; left: 50%; bottom: 180px; z-index: 30; transform: translateX(-50%); max-width: 560px; padding: 12px 18px; color: #f1dfb5; background: rgba(40,29,20,.95); border: 1px solid #a3824d; box-shadow: 0 10px 25px rgba(0,0,0,.28); font-family: 'Noto Serif SC'; }
+.tutorial-focus { position: relative; z-index: 42 !important; box-shadow: 0 0 0 4px rgba(218,174,85,.85), 0 0 0 12px rgba(218,174,85,.17), 0 15px 45px rgba(0,0,0,.38) !important; }
+.tutorial-layer { position: fixed; inset: 0; z-index: 40; pointer-events: none; }.tutorial-layer::before { content: ''; position: absolute; inset: 0; background: rgba(13,9,6,.67); backdrop-filter: blur(1px); }.tutorial-card { position: absolute; z-index: 43; width: 360px; padding: 24px 26px; color: #44372a; background: #eee2c8 url('/assets/rice-paper.png') center / 500px; border: 3px solid #4b311e; box-shadow: 0 20px 60px rgba(0,0,0,.48); pointer-events: auto; }.tutorial-card small { color: #8b3b2e; letter-spacing: 3px; }.tutorial-card h2 { margin: 7px 0 10px; font-family: 'Noto Serif SC'; font-size: 23px; }.tutorial-card p { margin: 0; color: #66543e; font-family: 'Noto Serif SC'; font-size: 12px; line-height: 1.8; }.tutorial-progress { display: flex; gap: 5px; margin: 18px 0 14px; }.tutorial-progress i { width: 28px; height: 2px; background: rgba(96,68,35,.2); }.tutorial-progress i.active { background: #8b3b2e; }.tutorial-card footer { display: flex; justify-content: space-between; }.tutorial-card footer button { padding: 8px 11px; color: #78664e; background: transparent; border: 0; }.tutorial-card footer button:last-child { display: flex; align-items: center; gap: 5px; color: #ead9aa; background: #315946; border: 1px solid #806b43; }
+.tutorial-briefing .tutorial-card { right: 470px; top: 120px; }.tutorial-map .tutorial-card { left: 240px; top: 120px; }.tutorial-council .tutorial-card { right: 470px; bottom: 145px; }.tutorial-decision .tutorial-card { left: 245px; bottom: 155px; }.tutorial-advance .tutorial-card { right: 40px; top: 92px; }
 
 .resolution-backdrop { position: fixed; inset: 0; z-index: 40; display: grid; place-items: center; padding: 34px; background: rgba(13,9,6,.86); backdrop-filter: blur(5px); animation: resolution-fade .35s ease both; }
 .resolution-stage { width: min(1080px, 94vw); height: min(680px, 88vh); display: grid; grid-template-columns: 1.18fr .82fr; overflow: hidden; background: #231810; border: 1px solid #a47c43; box-shadow: 0 30px 90px rgba(0,0,0,.58); }

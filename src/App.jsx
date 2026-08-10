@@ -58,6 +58,14 @@ const factions = [
   { id: 'gentry', name: '地方士绅', short: '乡望' },
 ];
 
+const tutorialSteps = [
+  { target: 'briefing', kicker: '第一步 · 读奏报', title: '先判断问题是真是假', body: '奏报提供事件、来源、可信度与矛盾线索。情报点有限，只核查真正关键的信息。' },
+  { target: 'map', kicker: '第二步 · 看地图', title: '命令必须落到具体地点', body: '点击城池查看粮草、驻军与动乱。颜色和脉冲表示当地压力，回合后状态会持续保留。' },
+  { target: 'council', kicker: '第三步 · 问幕僚', title: '每个建议都有立场', body: '选择一位幕僚查看完整意见并单独追问。采纳或拒绝会逐步改变人物关系与派系力量。' },
+  { target: 'decision', kicker: '第四步 · 定策略', title: '同一道命令也有不同风险', body: '稳妥、常规、激进与权谋会改变成本、收益和失败概率。先分析影响，再确认执行。' },
+  { target: 'advance', kicker: '最后一步 · 写历史', title: '推进回合，承担后果', body: '结算演出会展示路线、指标、人物反应和新奏报。你的每次选择都会进入历史分支与最终小说。' },
+];
+
 const cityPositions = {
   淮安: { left: '44%', top: '25%' },
   扬州: { left: '57%', top: '48%' },
@@ -139,6 +147,7 @@ export function App() {
   const [novelLoading, setNovelLoading] = useState(false);
   const [saveManagerScenarioId, setSaveManagerScenarioId] = useState(null);
   const [campaignNames, setCampaignNames] = useState({});
+  const [tutorialStep, setTutorialStep] = useState(null);
 
   const scenario = useMemo(() => getScenario(world.scenarioId), [world.scenarioId]);
   const dateLabel = scenario.manifest.turnLabels?.[world.turn] ?? `第${world.turn + 1}月`;
@@ -197,6 +206,16 @@ export function App() {
   function continueCampaign(campaign) {
     const node = campaign.latest;
     setWorld(node.world); setCurrentNodeId(node.id); setActiveRegion(reportsForWorld(node.world)[0].region); setFocusedCityName(reportsForWorld(node.world)[0].region); setSaveManagerScenarioId(null); setScreen('simulation');
+  }
+
+  function enterSimulation() {
+    setScreen('simulation');
+    if (!window.localStorage.getItem('hongguang-tutorial-complete')) setTutorialStep(0);
+  }
+
+  function closeTutorial() {
+    window.localStorage.setItem('hongguang-tutorial-complete', '1');
+    setTutorialStep(null);
   }
 
   function analyzeDecision() {
@@ -438,8 +457,8 @@ export function App() {
           <p>{card.body}</p>
           <div className="opening-progress">{introCards.map((_, index) => <i key={index} className={index <= introStep ? 'active' : ''} />)}</div>
           <div className="opening-actions">
-            <button className="opening-skip" onClick={() => setScreen('simulation')}>跳过序章</button>
-            <button className="opening-next" onClick={() => introStep < introCards.length - 1 ? setIntroStep(introStep + 1) : setScreen('simulation')}>
+            <button className="opening-skip" onClick={enterSimulation}>跳过序章</button>
+            <button className="opening-next" onClick={() => introStep < introCards.length - 1 ? setIntroStep(introStep + 1) : enterSimulation()}>
               {introStep < introCards.length - 1 ? '继续' : '入局执政'} <CaretRight size={19} />
             </button>
           </div>
@@ -459,10 +478,11 @@ export function App() {
         </button>
         <div className="turn-label">弘光元年　{dateLabel} · 第{world.turn + 1}回合 <small>{stage.remainingTurns > 0 ? `还余 ${stage.remainingTurns} 回合` : '阶段已结算'}</small></div>
         <div className="header-actions">
+          <button className="ghost-button guide-button" onClick={() => setTutorialStep(0)}>新手引导</button>
           <button className="ghost-button" onClick={saveSnapshot}>
             <FloppyDisk size={20} /> 保存快照
           </button>
-          <button className="advance-button" onClick={() => stage.state === 'ongoing' ? advanceTurn() : setEndingOpen(true)}>
+          <button className={`advance-button ${tutorialStep !== null && tutorialSteps[tutorialStep].target === 'advance' ? 'tutorial-focus' : ''}`} onClick={() => stage.state === 'ongoing' ? advanceTurn() : setEndingOpen(true)}>
             {stage.state === 'ongoing' ? '推进一月' : '查看结局'} <CaretRight size={20} weight="bold" />
           </button>
         </div>
@@ -479,7 +499,7 @@ export function App() {
           <button className="archive-link" onClick={() => setHistoryOpen(true)}><Archive size={20} /> 查看推演档案</button>
         </aside>
 
-        <section className="map-panel" aria-label="江南江北态势图">
+        <section className={`map-panel ${tutorialStep !== null && tutorialSteps[tutorialStep].target === 'map' ? 'tutorial-focus' : ''}`} aria-label="江南江北态势图">
           <img src="/assets/jiangnan-map.png" alt="江南与江北历史区域态势图" />
           <div className="map-wash" />
           <div className="frontline frontline-north"><span>清军南下压力</span></div>
@@ -516,7 +536,7 @@ export function App() {
           </div>
         </section>
 
-        <aside className="briefing-panel">
+        <aside className={`briefing-panel ${tutorialStep !== null && tutorialSteps[tutorialStep].target === 'briefing' ? 'tutorial-focus' : ''}`}>
           <div className="scroll-head"><span>本月奏报</span></div>
           <div className="report-tabs">
             {currentReports.map((report) => (
@@ -571,7 +591,7 @@ export function App() {
             </section>
           )}
 
-          <section className="council">
+          <section className={`council ${tutorialStep !== null && tutorialSteps[tutorialStep].target === 'council' ? 'tutorial-focus' : ''}`}>
             <div className="section-title"><span />幕僚会商<span /></div>
             {advisers.map((adviser) => (
               <button
@@ -607,7 +627,7 @@ export function App() {
         </aside>
       </section>
 
-      <section className="decision-desk">
+      <section className={`decision-desk ${tutorialStep !== null && tutorialSteps[tutorialStep].target === 'decision' ? 'tutorial-focus' : ''}`}>
         <BookOpenText size={28} weight="duotone" aria-hidden="true" />
         <div className="decision-compose">
           <div className="posture-picker" aria-label="决策风险偏好">
@@ -617,6 +637,16 @@ export function App() {
         </div>
         <button onClick={analyzeDecision}><Sparkle size={22} weight="fill" />分析影响</button>
       </section>
+
+      {tutorialStep !== null && (
+        <div className={`tutorial-layer tutorial-${tutorialSteps[tutorialStep].target}`}>
+          <section className="tutorial-card" role="dialog" aria-modal="true" aria-labelledby="tutorial-title">
+            <small>{tutorialSteps[tutorialStep].kicker}</small><h2 id="tutorial-title">{tutorialSteps[tutorialStep].title}</h2><p>{tutorialSteps[tutorialStep].body}</p>
+            <div className="tutorial-progress">{tutorialSteps.map((_, index) => <i key={index} className={index <= tutorialStep ? 'active' : ''} />)}</div>
+            <footer><button onClick={closeTutorial}>跳过引导</button><button onClick={() => tutorialStep < tutorialSteps.length - 1 ? setTutorialStep(tutorialStep + 1) : closeTutorial()}>{tutorialStep < tutorialSteps.length - 1 ? '下一步' : '开始执政'}<CaretRight size={17} /></button></footer>
+          </section>
+        </div>
+      )}
 
       {analysis && (
         <section className="analysis-bar" aria-live="polite">
