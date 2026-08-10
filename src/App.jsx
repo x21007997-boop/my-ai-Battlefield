@@ -134,6 +134,7 @@ export function App() {
   const [notice, setNotice] = useState('');
   const [introStep, setIntroStep] = useState(0);
   const [resolutionReport, setResolutionReport] = useState(null);
+  const [endingOpen, setEndingOpen] = useState(false);
 
   const scenario = useMemo(() => getScenario(world.scenarioId), [world.scenarioId]);
   const dateLabel = scenario.manifest.turnLabels?.[world.turn] ?? `第${world.turn + 1}月`;
@@ -177,6 +178,7 @@ export function App() {
     setAnalysis(null);
     setSelectedAdviserId(null);
     setResolutionReport(null);
+    setEndingOpen(false);
     setIntroStep(0);
     setScreen('intro');
   }
@@ -248,6 +250,7 @@ export function App() {
     setPostureId('balanced');
     setAnalysis(null);
     setResolutionReport(null);
+    setEndingOpen(false);
     setHistoryOpen(false);
     flash(`已回到“${node.label}”，下一道决策将创建新的历史分支。`, 3600);
   }
@@ -394,8 +397,8 @@ export function App() {
           <button className="ghost-button" onClick={saveSnapshot}>
             <FloppyDisk size={20} /> 保存快照
           </button>
-          <button className="advance-button" onClick={advanceTurn} disabled={stage.state !== 'ongoing'}>
-            {stage.state === 'ongoing' ? '推进一月' : '阶段结束'} <CaretRight size={20} weight="bold" />
+          <button className="advance-button" onClick={() => stage.state === 'ongoing' ? advanceTurn() : setEndingOpen(true)}>
+            {stage.state === 'ongoing' ? '推进一月' : '查看结局'} <CaretRight size={20} weight="bold" />
           </button>
         </div>
       </header>
@@ -625,7 +628,26 @@ export function App() {
                 <span>{stage.remainingTurns > 0 ? `距阶段结算还剩 ${stage.remainingTurns} 回合` : '阶段已经结算'}</span>
                 <b>{stage.collapsed ? `${stage.collapsed.label}跌破生存线` : stage.targets.filter((item) => item.met).length === stage.targets.length ? '全部目标已达成' : `已达成 ${stage.targets.filter((item) => item.met).length}/${stage.targets.length} 项目标`}</b>
               </div>
-              <button onClick={() => setResolutionReport(null)}><CheckCircle size={19} weight="fill" /> 收入起居注，继续执政</button>
+              <button onClick={() => { setResolutionReport(null); if (stage.state !== 'ongoing') setEndingOpen(true); }}><CheckCircle size={19} weight="fill" /> {stage.state === 'ongoing' ? '收入起居注，继续执政' : '收入起居注，查看结局'}</button>
+            </div>
+          </section>
+        </div>
+      )}
+
+      {endingOpen && (
+        <div className="ending-backdrop">
+          <section className={`ending-stage ending-${stage.state}`} role="dialog" aria-modal="true" aria-labelledby="ending-title">
+            <div className="ending-map">
+              <img src="/assets/jiangnan-map.png" alt="本阶段终局态势图" />
+              <div><small>本阶段终局</small><strong>{outcome?.outcome ?? (stage.state === 'defeat' ? '大局倾覆' : '江山未定')}</strong><p>{outcome?.detail ?? (stage.collapsed ? `${stage.collapsed.label}跌破生存线，朝局已经无法维持。` : '三个月的抉择已经写入历史，但真正的结局仍在后方。')}</p></div>
+            </div>
+            <div className="ending-scroll">
+              <header><small>阶段结算 · 第 {world.turn + 1} 回合</small><h2 id="ending-title">{scenario.manifest.title}</h2><span>{stage.state === 'victory' ? '目标达成' : stage.state === 'defeat' ? '提前崩盘' : '带伤存续'}</span></header>
+              <div className="ending-goals">{stage.targets.map((target) => <div key={target.key} className={target.met ? 'met' : ''}><span>{target.label}</span><strong>{target.value}</strong><small>目标 {target.target}</small></div>)}</div>
+              <section className="ending-section"><h3>人物归心</h3><div className="ending-people">{advisers.map((adviser) => { const value = world.adviserRelations?.[adviser.id] ?? 50; return <span key={adviser.id}><b>{adviser.name}</b><i>{relationLabel(value)} · {value}</i></span>; })}</div></section>
+              <section className="ending-section"><h3>朝局余波</h3><div className="ending-people">{factions.map((faction) => <span key={faction.id}><b>{faction.name}</b><i>影响力 {world.factionInfluence?.[faction.id] ?? 50}</i></span>)}</div></section>
+              <section className="ending-section"><h3>关键诏令</h3><ol>{world.history.slice(-3).map((record) => <li key={record.id}><span>第 {record.turnAfter + 1} 回合</span><p>{record.rawDecision}</p><b>{record.events.at(-1).title}</b></li>)}</ol></section>
+              <div className="ending-actions"><button onClick={() => { setEndingOpen(false); setHistoryOpen(true); }}><Archive size={18} />查看完整档案</button><button onClick={() => { setEndingOpen(false); setScreen('library'); }}><BookOpenText size={18} />返回剧本库</button></div>
             </div>
           </section>
         </div>
