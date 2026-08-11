@@ -201,6 +201,17 @@ export function App() {
   const resolutionVisual = resolutionReport ? resolutionVisualFor(resolutionReport.record.action) : null;
   const latestAdviserReaction = world.history.at(-1)?.adviserReaction ?? null;
   const latestFactionShift = world.history.at(-1)?.factionShift ?? null;
+  const decisionDrafts = useMemo(() => {
+    const defaults = scenario.manifest.actionDefaults;
+    const target = focusedCityName;
+    const drafts = [
+      { id: 'grain', label: '调粮赈济', text: `着从${defaults.grainSource}调运二十万石粮草至${target}，一面赈济灾民，一面严查沿途侵耗。` },
+      { id: 'army', label: '调兵增援', text: `即从${defaults.armySource}调集十五万兵力增援${target}，整饬城防，不得扰民。` },
+      { id: 'official', label: '遣使查办', text: `任命${defaults.official}为钦差，赴${target}核查钱粮军务，限期具奏。` },
+    ];
+    const preferred = selectedAdviserId === 'shi' ? 'grain' : selectedAdviserId === 'hubu' ? 'official' : selectedAdviserId === 'local' ? 'grain' : null;
+    return preferred ? drafts.sort((a, b) => Number(b.id === preferred) - Number(a.id === preferred)) : drafts;
+  }, [focusedCityName, scenario.manifest.actionDefaults, selectedAdviserId]);
 
   function flash(message, duration = 2600) {
     setNotice(message);
@@ -664,8 +675,11 @@ export function App() {
       <section className={`decision-desk ${tutorialStep !== null && tutorialSteps[tutorialStep].target === 'decision' ? 'tutorial-focus' : ''}`}>
         <BookOpenText size={28} weight="duotone" aria-hidden="true" />
         <div className="decision-compose">
-          <div className="posture-picker" aria-label="决策风险偏好">
-            {Object.values(DECISION_POSTURES).map((posture) => <button key={posture.id} className={postureId === posture.id ? 'active' : ''} onClick={() => { setPostureId(posture.id); setAnalysis(null); }} title={posture.riskLabel}>{posture.label}</button>)}
+          <div className="decision-toolbar">
+            <div className="posture-picker" aria-label="决策风险偏好">
+              {Object.values(DECISION_POSTURES).map((posture) => <button key={posture.id} className={postureId === posture.id ? 'active' : ''} onClick={() => { setPostureId(posture.id); setAnalysis(null); }} title={posture.riskLabel}>{posture.label}</button>)}
+            </div>
+            <div className="decision-drafts" aria-label="可编辑诏令草案"><small>诏令草案</small>{decisionDrafts.map((draft) => <button key={draft.id} title={draft.text} onClick={() => { setDecision(draft.text); setAnalysis(null); }}>{draft.label}</button>)}</div>
           </div>
           <textarea value={decision} onChange={(event) => { setDecision(event.target.value); setAnalysis(null); }} placeholder="下达你的诏令、政策或处置意见……" />
         </div>
