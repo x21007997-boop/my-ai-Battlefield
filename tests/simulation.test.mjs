@@ -149,6 +149,7 @@ test('a second registered scenario runs without changing the rule engine', () =>
   let world = createInitialWorld('hongguang-yangzhou-1645');
   assert.equal(world.turn, 0);
   assert.equal(world.metrics.treasury, 610);
+  assert.deepEqual(world.factionInfluence, { jiangbei: 52, finance: 44, gentry: 60 });
   world = resolveTurn(world, '调拨二十万石粮草赈济扬州').world;
   world = resolveTurn(world, '调动五万兵力增援扬州').world;
   world = resolveTurn(world, '派遣史可法前往扬州查办').world;

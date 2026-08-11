@@ -1,0 +1,5 @@
+[
+  { "id": "jiangbei", "name": "江北军政", "short": "军政", "influence": 58, "shift": { "direction": "gte", "threshold": 75, "tone": "ascendant", "title": "江北军政声势日隆", "detail": "督师体系逐渐掌握议程，朝廷对前线的依赖继续加深。" } },
+  { "id": "finance", "name": "户部财政", "short": "财权", "influence": 56, "shift": { "direction": "lte", "threshold": 30, "tone": "weakened", "title": "户部财权难以为继", "detail": "连续支出削弱了户部的调度能力，后续命令可能遭遇钱粮掣肘。" } },
+  { "id": "gentry", "name": "地方士绅", "short": "乡望", "influence": 52, "shift": { "direction": "lte", "threshold": 30, "tone": "weakened", "title": "地方士绅转趋离心", "detail": "地方利益持续受损，州县配合度开始下降。" } }
+]

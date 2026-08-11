@@ -24,12 +24,6 @@ import { askDeepSeekCouncil, generateEndingNovel, generateTurnChronicle } from '
 import { appendBranchNode, attachChronicle, buildManuscript, createCampaign, deleteCampaign, duplicateCampaign, exportCampaignArchive, getBranchPath, importCampaignArchive, initializeBranchTree, listCampaigns, renameCampaign, saveNamedSnapshot, updateBranchNodeWorld } from './storage';
 import { getScenario, SCENARIOS } from './scenarioRegistry';
 
-const factions = [
-  { id: 'jiangbei', name: '江北军政', short: '军政' },
-  { id: 'finance', name: '户部财政', short: '财权' },
-  { id: 'gentry', name: '地方士绅', short: '乡望' },
-];
-
 const tutorialSteps = [
   { target: 'briefing', kicker: '第一步 · 读奏报', title: '先判断问题是真是假', body: '奏报提供事件、来源、可信度与矛盾线索。情报点有限，只核查真正关键的信息。' },
   { target: 'map', kicker: '第二步 · 看地图', title: '命令必须落到具体地点', body: '点击城池查看粮草、驻军与动乱。颜色和脉冲表示当地压力，回合后状态会持续保留。' },
@@ -157,6 +151,7 @@ export function App() {
 
   const scenario = useMemo(() => getScenario(world.scenarioId), [world.scenarioId]);
   const advisers = scenario.council;
+  const factions = scenario.factions;
   const dateLabel = scenario.manifest.turnLabels?.[world.turn] ?? `第${world.turn + 1}月`;
   const currentReports = useMemo(() => reportsForWorld(world), [world]);
   const activeReport = currentReports.find((report) => report.region === activeRegion) ?? currentReports[0];

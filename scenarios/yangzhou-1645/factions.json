@@ -1,0 +1,5 @@
+[
+  { "id": "jiangbei", "name": "援扬诸军", "short": "援军", "influence": 52, "shift": { "direction": "gte", "threshold": 75, "tone": "ascendant", "title": "援扬诸军掌握守城议程", "detail": "各路援军在连续增援后逐渐压过文官体系，城中号令更多取决于将领协商。" } },
+  { "id": "finance", "name": "南京饷源", "short": "粮饷", "influence": 44, "shift": { "direction": "lte", "threshold": 30, "tone": "weakened", "title": "南京饷路近乎断绝", "detail": "朝廷转运能力跌至危险边缘，扬州后续军令将更多依靠城内自筹。" } },
+  { "id": "gentry", "name": "扬州绅民", "short": "民望", "influence": 60, "shift": { "direction": "lte", "threshold": 30, "tone": "weakened", "title": "城中绅民转趋离心", "detail": "征发与战火消磨了守城共识，民间开始拒绝继续提供钱粮与人力。" } }
+]

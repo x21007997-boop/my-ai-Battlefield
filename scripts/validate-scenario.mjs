@@ -4,7 +4,7 @@ import { createInitialWorld, resolveTurn } from '../src/simulation.js';
 import { currentOutcome } from '../src/scenario.js';
 
 const scenarioDir = resolve(process.argv[2] ?? 'scenarios/hongguang-1645');
-const requiredFiles = ['manifest.json', 'initial-world.json', 'cities.json', 'characters.json', 'council.json', 'presentation.json', 'events.json', 'endings.json', 'reports.json'];
+const requiredFiles = ['manifest.json', 'initial-world.json', 'cities.json', 'characters.json', 'council.json', 'factions.json', 'presentation.json', 'events.json', 'endings.json', 'reports.json'];
 const errors = [];
 const data = {};
 
@@ -22,6 +22,7 @@ if (!errors.length) {
   const characters = data['characters.json'];
   const council = data['council.json'];
   const presentation = data['presentation.json'];
+  const factions = data['factions.json'];
   const definitions = [...data['events.json'], ...data['endings.json']];
   const reports = data['reports.json'];
   const cityNames = new Set(cities.map((city) => city.name));
@@ -50,6 +51,13 @@ if (!errors.length) {
   if (!Array.isArray(presentation.opening) || presentation.opening.length < 3) errors.push('presentation.json: opening 至少需要三幕');
   presentation.opening?.forEach((card, index) => {
     for (const key of ['eyebrow', 'title', 'body']) if (!card[key]) errors.push(`presentation.json: opening[${index}] 缺少 ${key}`);
+  });
+  if (new Set(factions.map((faction) => faction.id)).size !== factions.length) errors.push('factions.json: id 存在重复');
+  for (const requiredId of ['jiangbei', 'finance', 'gentry']) if (!factions.some((faction) => faction.id === requiredId)) errors.push(`factions.json: 缺少规则势力 ${requiredId}`);
+  factions.forEach((faction) => {
+    for (const key of ['name', 'short']) if (!faction[key]) errors.push(`factions.json:${faction.id}: 缺少 ${key}`);
+    if (typeof faction.influence !== 'number' || faction.influence < 0 || faction.influence > 100) errors.push(`factions.json:${faction.id}: influence 必须是 0—100`);
+    if (faction.shift && (!['gte', 'lte'].includes(faction.shift.direction) || typeof faction.shift.threshold !== 'number' || !faction.shift.title || !faction.shift.detail)) errors.push(`factions.json:${faction.id}: shift 配置不完整`);
   });
   Object.entries(reports).forEach(([id, report]) => {
     if (!cityNames.has(report.region)) errors.push(`reports.json:${id}: region “${report.region}” 不存在`);
@@ -95,4 +103,4 @@ if (errors.length) {
   console.error(`剧本校验失败（${errors.length} 项）：\n- ${errors.join('\n- ')}`);
   process.exit(1);
 }
-console.log(`剧本校验通过：${data['manifest.json'].title}；${data['cities.json'].length} 城市，${data['characters.json'].length} 人物，${data['council.json'].length} 幕僚，${data['events.json'].length} 事件，${data['endings.json'].length} 结局。`);
+console.log(`剧本校验通过：${data['manifest.json'].title}；${data['cities.json'].length} 城市，${data['characters.json'].length} 人物，${data['council.json'].length} 幕僚，${data['factions.json'].length} 派系，${data['events.json'].length} 事件，${data['endings.json'].length} 结局。`);

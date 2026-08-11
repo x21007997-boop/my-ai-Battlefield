@@ -89,6 +89,8 @@ test('loads the adviser council from the selected scenario package', async ({ pa
   await expect(council).toContainText('扬州绅民');
   await expect(council).toContainText('坚守扬州');
   await expect(council).not.toContainText('户部尚书');
+  await expect(page.locator('.faction-balance')).toContainText('援扬诸军');
+  await expect(page.locator('.faction-balance')).toContainText('南京饷源');
   await page.getByRole('button', { name: '召集会议' }).click();
   await expect(page.getByRole('heading', { name: '扬州守御会商' })).toBeVisible();
 });

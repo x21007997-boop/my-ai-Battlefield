@@ -202,10 +202,12 @@ function factionEffectsFor(action) {
   return { jiangbei: action.official === '史可法' ? 3 : 1, finance: 2, gentry: -3 };
 }
 
-function resolveFactionShift(influence) {
-  if (influence.jiangbei >= 75) return { factionId: 'jiangbei', tone: 'ascendant', title: '江北军政声势日隆', detail: '督师体系逐渐掌握议程，朝廷对前线的依赖继续加深。' };
-  if (influence.finance <= 30) return { factionId: 'finance', tone: 'weakened', title: '户部财权难以为继', detail: '连续支出削弱了户部的调度能力，后续命令可能遭遇钱粮掣肘。' };
-  if (influence.gentry <= 30) return { factionId: 'gentry', tone: 'weakened', title: '地方士绅转趋离心', detail: '地方利益持续受损，州县配合度开始下降。' };
+function resolveFactionShift(world) {
+  for (const faction of getScenario(world.scenarioId).factions) {
+    const shift = faction.shift;
+    const value = world.factionInfluence[faction.id] ?? 50;
+    if (shift && (shift.direction === 'gte' ? value >= shift.threshold : value <= shift.threshold)) return { factionId: faction.id, tone: shift.tone, title: shift.title, detail: shift.detail };
+  }
   return null;
 }
 
@@ -279,7 +281,7 @@ export function resolveTurn(world, rawDecision, postureId = 'balanced') {
     });
     events.push({ type: 'adviser_reaction', ...adviserReaction });
   }
-  const factionShift = resolveFactionShift(next.factionInfluence);
+  const factionShift = resolveFactionShift(next);
   if (factionShift) events.push({ type: 'faction_shift', ...factionShift });
   const scenarioEvent = resolveScenarioEvent(next, preview.action, roll);
   if (scenarioEvent) {

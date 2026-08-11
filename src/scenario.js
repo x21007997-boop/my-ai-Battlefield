@@ -19,7 +19,7 @@ export function createScenarioWorld(scenarioOrId = SCENARIO_PACKAGE) {
     cities: Object.fromEntries(scenario.cities.map(({ name, id: _id, ...city }) => [name, city])),
     officials: Object.fromEntries(scenario.characters.map(({ name, id: _id, ...character }) => [name, character])),
     adviserRelations: Object.fromEntries(scenario.council.map((adviser) => [adviser.id, adviser.relation])),
-    factionInfluence: { jiangbei: 58, finance: 56, gentry: 52 },
+    factionInfluence: Object.fromEntries(scenario.factions.map((faction) => [faction.id, faction.influence])),
     intelligence: { points: 3, reports: {} },
     pendingEffects: [],
     flags: [...scenario.initialWorld.flags],
