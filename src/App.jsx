@@ -32,26 +32,16 @@ const tutorialSteps = [
   { target: 'advance', kicker: '最后一步 · 写历史', title: '推进回合，承担后果', body: '结算演出会展示路线、指标、人物反应和新奏报。你的每次选择都会进入历史分支与最终小说。' },
 ];
 
-const cityPositions = {
-  淮安: { left: '44%', top: '25%' },
-  扬州: { left: '57%', top: '48%' },
-  南京: { left: '53%', top: '68%' },
-};
-
-const cinematicCityPositions = {
-  淮安: { x: 59, y: 29 },
-  扬州: { x: 67, y: 52 },
-  南京: { x: 43, y: 75 },
-};
-
-function resolutionVisualFor(action) {
+function resolutionVisualFor(action, mapConfig) {
   const kinds = {
     transport_grain: { glyph: '粮', theme: 'grain', routeLabel: '漕粮启运', outcomeLabel: '粮道回报' },
     deploy_army: { glyph: '兵', theme: 'army', routeLabel: '大军开拔', outcomeLabel: '军报抵京' },
     appoint_official: { glyph: '使', theme: 'official', routeLabel: '持节赴任', outcomeLabel: '履任回奏' },
   };
-  const origin = cinematicCityPositions[action.source] ?? cinematicCityPositions.南京;
-  const target = cinematicCityPositions[action.target] ?? cinematicCityPositions.淮安;
+  const positions = mapConfig.cinematicPositions;
+  const fallback = Object.values(positions)[0];
+  const origin = positions[action.source] ?? fallback;
+  const target = positions[action.target] ?? fallback;
   return { ...kinds[action.type], origin, target, path: `M ${origin.x} ${origin.y} L ${target.x} ${target.y}` };
 }
 
@@ -170,7 +160,7 @@ export function App() {
     defense: ShieldChevron,
   }), [world]);
   const selectedAdviser = advisers.find((item) => item.id === selectedAdviserId) ?? null;
-  const resolutionVisual = resolutionReport ? resolutionVisualFor(resolutionReport.record.action) : null;
+  const resolutionVisual = resolutionReport ? resolutionVisualFor(resolutionReport.record.action, scenario.map) : null;
   const latestAdviserReaction = world.history.at(-1)?.adviserReaction ?? null;
   const latestFactionShift = world.history.at(-1)?.factionShift ?? null;
   const decisionDrafts = useMemo(() => {
@@ -495,7 +485,7 @@ export function App() {
     const card = introCards[introStep];
     return (
       <main className={`opening-cinematic opening-step-${introStep}`}>
-        <div className="opening-map" aria-hidden="true" />
+        <div className="opening-map" style={{ backgroundImage: `url('${scenario.map.asset}')` }} aria-hidden="true" />
         <div className="opening-vignette" aria-hidden="true" />
         <button className="opening-back" onClick={() => setScreen('library')}><ArrowLeft size={18} /> 返回选局</button>
         <section className="opening-copy" key={introStep}>
@@ -549,9 +539,9 @@ export function App() {
         </aside>
 
         <section className={`map-panel ${tutorialStep !== null && tutorialSteps[tutorialStep].target === 'map' ? 'tutorial-focus' : ''}`} aria-label="江南江北态势图">
-          <img src="/assets/jiangnan-map.png" alt="江南与江北历史区域态势图" />
+          <img src={scenario.map.asset} alt={scenario.map.alt} />
           <div className="map-wash" />
-          <div className="frontline frontline-north"><span>清军南下压力</span></div>
+          <div className="frontline frontline-north"><span>{scenario.map.pressureLabel}</span></div>
           {Object.entries(world.cities).map(([name, city]) => {
             const selected = name === focusedCityName;
             const condition = cityCondition(city);
@@ -559,7 +549,7 @@ export function App() {
             return (
               <button
                 className={`marker city-marker ${selected ? 'selected' : ''} ${condition.key} ${recent ? 'recent' : ''}`}
-                style={cityPositions[name]}
+                style={scenario.map.cityPositions[name]}
                 key={name}
                 onClick={() => {
                   setFocusedCityName(name);
@@ -611,9 +601,7 @@ export function App() {
             {activeIntel?.reportTitle === activeReport.title && <p className="intel-detail">{activeIntel.detail}</p>}
           </article>
 
-          <div className="causal-line">
-            <span>粮运受阻</span><ArrowRight /><span>粮价上涨</span><ArrowRight /><span>民心下降</span>
-          </div>
+          <div className="causal-line">{scenario.map.causalChain.map((item, index) => <span key={item}>{index > 0 && <ArrowRight />}<span>{item}</span></span>)}</div>
 
           {(world.pendingEffects.length > 0 || riskCities.length > 0) && (
             <section className="pending-consequences">
@@ -747,7 +735,7 @@ export function App() {
         <div className="resolution-backdrop" role="presentation">
           <section className={`resolution-stage resolution-${resolutionVisual.theme}`} role="dialog" aria-modal="true" aria-labelledby="resolution-title">
             <div className="resolution-map" aria-hidden="true">
-              <img src="/assets/jiangnan-map.png" alt="" />
+              <img src={scenario.map.asset} alt="" />
               <span className="route-caption">{resolutionVisual.routeLabel}</span>
               <span className="route-origin" style={{ left: `${resolutionVisual.origin.x}%`, top: `${resolutionVisual.origin.y}%` }}>{resolutionReport.record.action.source}</span>
               <svg className="supply-route" viewBox="0 0 100 100" preserveAspectRatio="none"><path d={resolutionVisual.path} /></svg>
@@ -816,7 +804,7 @@ export function App() {
         <div className="ending-backdrop">
           <section className={`ending-stage ending-${stage.state}`} role="dialog" aria-modal="true" aria-labelledby="ending-title">
             <div className="ending-map">
-              <img src="/assets/jiangnan-map.png" alt="本阶段终局态势图" />
+              <img src={scenario.map.asset} alt={`${scenario.manifest.title}终局态势图`} />
               <div><small>本阶段终局</small><strong>{outcome?.outcome ?? (stage.state === 'defeat' ? '大局倾覆' : '江山未定')}</strong><p>{outcome?.detail ?? (stage.collapsed ? `${stage.collapsed.label}跌破生存线，朝局已经无法维持。` : '三个月的抉择已经写入历史，但真正的结局仍在后方。')}</p></div>
             </div>
             <div className="ending-scroll">

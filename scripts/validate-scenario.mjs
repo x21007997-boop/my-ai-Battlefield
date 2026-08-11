@@ -4,7 +4,7 @@ import { createInitialWorld, resolveTurn } from '../src/simulation.js';
 import { currentOutcome } from '../src/scenario.js';
 
 const scenarioDir = resolve(process.argv[2] ?? 'scenarios/hongguang-1645');
-const requiredFiles = ['manifest.json', 'initial-world.json', 'cities.json', 'characters.json', 'council.json', 'factions.json', 'presentation.json', 'events.json', 'endings.json', 'reports.json'];
+const requiredFiles = ['manifest.json', 'initial-world.json', 'cities.json', 'characters.json', 'council.json', 'factions.json', 'map.json', 'presentation.json', 'events.json', 'endings.json', 'reports.json'];
 const errors = [];
 const data = {};
 
@@ -23,6 +23,7 @@ if (!errors.length) {
   const council = data['council.json'];
   const presentation = data['presentation.json'];
   const factions = data['factions.json'];
+  const map = data['map.json'];
   const definitions = [...data['events.json'], ...data['endings.json']];
   const reports = data['reports.json'];
   const cityNames = new Set(cities.map((city) => city.name));
@@ -58,6 +59,12 @@ if (!errors.length) {
     for (const key of ['name', 'short']) if (!faction[key]) errors.push(`factions.json:${faction.id}: 缺少 ${key}`);
     if (typeof faction.influence !== 'number' || faction.influence < 0 || faction.influence > 100) errors.push(`factions.json:${faction.id}: influence 必须是 0—100`);
     if (faction.shift && (!['gte', 'lte'].includes(faction.shift.direction) || typeof faction.shift.threshold !== 'number' || !faction.shift.title || !faction.shift.detail)) errors.push(`factions.json:${faction.id}: shift 配置不完整`);
+  });
+  for (const key of ['asset', 'alt', 'pressureLabel']) if (!map[key]) errors.push(`map.json: 缺少 ${key}`);
+  if (!Array.isArray(map.causalChain) || map.causalChain.length < 2) errors.push('map.json: causalChain 至少需要两个节点');
+  cityNames.forEach((city) => {
+    if (!map.cityPositions?.[city]) errors.push(`map.json: 缺少 ${city} 的 cityPositions`);
+    if (!map.cinematicPositions?.[city]) errors.push(`map.json: 缺少 ${city} 的 cinematicPositions`);
   });
   Object.entries(reports).forEach(([id, report]) => {
     if (!cityNames.has(report.region)) errors.push(`reports.json:${id}: region “${report.region}” 不存在`);

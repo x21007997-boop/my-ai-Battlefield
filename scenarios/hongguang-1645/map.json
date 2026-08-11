@@ -1,0 +1,8 @@
+{
+  "asset": "/assets/jiangnan-map.png",
+  "alt": "江南与江北历史区域态势图",
+  "pressureLabel": "清军南下压力",
+  "cityPositions": { "淮安": { "left": "44%", "top": "25%" }, "扬州": { "left": "57%", "top": "48%" }, "南京": { "left": "53%", "top": "68%" } },
+  "cinematicPositions": { "淮安": { "x": 59, "y": 29 }, "扬州": { "x": 67, "y": 52 }, "南京": { "x": 43, "y": 75 } },
+  "causalChain": ["粮运受阻", "粮价上涨", "民心下降"]
+}
