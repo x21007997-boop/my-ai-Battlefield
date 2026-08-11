@@ -84,6 +84,44 @@ export function deleteCampaign(campaignId) {
   return writeStore(store);
 }
 
+export function exportCampaignArchive(campaignId) {
+  const store = readStore();
+  const root = store.nodes.find((node) => node.id === campaignId && !node.parentId);
+  if (!root) throw new Error('未找到这份推演存档。');
+  const ids = descendantsOf(store, campaignId);
+  const nodes = store.nodes.filter((node) => ids.has(node.id));
+  return JSON.stringify({
+    format: 'hongguang-campaign-v1',
+    exportedAt: new Date().toISOString(),
+    scenarioId: root.world.scenarioId,
+    campaignName: root.campaignName ?? root.label ?? '未命名推演',
+    nodes,
+  }, null, 2);
+}
+
+export function importCampaignArchive(rawArchive, expectedScenarioId) {
+  let archive;
+  try { archive = typeof rawArchive === 'string' ? JSON.parse(rawArchive) : rawArchive; } catch { throw new Error('存档文件不是有效的 JSON。'); }
+  if (archive?.format !== 'hongguang-campaign-v1' || !Array.isArray(archive.nodes) || !archive.nodes.length) throw new Error('无法识别这份推演存档。');
+  try { getScenario(archive.scenarioId); } catch { throw new Error('存档引用了当前版本不支持的历史剧本。'); }
+  if (expectedScenarioId && archive.scenarioId !== expectedScenarioId) throw new Error('这份存档属于另一个历史剧本。');
+  const roots = archive.nodes.filter((node) => !node.parentId);
+  if (roots.length !== 1 || archive.nodes.some((node) => node.world?.scenarioId !== archive.scenarioId || !Array.isArray(node.world?.history))) throw new Error('存档结构不完整或剧本信息不一致。');
+  const sourceIds = new Set(archive.nodes.map((node) => node.id));
+  if (sourceIds.size !== archive.nodes.length || archive.nodes.some((node) => node.parentId && !sourceIds.has(node.parentId))) throw new Error('存档中的历史分支关系已经损坏。');
+  const suffix = globalThis.crypto?.randomUUID?.() ?? `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 9)}`;
+  const idMap = new Map(archive.nodes.map((node, index) => [node.id, `import-${suffix}-${index}`]));
+  const importedAt = new Date().toISOString();
+  const nodes = archive.nodes.map((node) => ({ ...JSON.parse(JSON.stringify(node)), id: idMap.get(node.id), parentId: node.parentId ? idMap.get(node.parentId) : null }));
+  const root = nodes.find((node) => !node.parentId);
+  root.campaignName = `${archive.campaignName || '导入推演'} · 导入`;
+  root.createdAt = importedAt;
+  const store = readStore();
+  store.nodes.push(...nodes);
+  writeStore(store);
+  return { store, id: root.id, scenarioId: archive.scenarioId };
+}
+
 export function appendBranchNode(parentId, world, record) {
   const store = readStore();
   const id = `${record.id}-${Date.now().toString(36)}`;

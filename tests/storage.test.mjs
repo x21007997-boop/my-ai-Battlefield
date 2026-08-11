@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { appendBranchNode, attachChronicle, buildManuscript, createCampaign, deleteCampaign, duplicateCampaign, getBranchPath, initializeBranchTree, listCampaigns, renameCampaign } from '../src/storage.js';
+import { appendBranchNode, attachChronicle, buildManuscript, createCampaign, deleteCampaign, duplicateCampaign, exportCampaignArchive, getBranchPath, importCampaignArchive, initializeBranchTree, listCampaigns, renameCampaign } from '../src/storage.js';
 
 function mockStorage() {
   const values = new Map();
@@ -31,4 +31,20 @@ test('campaign saves can be created, renamed, duplicated, and deleted', () => {
   assert.equal(listCampaigns(duplicated.store, 'test-scenario').length, 2);
   const deleted = deleteCampaign(created.id);
   assert.equal(listCampaigns(deleted, 'test-scenario').length, 1);
+});
+
+test('campaign archives round-trip as an independent validated branch tree', () => {
+  mockStorage();
+  const world = { scenarioId: 'hongguang-1645', turn: 3, history: [] };
+  const created = createCampaign(world, '江北粮运线');
+  const record = { id: 'edict-1', turnAfter: 4, rawDecision: '调粮', events: [{ title: '粮船入淮' }] };
+  appendBranchNode(created.id, { ...world, turn: 4, history: [record] }, record);
+  const archive = exportCampaignArchive(created.id);
+  const imported = importCampaignArchive(archive, 'hongguang-1645');
+  const campaigns = listCampaigns(imported.store, 'hongguang-1645');
+  assert.equal(campaigns.length, 2);
+  assert.equal(campaigns.find((item) => item.id === imported.id).nodeCount, 2);
+  assert.match(campaigns.find((item) => item.id === imported.id).name, /导入/);
+  assert.throws(() => importCampaignArchive(archive, 'yangzhou-1645'), /另一个历史剧本/);
+  assert.throws(() => importCampaignArchive('{bad json'), /有效的 JSON/);
 });

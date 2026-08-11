@@ -21,7 +21,7 @@ import {
 import { createInitialWorld, DECISION_POSTURES, investigateReport, metricsForView, parseDecision, previewDecision, resolveTurn, serializeSnapshot } from './simulation';
 import { currentOutcome, reportsForWorld, stageStatus } from './scenario';
 import { askDeepSeekCouncil, generateEndingNovel, generateTurnChronicle } from './ai';
-import { appendBranchNode, attachChronicle, buildManuscript, createCampaign, deleteCampaign, duplicateCampaign, getBranchPath, initializeBranchTree, listCampaigns, renameCampaign, saveNamedSnapshot, updateBranchNodeWorld } from './storage';
+import { appendBranchNode, attachChronicle, buildManuscript, createCampaign, deleteCampaign, duplicateCampaign, exportCampaignArchive, getBranchPath, importCampaignArchive, initializeBranchTree, listCampaigns, renameCampaign, saveNamedSnapshot, updateBranchNodeWorld } from './storage';
 import { getScenario, SCENARIOS } from './scenarioRegistry';
 
 const advisers = [
@@ -270,6 +270,26 @@ export function App() {
     setWorld(node.world); setCurrentNodeId(node.id); setActiveRegion(reportsForWorld(node.world)[0].region); setFocusedCityName(reportsForWorld(node.world)[0].region); setSaveManagerScenarioId(null); setScreen('simulation');
   }
 
+  function downloadCampaign(campaign) {
+    const archive = exportCampaignArchive(campaign.id);
+    const url = URL.createObjectURL(new Blob([archive], { type: 'application/json;charset=utf-8' }));
+    const link = document.createElement('a');
+    link.href = url; link.download = `${campaign.name.replace(/[^\p{L}\p{N}-]+/gu, '-')}.hongguang.json`; link.click();
+    URL.revokeObjectURL(url);
+    flash('推演存档已经导出，可在其他浏览器中恢复。');
+  }
+
+  async function uploadCampaign(event) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    try {
+      const imported = importCampaignArchive(await file.text(), saveManagerScenarioId);
+      setBranchStore(imported.store);
+      flash('存档导入成功，已作为独立推演保存。');
+    } catch (error) { flash(error.message, 4200); }
+    event.target.value = '';
+  }
+
   function enterSimulation() {
     setScreen('simulation');
     if (!window.localStorage.getItem('hongguang-tutorial-complete')) setTutorialStep(0);
@@ -483,13 +503,14 @@ export function App() {
             <section className="meeting-modal save-manager" role="dialog" aria-modal="true" aria-labelledby="save-manager-title" onMouseDown={(event) => event.stopPropagation()}>
               <div className="meeting-heading"><div><small>推演存档</small><h2 id="save-manager-title">{getScenario(saveManagerScenarioId).manifest.title}</h2></div><button onClick={() => setSaveManagerScenarioId(null)}>关闭</button></div>
               <button className="new-campaign-button" onClick={() => beginNewCampaign(saveManagerScenarioId)}>＋ 新建一局推演</button>
+              <label className="import-campaign-button">导入存档<input type="file" accept=".json,.hongguang.json,application/json" onChange={uploadCampaign} /></label>
               <div className="campaign-list">
                 {listCampaigns(branchStore, saveManagerScenarioId).map((campaign) => (
                   <article key={campaign.id}>
                     <div><input value={campaignNames[campaign.id] ?? campaign.name} onChange={(event) => setCampaignNames({ ...campaignNames, [campaign.id]: event.target.value })} /><button onClick={() => { const store = renameCampaign(campaign.id, campaignNames[campaign.id] ?? campaign.name); setBranchStore(store); flash('存档名称已更新。'); }}>改名</button></div>
                     <p>第 {campaign.latest.world.turn + 1} 回合 · {campaign.nodeCount} 个历史节点</p>
                     <small>更新于 {new Intl.DateTimeFormat('zh-CN', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(campaign.updatedAt))}</small>
-                    <footer><button onClick={() => continueCampaign(campaign)}>继续</button><button onClick={() => { const copied = duplicateCampaign(campaign.id); setBranchStore(copied.store); }}>复制分支</button><button className="danger" onClick={() => { if (window.confirm(`确定删除“${campaign.name}”及其全部历史分支吗？`)) setBranchStore(deleteCampaign(campaign.id)); }}>删除</button></footer>
+                    <footer><button onClick={() => continueCampaign(campaign)}>继续</button><button onClick={() => downloadCampaign(campaign)}>导出</button><button onClick={() => { const copied = duplicateCampaign(campaign.id); setBranchStore(copied.store); }}>复制分支</button><button className="danger" onClick={() => { if (window.confirm(`确定删除“${campaign.name}”及其全部历史分支吗？`)) setBranchStore(deleteCampaign(campaign.id)); }}>删除</button></footer>
                   </article>
                 ))}
                 {!listCampaigns(branchStore, saveManagerScenarioId).length && <p className="empty-history">尚无存档，可以新建第一局推演。</p>}
