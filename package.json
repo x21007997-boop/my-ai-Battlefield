@@ -9,6 +9,7 @@
     "preview": "vite preview",
     "test": "node --test tests/simulation.test.mjs tests/deepseek.test.mjs tests/storage.test.mjs tests/docx.test.mjs",
     "test:e2e": "playwright test",
+    "test:ci": "npm run validate:scenario && npm test && npm run test:e2e && npm run build && npm run test:sites",
     "test:sites": "node --test tests/sites-worker.test.mjs",
     "validate:scenario": "node scripts/validate-scenario.mjs scenarios/hongguang-1645 && node scripts/validate-scenario.mjs scenarios/yangzhou-1645"
   },

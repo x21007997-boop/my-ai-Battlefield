@@ -86,6 +86,9 @@ worker/                      Sites 部署入口
 - `docs/narrative.md`：回合纪事、分支卷宗和导出说明；
 - `src/styles.css`：历史档案视觉系统；
 - `tests/simulation.test.mjs`：决策解析、复现性和三回合闭环测试；
+- `tests/e2e/core-flow.spec.js`：选局、序章、诏令识别、影响分析、体验设置与快捷键的真实浏览器回归；
+- `npm run test:ci`：一次执行剧本校验、规则测试、浏览器测试、生产构建和 Sites 兼容测试；
+- `.github/workflows/quality.yml`：每次推送和 Pull Request 自动运行质量门禁，失败时保留 Playwright 诊断文件；
 - `docs/engine-v1.md`：推演内核 V1 的规则与数据说明；
 - `docs/design/design-qa.md`：视觉对照与验收记录。
 
