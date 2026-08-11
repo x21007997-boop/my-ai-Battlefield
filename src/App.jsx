@@ -11,6 +11,7 @@ import {
   FloppyDisk,
   GearSix,
   MapPin,
+  Question,
   ShieldChevron,
   Sparkle,
   UsersThree,
@@ -150,6 +151,7 @@ export function App() {
   const [campaignNames, setCampaignNames] = useState({});
   const [tutorialStep, setTutorialStep] = useState(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
   const [preferences, setPreferences] = useState(() => {
     const defaults = { motion: 'standard', scale: 1, skipOpening: false };
     try { return { ...defaults, ...JSON.parse(window.localStorage.getItem('hongguang-preferences') ?? '{}') }; } catch { return defaults; }
@@ -160,6 +162,23 @@ export function App() {
     document.documentElement.dataset.motion = preferences.motion;
     document.documentElement.style.setProperty('--app-scale', preferences.scale);
   }, [preferences]);
+
+  useEffect(() => {
+    function handleShortcut(event) {
+      const editing = ['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName);
+      if (event.key === 'Escape') {
+        setHelpOpen(false); setSettingsOpen(false); setMeetingOpen(false); setHistoryOpen(false);
+        return;
+      }
+      if (screen !== 'simulation') return;
+      if (editing || event.metaKey || event.ctrlKey || event.altKey) return;
+      if (event.key === '?' || event.key.toLowerCase() === 'h') { event.preventDefault(); setHelpOpen((open) => !open); }
+      if (event.key.toLowerCase() === 'g') { event.preventDefault(); setTutorialStep(0); }
+      if (event.key.toLowerCase() === 's') { event.preventDefault(); setSettingsOpen(true); }
+    }
+    window.addEventListener('keydown', handleShortcut);
+    return () => window.removeEventListener('keydown', handleShortcut);
+  }, [screen]);
 
   const scenario = useMemo(() => getScenario(world.scenarioId), [world.scenarioId]);
   const dateLabel = scenario.manifest.turnLabels?.[world.turn] ?? `第${world.turn + 1}月`;
@@ -492,6 +511,7 @@ export function App() {
         <div className="turn-label">弘光元年　{dateLabel} · 第{world.turn + 1}回合 <small>{stage.remainingTurns > 0 ? `还余 ${stage.remainingTurns} 回合` : '阶段已结算'}</small></div>
         <div className="header-actions">
           <button className="ghost-button guide-button" onClick={() => setTutorialStep(0)}>新手引导</button>
+          <button className="ghost-button help-button" onClick={() => setHelpOpen(true)} title="帮助与快捷键（H）"><Question size={20} /></button>
           <button className="ghost-button settings-button" onClick={() => setSettingsOpen(true)}><GearSix size={20} /> 体验设置</button>
           <button className="ghost-button" onClick={saveSnapshot}>
             <FloppyDisk size={20} /> 保存快照
@@ -671,6 +691,22 @@ export function App() {
             <label className="setting-toggle"><div><strong>新局跳过序章</strong><span>直接进入地图；首次使用仍会显示操作引导</span></div><input type="checkbox" checked={preferences.skipOpening} onChange={(event) => setPreferences({ ...preferences, skipOpening: event.target.checked })} /><i /></label>
             <div className="settings-utilities"><button onClick={() => document.documentElement.requestFullscreen?.()}>进入全屏</button><button onClick={() => { window.localStorage.removeItem('hongguang-tutorial-complete'); setSettingsOpen(false); setTutorialStep(0); }}>重看新手引导</button></div>
             <footer><button onClick={() => setPreferences({ motion: 'standard', scale: 1, skipOpening: false })}>恢复默认</button><button onClick={() => setSettingsOpen(false)}>保存并返回</button></footer>
+          </section>
+        </div>
+      )}
+
+      {helpOpen && (
+        <div className="help-backdrop" onMouseDown={(event) => event.target === event.currentTarget && setHelpOpen(false)}>
+          <section className="help-panel" role="dialog" aria-modal="true" aria-labelledby="help-title">
+            <header><div><small>御前备忘 · 操作指南</small><h2 id="help-title">这一月该如何裁决</h2></div><button aria-label="关闭帮助" onClick={() => setHelpOpen(false)}>×</button></header>
+            <ol className="help-flow">
+              <li><b>一</b><div><strong>读奏报，辨虚实</strong><span>先看来源与可信度；存疑的情报可消耗情报点核查。</span></div></li>
+              <li><b>二</b><div><strong>看地图，定落点</strong><span>比较各城粮草、驻军和动乱，选择命令真正作用的地点。</span></div></li>
+              <li><b>三</b><div><strong>问幕僚，识立场</strong><span>意见背后关联人物关系和派系利益，可选择一人继续追问。</span></div></li>
+              <li><b>四</b><div><strong>写诏令，选手段</strong><span>输入自由决策，选择风险姿态，先分析影响再确认执行。</span></div></li>
+            </ol>
+            <div className="shortcut-grid"><span><kbd>H</kbd>帮助</span><span><kbd>G</kbd>新手引导</span><span><kbd>S</kbd>体验设置</span><span><kbd>Esc</kbd>关闭浮层</span></div>
+            <footer><button onClick={() => { setHelpOpen(false); setTutorialStep(0); }}>进入分步引导</button><button onClick={() => setHelpOpen(false)}>我已明白</button></footer>
           </section>
         </div>
       )}
