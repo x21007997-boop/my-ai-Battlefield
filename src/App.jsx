@@ -24,36 +24,6 @@ import { askDeepSeekCouncil, generateEndingNovel, generateTurnChronicle } from '
 import { appendBranchNode, attachChronicle, buildManuscript, createCampaign, deleteCampaign, duplicateCampaign, exportCampaignArchive, getBranchPath, importCampaignArchive, initializeBranchTree, listCampaigns, renameCampaign, saveNamedSnapshot, updateBranchNodeWorld } from './storage';
 import { getScenario, SCENARIOS } from './scenarioRegistry';
 
-const advisers = [
-  {
-    id: 'shi',
-    name: '史可法',
-    office: '督师',
-    stance: '立即调粮',
-    tone: 'support',
-    text: '江北民心危在旦夕，当先行调粮以安民心，再查转运之弊。',
-    image: '/assets/adviser-shi.png',
-  },
-  {
-    id: 'hubu',
-    name: '户部尚书',
-    office: '钱粮总理',
-    stance: '先查账目',
-    tone: 'neutral',
-    text: '账目混乱，贸然再拨恐重蹈覆辙，宜先厘清流向与责任。',
-    image: '/assets/adviser-hubu.png',
-  },
-  {
-    id: 'local',
-    name: '地方官员',
-    office: '卢之延',
-    stance: '就地筹粮',
-    tone: 'oppose',
-    text: '舟车转运缓不济急，可准州县就地籴买，缓解眼下之急。',
-    image: '/assets/adviser-local.png',
-  },
-];
-
 const factions = [
   { id: 'jiangbei', name: '江北军政', short: '军政' },
   { id: 'finance', name: '户部财政', short: '财权' },
@@ -186,6 +156,7 @@ export function App() {
   }, [screen]);
 
   const scenario = useMemo(() => getScenario(world.scenarioId), [world.scenarioId]);
+  const advisers = scenario.council;
   const dateLabel = scenario.manifest.turnLabels?.[world.turn] ?? `第${world.turn + 1}月`;
   const currentReports = useMemo(() => reportsForWorld(world), [world]);
   const activeReport = currentReports.find((report) => report.region === activeRegion) ?? currentReports[0];

@@ -4,7 +4,7 @@ import { createInitialWorld, resolveTurn } from '../src/simulation.js';
 import { currentOutcome } from '../src/scenario.js';
 
 const scenarioDir = resolve(process.argv[2] ?? 'scenarios/hongguang-1645');
-const requiredFiles = ['manifest.json', 'initial-world.json', 'cities.json', 'characters.json', 'events.json', 'endings.json', 'reports.json'];
+const requiredFiles = ['manifest.json', 'initial-world.json', 'cities.json', 'characters.json', 'council.json', 'events.json', 'endings.json', 'reports.json'];
 const errors = [];
 const data = {};
 
@@ -20,6 +20,7 @@ if (!errors.length) {
   const manifest = data['manifest.json'];
   const cities = data['cities.json'];
   const characters = data['characters.json'];
+  const council = data['council.json'];
   const definitions = [...data['events.json'], ...data['endings.json']];
   const reports = data['reports.json'];
   const cityNames = new Set(cities.map((city) => city.name));
@@ -34,6 +35,15 @@ if (!errors.length) {
   }
   characters.forEach((character) => {
     if (!cityNames.has(character.location)) errors.push(`characters.json:${character.id}: location “${character.location}” 不存在`);
+  });
+  if (new Set(council.map((adviser) => adviser.id)).size !== council.length) errors.push('council.json: id 存在重复');
+  for (const requiredId of ['shi', 'hubu', 'local']) if (!council.some((adviser) => adviser.id === requiredId)) errors.push(`council.json: 缺少规则角色 ${requiredId}`);
+  council.forEach((adviser) => {
+    for (const key of ['name', 'office', 'stance', 'text', 'image']) if (!adviser[key]) errors.push(`council.json:${adviser.id}: 缺少 ${key}`);
+    if (typeof adviser.relation !== 'number' || adviser.relation < 0 || adviser.relation > 100) errors.push(`council.json:${adviser.id}: relation 必须是 0—100`);
+    Object.values(adviser.reactions ?? {}).forEach((reaction) => {
+      if (!reaction.title || !reaction.detail || !reaction.effects) errors.push(`council.json:${adviser.id}: reaction 缺少 title、detail 或 effects`);
+    });
   });
   Object.entries(reports).forEach(([id, report]) => {
     if (!cityNames.has(report.region)) errors.push(`reports.json:${id}: region “${report.region}” 不存在`);
@@ -79,4 +89,4 @@ if (errors.length) {
   console.error(`剧本校验失败（${errors.length} 项）：\n- ${errors.join('\n- ')}`);
   process.exit(1);
 }
-console.log(`剧本校验通过：${data['manifest.json'].title}；${data['cities.json'].length} 城市，${data['characters.json'].length} 人物，${data['events.json'].length} 事件，${data['endings.json'].length} 结局。`);
+console.log(`剧本校验通过：${data['manifest.json'].title}；${data['cities.json'].length} 城市，${data['characters.json'].length} 人物，${data['council.json'].length} 幕僚，${data['events.json'].length} 事件，${data['endings.json'].length} 结局。`);

@@ -18,7 +18,7 @@ export function createScenarioWorld(scenarioOrId = SCENARIO_PACKAGE) {
     previousEffects: clone(scenario.initialWorld.previousEffects),
     cities: Object.fromEntries(scenario.cities.map(({ name, id: _id, ...city }) => [name, city])),
     officials: Object.fromEntries(scenario.characters.map(({ name, id: _id, ...character }) => [name, character])),
-    adviserRelations: { shi: 68, hubu: 56, local: 52 },
+    adviserRelations: Object.fromEntries(scenario.council.map((adviser) => [adviser.id, adviser.relation])),
     factionInfluence: { jiangbei: 58, finance: 56, gentry: 52 },
     intelligence: { points: 3, reports: {} },
     pendingEffects: [],

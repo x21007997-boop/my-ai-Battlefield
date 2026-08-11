@@ -1,0 +1,5 @@
+[
+  { "id": "shi", "name": "史可法", "office": "江北督师", "stance": "坚守扬州", "tone": "support", "text": "扬州为江北门户，不可轻弃。应速整军粮、安百姓，使城中上下同守一心。", "image": "/assets/adviser-shi.png", "relation": 76, "reactions": { "high": { "title": "史可法亲巡城防", "detail": "史可法亲赴各门申明守御，使军民士气与城防协同有所提升。", "effects": { "treasury": 0, "grain": 0, "support": 1, "defense": 2 } } } },
+  { "id": "hubu", "name": "刘肇基", "office": "援扬总兵", "stance": "整军迎敌", "tone": "neutral", "text": "敌势迫近，援军必须统一号令。粮饷若再迟疑，各部未战便可能自行离散。", "image": "/assets/adviser-hubu.png", "relation": 64, "reactions": { "low": { "title": "援军拒绝开拔", "detail": "刘肇基所部以粮饷无着为由按兵不动，城防调度因此承受额外压力。", "effects": { "treasury": -3, "grain": 0, "support": 0, "defense": 0 } } } },
+  { "id": "local", "name": "扬州绅民", "office": "城中公议", "stance": "保境安民", "tone": "oppose", "text": "守城固然要紧，但不可尽夺民粮、强征民夫；若百姓先乱，坚城也将从内部崩解。", "image": "/assets/adviser-local.png", "relation": 58, "reactions": { "low": { "title": "城中拒绝输饷", "detail": "绅民对连续征发失去信任，募饷与民夫征集同时陷入停滞。", "effects": { "treasury": 0, "grain": 0, "support": -2, "defense": 0 } } } }
+]

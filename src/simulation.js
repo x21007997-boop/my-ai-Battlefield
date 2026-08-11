@@ -178,14 +178,20 @@ function relationEffectsFor(action) {
 
 function resolveAdviserReaction(world, action) {
   const relations = world.adviserRelations;
+  const council = getScenario(world.scenarioId).council;
+  const reactionFor = (adviserId, kind, tone) => {
+    const adviser = council.find((item) => item.id === adviserId);
+    const reaction = adviser?.reactions?.[kind];
+    return reaction ? { adviserId, tone, ...reaction, effects: reaction.effects } : null;
+  };
   if (relations.hubu <= 35) {
-    return { adviserId: 'hubu', tone: 'obstruction', title: '户部封驳诏令', detail: '户部以钱粮无着为由拖延发文，执行成本继续增加。', effects: { treasury: -3, grain: 0, support: 0, defense: 0 } };
+    return reactionFor('hubu', 'low', 'obstruction');
   }
   if (relations.local <= 35) {
-    return { adviserId: 'local', tone: 'obstruction', title: '地方阳奉阴违', detail: '地方官员表面奉旨，实际拖延筹措，引发新的民间猜疑。', effects: { treasury: 0, grain: 0, support: -2, defense: 0 } };
+    return reactionFor('local', 'low', 'obstruction');
   }
   if (relations.shi >= 80 && action.type !== ACTION_TYPES.APPOINT_OFFICIAL) {
-    return { adviserId: 'shi', tone: 'support', title: '史可法补陈方略', detail: '史可法主动补齐军民协同章程，使本次命令执行得更为稳妥。', effects: { treasury: 0, grain: 0, support: 1, defense: 2 } };
+    return reactionFor('shi', 'high', 'support');
   }
   return null;
 }

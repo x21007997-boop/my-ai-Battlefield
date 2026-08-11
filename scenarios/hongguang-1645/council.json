@@ -1,0 +1,5 @@
+[
+  { "id": "shi", "name": "史可法", "office": "督师", "stance": "立即调粮", "tone": "support", "text": "江北民心危在旦夕，当先行调粮以安民心，再查转运之弊。", "image": "/assets/adviser-shi.png", "relation": 68, "reactions": { "high": { "title": "史可法补陈方略", "detail": "史可法主动补齐军民协同章程，使本次命令执行得更为稳妥。", "effects": { "treasury": 0, "grain": 0, "support": 1, "defense": 2 } } } },
+  { "id": "hubu", "name": "户部尚书", "office": "钱粮总理", "stance": "先查账目", "tone": "neutral", "text": "账目混乱，贸然再拨恐重蹈覆辙，宜先厘清流向与责任。", "image": "/assets/adviser-hubu.png", "relation": 56, "reactions": { "low": { "title": "户部封驳诏令", "detail": "户部以钱粮无着为由拖延发文，执行成本继续增加。", "effects": { "treasury": -3, "grain": 0, "support": 0, "defense": 0 } } } },
+  { "id": "local", "name": "地方官员", "office": "卢之延", "stance": "就地筹粮", "tone": "oppose", "text": "舟车转运缓不济急，可准州县就地籴买，缓解眼下之急。", "image": "/assets/adviser-local.png", "relation": 52, "reactions": { "low": { "title": "地方阳奉阴违", "detail": "地方官员表面奉旨，实际拖延筹措，引发新的民间猜疑。", "effects": { "treasury": 0, "grain": 0, "support": -2, "defense": 0 } } } }
+]
