@@ -15,7 +15,7 @@
 }
 
 * { box-sizing: border-box; }
-body { margin: 0; min-width: 1180px; min-height: 100vh; -webkit-font-smoothing: antialiased; }
+body { margin: 0; min-width: 1180px; min-height: 100vh; zoom: var(--app-scale, 1); -webkit-font-smoothing: antialiased; }
 button, textarea { font: inherit; }
 button { cursor: pointer; }
 
@@ -46,6 +46,7 @@ button { cursor: pointer; }
 .header-actions button { height: 46px; display: flex; align-items: center; gap: 8px; padding: 0 20px; color: #e7d7b3; border-radius: 3px; }
 .ghost-button { background: rgba(12, 10, 8, .24); border: 1px solid rgba(206,169,96,.55); }
 .guide-button { padding-inline: 12px !important; font-size: 11px; }
+.settings-button { padding-inline: 12px !important; font-size: 11px; }
 .advance-button { background: linear-gradient(#9b4939, #713025); border: 1px solid #c17959; font-family: 'Noto Serif SC', serif; font-size: 18px; font-weight: 700; box-shadow: inset 0 0 0 2px rgba(53,20,13,.42); }
 .advance-button:disabled { opacity: .5; cursor: not-allowed; }
 
@@ -207,6 +208,21 @@ button { cursor: pointer; }
 .tutorial-focus { position: relative; z-index: 42 !important; box-shadow: 0 0 0 4px rgba(218,174,85,.85), 0 0 0 12px rgba(218,174,85,.17), 0 15px 45px rgba(0,0,0,.38) !important; }
 .tutorial-layer { position: fixed; inset: 0; z-index: 40; pointer-events: none; }.tutorial-layer::before { content: ''; position: absolute; inset: 0; background: rgba(13,9,6,.67); backdrop-filter: blur(1px); }.tutorial-card { position: absolute; z-index: 43; width: 360px; padding: 24px 26px; color: #44372a; background: #eee2c8 url('/assets/rice-paper.png') center / 500px; border: 3px solid #4b311e; box-shadow: 0 20px 60px rgba(0,0,0,.48); pointer-events: auto; }.tutorial-card small { color: #8b3b2e; letter-spacing: 3px; }.tutorial-card h2 { margin: 7px 0 10px; font-family: 'Noto Serif SC'; font-size: 23px; }.tutorial-card p { margin: 0; color: #66543e; font-family: 'Noto Serif SC'; font-size: 12px; line-height: 1.8; }.tutorial-progress { display: flex; gap: 5px; margin: 18px 0 14px; }.tutorial-progress i { width: 28px; height: 2px; background: rgba(96,68,35,.2); }.tutorial-progress i.active { background: #8b3b2e; }.tutorial-card footer { display: flex; justify-content: space-between; }.tutorial-card footer button { padding: 8px 11px; color: #78664e; background: transparent; border: 0; }.tutorial-card footer button:last-child { display: flex; align-items: center; gap: 5px; color: #ead9aa; background: #315946; border: 1px solid #806b43; }
 .tutorial-briefing .tutorial-card { right: 470px; top: 120px; }.tutorial-map .tutorial-card { left: 240px; top: 120px; }.tutorial-council .tutorial-card { right: 470px; bottom: 145px; }.tutorial-decision .tutorial-card { left: 245px; bottom: 155px; }.tutorial-advance .tutorial-card { right: 40px; top: 92px; }
+
+.settings-backdrop { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; padding: 30px; background: rgba(15,10,7,.76); backdrop-filter: blur(4px); animation: resolution-fade .24s ease both; }
+.settings-panel { width: min(660px, 92vw); color: #44372a; background: #eadfc7 url('/assets/rice-paper.png') center / 520px; border: 4px solid #4b311e; outline: 1px solid #b58b4b; box-shadow: 0 28px 80px rgba(0,0,0,.55); font-family: 'Noto Serif SC'; }
+.settings-panel > header { display: flex; justify-content: space-between; align-items: start; padding: 24px 28px 18px; border-bottom: 1px solid rgba(86,60,32,.28); }
+.settings-panel header small { color: #8b3b2e; letter-spacing: 3px; }.settings-panel h2 { margin: 6px 0 0; font-size: 26px; }.settings-panel header > button { width: 34px; height: 34px; color: #725e45; background: transparent; border: 1px solid rgba(94,67,36,.3); font-size: 23px; line-height: 1; }
+.setting-row, .setting-toggle { min-height: 88px; display: flex; justify-content: space-between; align-items: center; gap: 24px; margin: 0 28px; border-bottom: 1px solid rgba(86,60,32,.2); }
+.setting-row > div:first-child, .setting-toggle > div { display: grid; gap: 5px; }.setting-row strong, .setting-toggle strong { font-size: 15px; }.setting-row span, .setting-toggle span { color: #79674f; font-family: 'Noto Sans SC'; font-size: 10px; }
+.setting-options { display: flex; padding: 3px; background: rgba(81,57,30,.08); border: 1px solid rgba(81,57,30,.18); }.setting-options button { min-width: 61px; padding: 8px 9px; color: #76634c; background: transparent; border: 0; font-size: 11px; }.setting-options button.active { color: #f0dfb6; background: #315946; box-shadow: inset 0 0 0 1px #6e886e; }
+.setting-toggle { position: relative; cursor: pointer; }.setting-toggle input { position: absolute; opacity: 0; }.setting-toggle i { position: relative; width: 46px; height: 24px; flex: 0 0 auto; background: rgba(79,57,32,.2); border: 1px solid rgba(79,57,32,.35); border-radius: 20px; transition: background .2s ease; }.setting-toggle i::after { content: ''; position: absolute; left: 3px; top: 3px; width: 16px; height: 16px; background: #efe1c1; border: 1px solid #8d7147; border-radius: 50%; transition: transform .2s ease; }.setting-toggle input:checked + i { background: #315946; }.setting-toggle input:checked + i::after { transform: translateX(21px); }
+.settings-utilities { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 20px 28px 4px; }.settings-utilities button { padding: 10px; color: #5f4e39; background: rgba(255,250,237,.35); border: 1px solid rgba(89,64,37,.25); }
+.settings-panel > footer { display: flex; justify-content: space-between; padding: 18px 28px 24px; }.settings-panel > footer button { padding: 10px 15px; color: #78644b; background: transparent; border: 0; }.settings-panel > footer button:last-child { color: #eeddb5; background: #84372c; border: 1px solid #ad6953; }
+
+html[data-motion='fast'] * { animation-duration: .55s !important; transition-duration: .1s !important; }
+html[data-motion='slow'] * { animation-duration: 1.55s !important; transition-duration: .5s !important; }
+html[data-motion='reduced'] *, html[data-motion='reduced'] *::before, html[data-motion='reduced'] *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 
 .resolution-backdrop { position: fixed; inset: 0; z-index: 40; display: grid; place-items: center; padding: 34px; background: rgba(13,9,6,.86); backdrop-filter: blur(5px); animation: resolution-fade .35s ease both; }
 .resolution-stage { width: min(1080px, 94vw); height: min(680px, 88vh); display: grid; grid-template-columns: 1.18fr .82fr; overflow: hidden; background: #231810; border: 1px solid #a47c43; box-shadow: 0 30px 90px rgba(0,0,0,.58); }

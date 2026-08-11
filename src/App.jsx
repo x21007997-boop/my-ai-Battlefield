@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Archive,
   ArrowLeft,
@@ -9,6 +9,7 @@ import {
   Coins,
   DownloadSimple,
   FloppyDisk,
+  GearSix,
   MapPin,
   ShieldChevron,
   Sparkle,
@@ -148,6 +149,17 @@ export function App() {
   const [saveManagerScenarioId, setSaveManagerScenarioId] = useState(null);
   const [campaignNames, setCampaignNames] = useState({});
   const [tutorialStep, setTutorialStep] = useState(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [preferences, setPreferences] = useState(() => {
+    const defaults = { motion: 'standard', scale: 1, skipOpening: false };
+    try { return { ...defaults, ...JSON.parse(window.localStorage.getItem('hongguang-preferences') ?? '{}') }; } catch { return defaults; }
+  });
+
+  useEffect(() => {
+    window.localStorage.setItem('hongguang-preferences', JSON.stringify(preferences));
+    document.documentElement.dataset.motion = preferences.motion;
+    document.documentElement.style.setProperty('--app-scale', preferences.scale);
+  }, [preferences]);
 
   const scenario = useMemo(() => getScenario(world.scenarioId), [world.scenarioId]);
   const dateLabel = scenario.manifest.turnLabels?.[world.turn] ?? `第${world.turn + 1}月`;
@@ -194,13 +206,14 @@ export function App() {
     setEndingOpen(false);
     setEndingNovel(null);
     setIntroStep(0);
-    setScreen('intro');
+    if (preferences.skipOpening) enterSimulation(); else setScreen('intro');
   }
 
   function beginNewCampaign(scenarioId) {
     const nextWorld = createInitialWorld(scenarioId);
     const created = createCampaign(nextWorld, `新推演 · ${new Intl.DateTimeFormat('zh-CN', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date())}`);
-    setWorld(nextWorld); setBranchStore(created.store); setCurrentNodeId(created.id); setActiveRegion(reportsForWorld(nextWorld)[0].region); setFocusedCityName(reportsForWorld(nextWorld)[0].region); setSaveManagerScenarioId(null); setIntroStep(0); setScreen('intro');
+    setWorld(nextWorld); setBranchStore(created.store); setCurrentNodeId(created.id); setActiveRegion(reportsForWorld(nextWorld)[0].region); setFocusedCityName(reportsForWorld(nextWorld)[0].region); setSaveManagerScenarioId(null); setIntroStep(0);
+    if (preferences.skipOpening) enterSimulation(); else setScreen('intro');
   }
 
   function continueCampaign(campaign) {
@@ -479,6 +492,7 @@ export function App() {
         <div className="turn-label">弘光元年　{dateLabel} · 第{world.turn + 1}回合 <small>{stage.remainingTurns > 0 ? `还余 ${stage.remainingTurns} 回合` : '阶段已结算'}</small></div>
         <div className="header-actions">
           <button className="ghost-button guide-button" onClick={() => setTutorialStep(0)}>新手引导</button>
+          <button className="ghost-button settings-button" onClick={() => setSettingsOpen(true)}><GearSix size={20} /> 体验设置</button>
           <button className="ghost-button" onClick={saveSnapshot}>
             <FloppyDisk size={20} /> 保存快照
           </button>
@@ -644,6 +658,19 @@ export function App() {
             <small>{tutorialSteps[tutorialStep].kicker}</small><h2 id="tutorial-title">{tutorialSteps[tutorialStep].title}</h2><p>{tutorialSteps[tutorialStep].body}</p>
             <div className="tutorial-progress">{tutorialSteps.map((_, index) => <i key={index} className={index <= tutorialStep ? 'active' : ''} />)}</div>
             <footer><button onClick={closeTutorial}>跳过引导</button><button onClick={() => tutorialStep < tutorialSteps.length - 1 ? setTutorialStep(tutorialStep + 1) : closeTutorial()}>{tutorialStep < tutorialSteps.length - 1 ? '下一步' : '开始执政'}<CaretRight size={17} /></button></footer>
+          </section>
+        </div>
+      )}
+
+      {settingsOpen && (
+        <div className="settings-backdrop" onMouseDown={(event) => event.target === event.currentTarget && setSettingsOpen(false)}>
+          <section className="settings-panel" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+            <header><div><small>御前起居注 · 体验设置</small><h2 id="settings-title">依你的习惯入局</h2></div><button aria-label="关闭设置" onClick={() => setSettingsOpen(false)}>×</button></header>
+            <div className="setting-row"><div><strong>演出节奏</strong><span>控制转场、地图与结算动画</span></div><div className="setting-options">{[['fast', '利落'], ['standard', '从容'], ['slow', '沉浸'], ['reduced', '减少动态']].map(([value, label]) => <button key={value} className={preferences.motion === value ? 'active' : ''} onClick={() => setPreferences({ ...preferences, motion: value })}>{label}</button>)}</div></div>
+            <div className="setting-row"><div><strong>界面尺度</strong><span>适应不同尺寸的书案与屏幕</span></div><div className="setting-options">{[[.9, '紧凑'], [1, '标准'], [1.08, '舒展']].map(([value, label]) => <button key={value} className={preferences.scale === value ? 'active' : ''} onClick={() => setPreferences({ ...preferences, scale: value })}>{label}</button>)}</div></div>
+            <label className="setting-toggle"><div><strong>新局跳过序章</strong><span>直接进入地图；首次使用仍会显示操作引导</span></div><input type="checkbox" checked={preferences.skipOpening} onChange={(event) => setPreferences({ ...preferences, skipOpening: event.target.checked })} /><i /></label>
+            <div className="settings-utilities"><button onClick={() => document.documentElement.requestFullscreen?.()}>进入全屏</button><button onClick={() => { window.localStorage.removeItem('hongguang-tutorial-complete'); setSettingsOpen(false); setTutorialStep(0); }}>重看新手引导</button></div>
+            <footer><button onClick={() => setPreferences({ motion: 'standard', scale: 1, skipOpening: false })}>恢复默认</button><button onClick={() => setSettingsOpen(false)}>保存并返回</button></footer>
           </section>
         </div>
       )}
