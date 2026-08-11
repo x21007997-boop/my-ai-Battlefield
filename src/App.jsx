@@ -152,6 +152,7 @@ export function App() {
   const scenario = useMemo(() => getScenario(world.scenarioId), [world.scenarioId]);
   const advisers = scenario.council;
   const factions = scenario.factions;
+  const aiScenarioContext = useMemo(() => ({ id: scenario.manifest.id, title: scenario.manifest.title, description: scenario.manifest.description, eraLabel: scenario.presentation.eraLabel, actionDefaults: scenario.manifest.actionDefaults, advisers: scenario.council.map(({ id, name, office, stance, text }) => ({ id, name, office, stance, text })), factions: scenario.factions.map(({ id, name, influence }) => ({ id, name, influence })) }), [scenario]);
   const dateLabel = scenario.manifest.turnLabels?.[world.turn] ?? `第${world.turn + 1}月`;
   const currentReports = useMemo(() => reportsForWorld(world), [world]);
   const activeReport = currentReports.find((report) => report.region === activeRegion) ?? currentReports[0];
@@ -352,6 +353,7 @@ export function App() {
         world,
         report: activeReport,
         decision,
+        scenarioContext: aiScenarioContext,
         question: selectedAdviser
           ? `重点回应${selectedAdviser.name}提出的“${selectedAdviser.stance}”主张，分析其依据、风险并给出可执行修订。`
           : decision.trim() ? '评议这道拟议诏令，并给出可执行修订。' : '根据本月奏报，会商下一步最应优先处理的事务。',
@@ -373,7 +375,7 @@ export function App() {
     setChronicleLoading(true);
     try {
       const previousChronicle = getBranchPath(branchStore, currentNodeId).filter((node) => node.chronicle && node.id !== currentNodeId).at(-1)?.chronicle ?? null;
-      const chronicle = await generateTurnChronicle({ world, record, previousChronicle });
+      const chronicle = await generateTurnChronicle({ world, record, previousChronicle, scenarioContext: aiScenarioContext });
       setBranchStore(attachChronicle(currentNodeId, chronicle));
       flash(`《${chronicle.chapterTitle}》已经收入本分支卷宗。`, 3800);
     } catch (error) {
@@ -412,7 +414,7 @@ export function App() {
     try {
       const records = world.history.map((record) => ({ turnAfter: record.turnAfter, decision: record.rawDecision, posture: record.posture?.label, effects: record.effects, events: record.events.map((event) => ({ title: event.title, detail: event.detail })) }));
       const chronicles = branchChapters.map((node) => ({ chapterTitle: node.chronicle.chapterTitle, fullText: node.chronicle.fullText }));
-      const novel = await generateEndingNovel({ world, records, chronicles, outcome });
+      const novel = await generateEndingNovel({ world, records, chronicles, outcome, scenarioContext: aiScenarioContext });
       setEndingNovel(novel);
       flash(`长篇小说《${novel.title}》已经完成。`, 4200);
     } catch (error) {
