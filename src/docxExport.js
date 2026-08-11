@@ -62,7 +62,9 @@ export async function buildBranchDocx({ store, nodeId, world }) {
   if (!chapters.length) throw new Error('当前分支还没有可导出的回合纪事。');
   const records = path.flatMap((node) => node.world?.history?.at(-1) ? [{ node, record: node.world.history.at(-1) }] : []);
   const outcome = outcomeFromWorld(world);
-  const scenarioTitle = getScenario(world.scenarioId).manifest.title;
+  const scenario = getScenario(world.scenarioId);
+  const scenarioTitle = scenario.manifest.title;
+  const eraLabel = scenario.presentation.eraLabel;
   const [eraTitle, episodeTitle] = scenarioTitle.split('：');
   const generatedDate = new Intl.DateTimeFormat('zh-CN', { dateStyle: 'long' }).format(new Date());
 
@@ -74,7 +76,7 @@ export async function buildBranchDocx({ store, nodeId, world }) {
     paragraph(`当前分支共 ${chapters.length} 章　·　导出于 ${generatedDate}`, { alignment: AlignmentType.CENTER, size: 19, color: COLORS.muted }),
     new Paragraph({ children: [new PageBreak()] }),
     heading('卷首说明'),
-    paragraph('本卷并非预先写定的故事。每一章均源自玩家在弘光元年江南局势中的真实决策，并以确定性规则结算所得的国库、粮草、民心、军力和地方事件为史实底稿。AI 仅负责将已经发生的推演结果整理为叙事，不改变任何正式状态。'),
+    paragraph(`本卷并非预先写定的故事。每一章均源自玩家在《${scenarioTitle}》中的真实决策。剧本背景为：${scenario.manifest.description}所有国库、粮草、民心、军力与地方事件均由确定性规则结算；AI 仅负责将已经发生的结果整理为叙事，不改变任何正式状态。`),
     heading('目录'),
     ...chapters.map((node, index) => new Paragraph({ children: [run(`第 ${index + 1} 章　${node.chronicle.chapterTitle}`), run(`回合 ${node.world.turn + 1}`, { color: COLORS.muted })], tabStops: [{ type: TabStopType.RIGHT, position: TabStopPosition.MAX }], spacing: { after: 100 } })),
     ...chapters.flatMap(chapterChildren),
@@ -90,11 +92,11 @@ export async function buildBranchDocx({ store, nodeId, world }) {
     heading('结局复盘'),
     paragraph(outcome ? `${outcome.title}\n${outcome.detail}` : '本分支尚未抵达三个月阶段结局，后续回合仍在书写。'),
     paragraph(`最终指标：国库 ${world.metrics.treasury} 万两，粮草 ${world.metrics.grain} 万石，民心 ${world.metrics.support}，有效防务 ${world.metrics.defense}。`, { color: COLORS.jade, bold: true }),
-    paragraph('—— 弘光元年推演卷宗终 ——', { alignment: AlignmentType.CENTER, color: COLORS.gold, before: 600 }),
+    paragraph(`—— ${eraLabel}推演卷宗终 ——`, { alignment: AlignmentType.CENTER, color: COLORS.gold, before: 600 }),
   ];
 
   const doc = new Document({
-    creator: '弘光历史推演模拟器',
+    creator: '历史分支推演模拟器',
     title: scenarioTitle,
     description: '当前历史分支的推演小说卷宗',
     styles: {
@@ -121,13 +123,14 @@ export async function downloadBranchDocx({ store, nodeId, world }) {
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
-  link.download = `${scenarioTitle.replace('：', '-')}-${chapters.length}章.docx`;
+  link.download = `${scenarioTitle.replace(/[\/:*?"<>|：]/g, '-')}-${chapters.length}章.docx`;
   link.click();
   URL.revokeObjectURL(url);
 }
 
 export async function buildGeneratedNovelDocx({ novel, world }) {
-  const scenarioTitle = getScenario(world.scenarioId).manifest.title;
+  const scenario = getScenario(world.scenarioId);
+  const scenarioTitle = scenario.manifest.title;
   const body = [
     paragraph('历史推演长篇小说', { alignment: AlignmentType.CENTER, size: 20, color: COLORS.gold, before: 1700, after: 260 }),
     paragraph(novel.title, { alignment: AlignmentType.CENTER, size: 54, color: COLORS.cinnabar, bold: true, after: 100 }),
@@ -146,9 +149,9 @@ export async function buildGeneratedNovelDocx({ novel, world }) {
     ...novel.characterEndings.flatMap((person) => [heading(person.name, 2), paragraph(person.ending)]),
     heading('尾声'),
     ...String(novel.epilogue).split(/\n+/).filter(Boolean).map((text) => paragraph(text, { line: 360 })),
-    paragraph('—— 全卷终 ——', { alignment: AlignmentType.CENTER, color: COLORS.gold, before: 600 }),
+    paragraph(`—— 《${scenarioTitle}》全卷终 ——`, { alignment: AlignmentType.CENTER, color: COLORS.gold, before: 600 }),
   ];
-  const doc = new Document({ creator: '弘光历史推演模拟器', title: novel.title, description: '由完整历史分支生成的架空历史小说', sections: [{ properties: { page: { size: { width: 12240, height: 15840 }, margin: { top: 1440, right: 1440, bottom: 1440, left: 1440 } } }, headers: { default: new Header({ children: [paragraph(`${novel.title} · ${scenarioTitle}`, { size: 17, color: COLORS.muted })] }) }, footers: { default: new Footer({ children: [new Paragraph({ children: [new TextRun({ children: [PageNumber.CURRENT], size: 17, color: COLORS.muted })], alignment: AlignmentType.RIGHT })] }) }, children: body }] });
+  const doc = new Document({ creator: '历史分支推演模拟器', title: novel.title, description: `由《${scenarioTitle}》完整历史分支生成的架空历史小说`, sections: [{ properties: { page: { size: { width: 12240, height: 15840 }, margin: { top: 1440, right: 1440, bottom: 1440, left: 1440 } } }, headers: { default: new Header({ children: [paragraph(`${novel.title} · ${scenarioTitle}`, { size: 17, color: COLORS.muted })] }) }, footers: { default: new Footer({ children: [new Paragraph({ children: [new TextRun({ children: [PageNumber.CURRENT], size: 17, color: COLORS.muted })], alignment: AlignmentType.RIGHT })] }) }, children: body }] });
   return Packer.toBlob(doc);
 }
 

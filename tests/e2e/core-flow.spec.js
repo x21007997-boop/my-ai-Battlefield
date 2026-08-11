@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 test.beforeEach(async ({ page }) => {
+  await page.route(/https:\/\/fonts\.(googleapis|gstatic)\.com\//, (route) => route.abort());
   await page.addInitScript(() => {
     localStorage.clear();
     localStorage.setItem('hongguang-tutorial-complete', '1');
@@ -9,7 +10,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 test('enters a scenario and interprets an editable edict', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
   await expect(page.getByRole('heading', { name: '择一局，重写未定之史' })).toBeVisible();
   await page.locator('.scenario-card').first().getByRole('button', { name: '进入此局' }).click();
   await expect(page.getByRole('heading', { name: '北都既覆，江山只余半壁' })).toBeVisible();
@@ -23,7 +24,7 @@ test('enters a scenario and interprets an editable edict', async ({ page }) => {
 });
 
 test('opens experience settings and persists preferences', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
   await page.locator('.scenario-card').first().getByRole('button', { name: '进入此局' }).click();
   await page.getByRole('button', { name: '跳过序章' }).click();
   await page.getByRole('button', { name: '体验设置' }).click();
@@ -37,7 +38,7 @@ test('opens experience settings and persists preferences', async ({ page }) => {
 });
 
 test('opens help with keyboard shortcuts without hijacking edict input', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
   await page.locator('.scenario-card').first().getByRole('button', { name: '进入此局' }).click();
   await page.getByRole('button', { name: '跳过序章' }).click();
   await page.keyboard.press('h');
@@ -51,7 +52,7 @@ test('opens help with keyboard shortcuts without hijacking edict input', async (
 });
 
 test('completes a full monthly turn and records its consequences', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
   await page.locator('.scenario-card').first().getByRole('button', { name: '进入此局' }).click();
   await page.getByRole('button', { name: '跳过序章' }).click();
   const initialTurnLabel = await page.locator('.turn-label').innerText();
@@ -80,7 +81,7 @@ test('completes a full monthly turn and records its consequences', async ({ page
 });
 
 test('loads the adviser council from the selected scenario package', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
   await page.locator('.scenario-card').nth(1).getByRole('button', { name: '进入此局' }).click();
   await expect(page.getByRole('heading', { name: '大兵压境，扬州已成江北孤城' })).toBeVisible();
   await page.getByRole('button', { name: '跳过序章' }).click();
