@@ -104,6 +104,11 @@ function relationLabel(value) {
   return '离心';
 }
 
+function effectSummary(effects = {}) {
+  const labels = { treasury: '银', grain: '粮', support: '民心', defense: '防务' };
+  return Object.entries(effects).filter(([, value]) => value !== 0).map(([key, value]) => `${labels[key]}${value > 0 ? '+' : ''}${value}`).join(' · ');
+}
+
 function Metric({ item }) {
   const Icon = item.icon;
   return (
@@ -212,6 +217,12 @@ export function App() {
     const preferred = selectedAdviserId === 'shi' ? 'grain' : selectedAdviserId === 'hubu' ? 'official' : selectedAdviserId === 'local' ? 'grain' : null;
     return preferred ? drafts.sort((a, b) => Number(b.id === preferred) - Number(a.id === preferred)) : drafts;
   }, [focusedCityName, scenario.manifest.actionDefaults, selectedAdviserId]);
+  const riskCities = useMemo(() => Object.entries(world.cities).map(([name, city]) => ({
+    name,
+    city,
+    score: city.unrest + Math.max(0, 40 - city.garrison) + Math.max(0, 25 - city.grain),
+    warnings: [city.unrest >= 45 && `动乱 ${city.unrest}`, city.garrison < 35 && `驻军 ${city.garrison}`, city.grain < 20 && `存粮 ${city.grain}`].filter(Boolean),
+  })).filter((item) => item.warnings.length).sort((a, b) => b.score - a.score).slice(0, 2), [world.cities]);
 
   function flash(message, duration = 2600) {
     setNotice(message);
@@ -611,12 +622,13 @@ export function App() {
             <span>粮运受阻</span><ArrowRight /><span>粮价上涨</span><ArrowRight /><span>民心下降</span>
           </div>
 
-          {world.pendingEffects.length > 0 && (
+          {(world.pendingEffects.length > 0 || riskCities.length > 0) && (
             <section className="pending-consequences">
-              <div><small>待发后效</small><span>{world.pendingEffects.length} 项</span></div>
+              <div><small>政令余波与风险</small><span>{world.pendingEffects.length} 项待结算</span></div>
               {world.pendingEffects.slice(0, 2).map((item) => (
-                <p key={`${item.dueTurn}-${item.label}`}><b>{item.label}</b><span>第 {item.dueTurn + 1} 回合揭晓</span></p>
+                <p key={`${item.dueTurn}-${item.label}`} className="pending-effect"><b>{item.label}<em>{effectSummary(item.effects)}</em></b><span>{Math.max(1, item.dueTurn - world.turn)} 月后</span></p>
               ))}
+              {riskCities.map((item) => <button key={item.name} className="risk-watch" onClick={() => { setActiveRegion(item.name); setFocusedCityName(item.name); }}><b>{item.name}告警</b><span>{item.warnings.join(' · ')}</span><CaretRight size={13} /></button>)}
             </section>
           )}
 
