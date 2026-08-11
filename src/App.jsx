@@ -18,7 +18,7 @@ import {
   Warning,
   Grains,
 } from '@phosphor-icons/react';
-import { createInitialWorld, DECISION_POSTURES, investigateReport, metricsForView, previewDecision, resolveTurn, serializeSnapshot } from './simulation';
+import { createInitialWorld, DECISION_POSTURES, investigateReport, metricsForView, parseDecision, previewDecision, resolveTurn, serializeSnapshot } from './simulation';
 import { currentOutcome, reportsForWorld, stageStatus } from './scenario';
 import { askDeepSeekCouncil, generateEndingNovel, generateTurnChronicle } from './ai';
 import { appendBranchNode, attachChronicle, buildManuscript, createCampaign, deleteCampaign, duplicateCampaign, getBranchPath, initializeBranchTree, listCampaigns, renameCampaign, saveNamedSnapshot, updateBranchNodeWorld } from './storage';
@@ -223,6 +223,14 @@ export function App() {
     score: city.unrest + Math.max(0, 40 - city.garrison) + Math.max(0, 25 - city.grain),
     warnings: [city.unrest >= 45 && `动乱 ${city.unrest}`, city.garrison < 35 && `驻军 ${city.garrison}`, city.grain < 20 && `存粮 ${city.grain}`].filter(Boolean),
   })).filter((item) => item.warnings.length).sort((a, b) => b.score - a.score).slice(0, 2), [world.cities]);
+  const decisionReadback = useMemo(() => {
+    if (!decision.trim()) return null;
+    const parsed = parseDecision(decision, world);
+    if (!parsed.valid) return { valid: false, message: parsed.errors[0] };
+    const actionLabels = { transport_grain: '调运粮草', deploy_army: '调动军队', appoint_official: '任免派官' };
+    const action = parsed.action;
+    return { valid: true, message: `${actionLabels[action.type]} · ${action.source} → ${action.target} · ${action.type === 'appoint_official' ? action.official : `${action.amount}万`}` };
+  }, [decision, world]);
 
   function flash(message, duration = 2600) {
     setNotice(message);
@@ -694,6 +702,7 @@ export function App() {
             <div className="decision-drafts" aria-label="可编辑诏令草案"><small>诏令草案</small>{decisionDrafts.map((draft) => <button key={draft.id} title={draft.text} onClick={() => { setDecision(draft.text); setAnalysis(null); }}>{draft.label}</button>)}</div>
           </div>
           <textarea value={decision} onChange={(event) => { setDecision(event.target.value); setAnalysis(null); }} placeholder="下达你的诏令、政策或处置意见……" />
+          {decisionReadback && <div className={`decision-readback ${decisionReadback.valid ? 'valid' : 'invalid'}`} role="status"><span>{decisionReadback.valid ? '已识别' : '尚未识别'}</span>{decisionReadback.message}</div>}
         </div>
         <button onClick={analyzeDecision}><Sparkle size={22} weight="fill" />分析影响</button>
       </section>
