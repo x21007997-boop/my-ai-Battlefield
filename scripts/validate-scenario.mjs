@@ -61,6 +61,9 @@ if (!errors.length) {
     if (faction.shift && (!['gte', 'lte'].includes(faction.shift.direction) || typeof faction.shift.threshold !== 'number' || !faction.shift.title || !faction.shift.detail)) errors.push(`factions.json:${faction.id}: shift 配置不完整`);
   });
   for (const key of ['asset', 'alt', 'pressureLabel']) if (!map[key]) errors.push(`map.json: 缺少 ${key}`);
+  if (map.asset) {
+    try { await readFile(resolve('public', map.asset.replace(/^\//, ''))); } catch { errors.push(`map.json: 地图资源 ${map.asset} 不存在`); }
+  }
   if (!Array.isArray(map.causalChain) || map.causalChain.length < 2) errors.push('map.json: causalChain 至少需要两个节点');
   cityNames.forEach((city) => {
     if (!map.cityPositions?.[city]) errors.push(`map.json: 缺少 ${city} 的 cityPositions`);

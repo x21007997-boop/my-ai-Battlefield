@@ -94,6 +94,7 @@ test('loads the adviser council from the selected scenario package', async ({ pa
   await expect(page.locator('.faction-balance')).toContainText('南京饷源');
   await expect(page.locator('.frontline')).toContainText('清军逼近扬州');
   await expect(page.locator('.causal-line')).toContainText('援军未集');
+  await expect(page.locator('.map-panel > img')).toHaveAttribute('src', '/assets/yangzhou-siege-map.png');
   await page.getByRole('button', { name: '召集会议' }).click();
   await expect(page.getByRole('heading', { name: '扬州守御会商' })).toBeVisible();
 });
