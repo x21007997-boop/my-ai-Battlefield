@@ -393,7 +393,7 @@ export function App() {
     const url = URL.createObjectURL(new Blob([markdown], { type: 'text/markdown;charset=utf-8' }));
     const link = document.createElement('a');
     link.href = url;
-    link.download = `弘光元年-江南残局-${branchChapters.length}章.md`;
+    link.download = `${scenario.manifest.title.replace(/[^\p{L}\p{N}-]+/gu, '-')}-${branchChapters.length}章.md`;
     link.click();
     URL.revokeObjectURL(url);
     flash(`本分支 ${branchChapters.length} 篇纪事已汇编下载。`);
@@ -494,11 +494,7 @@ export function App() {
   }
 
   if (screen === 'intro') {
-    const introCards = [
-      { eyebrow: '弘光元年 · 五月', title: '北都既覆，江山只余半壁', body: '清军沿运河南下，江北各镇互不统属。南京朝堂仍在争论名分，而军粮已经见底。' },
-      { eyebrow: '急递 · 淮安', title: '粮仓告急，饥民聚于城下', body: '官仓只够支应数日。开仓，可能断绝前线军粮；不开仓，民变或将在今夜发生。' },
-      { eyebrow: '御前 · 等候裁决', title: '历史不会等待准备周全的人', body: '银子、粮草、民心与军力彼此牵动。你下达的每一道命令，都将成为后来史书中的一句话。' },
-    ];
+    const introCards = scenario.presentation.opening;
     const card = introCards[introStep];
     return (
       <main className={`opening-cinematic opening-step-${introStep}`}>
@@ -530,7 +526,7 @@ export function App() {
           <span>{scenario.manifest.title}</span>
           <i>局</i>
         </button>
-        <div className="turn-label">弘光元年　{dateLabel} · 第{world.turn + 1}回合 <small>{stage.remainingTurns > 0 ? `还余 ${stage.remainingTurns} 回合` : '阶段已结算'}</small></div>
+        <div className="turn-label">{scenario.presentation.eraLabel}　{dateLabel} · 第{world.turn + 1}回合 <small>{stage.remainingTurns > 0 ? `还余 ${stage.remainingTurns} 回合` : '阶段已结算'}</small></div>
         <div className="header-actions">
           <button className="ghost-button guide-button" onClick={() => setTutorialStep(0)}>新手引导</button>
           <button className="ghost-button help-button" onClick={() => setHelpOpen(true)} title="帮助与快捷键（H）"><Question size={20} /></button>
@@ -848,7 +844,7 @@ export function App() {
         <div className="modal-backdrop" role="presentation" onMouseDown={() => setMeetingOpen(false)}>
           <section className="meeting-modal" role="dialog" aria-modal="true" aria-labelledby="meeting-title" onMouseDown={(event) => event.stopPropagation()}>
             <div className="meeting-heading">
-              <div><small>{selectedAdviser ? '单独奏对' : '御前会议'}</small><h2 id="meeting-title">{selectedAdviser ? `追问${selectedAdviser.name}` : '江北赈粮处置'}</h2></div>
+              <div><small>{selectedAdviser ? '单独奏对' : '御前会议'}</small><h2 id="meeting-title">{selectedAdviser ? `追问${selectedAdviser.name}` : scenario.presentation.meetingTitle}</h2></div>
               <button onClick={() => setMeetingOpen(false)}>关闭</button>
             </div>
             <p className="meeting-intro">{selectedAdviser ? `${selectedAdviser.name}主张“${selectedAdviser.stance}”。你可以让其进一步解释依据、风险与执行细节。` : '三位幕僚意见相左。你可以综合意见，在下方形成最终裁决。'}</p>
@@ -880,7 +876,7 @@ export function App() {
         <div className="modal-backdrop" role="presentation" onMouseDown={() => setHistoryOpen(false)}>
           <section className="meeting-modal history-modal" role="dialog" aria-modal="true" aria-labelledby="history-title" onMouseDown={(event) => event.stopPropagation()}>
             <div className="meeting-heading">
-              <div><small>推演档案</small><h2 id="history-title">弘光元年决策实录</h2></div>
+              <div><small>推演档案</small><h2 id="history-title">{scenario.presentation.archiveTitle}</h2></div>
               <button onClick={() => setHistoryOpen(false)}>关闭</button>
             </div>
             <div className="world-summary">

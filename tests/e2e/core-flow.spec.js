@@ -75,17 +75,20 @@ test('completes a full monthly turn and records its consequences', async ({ page
   expect(autosave.world.pendingEffects).toHaveLength(1);
 
   await page.getByRole('button', { name: '查看推演档案' }).click();
-  await expect(page.getByRole('heading', { name: '弘光元年决策实录' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: '弘光元年江南决策实录' })).toBeVisible();
   await expect(page.locator('.history-list')).toContainText('调运二十万石粮草');
 });
 
 test('loads the adviser council from the selected scenario package', async ({ page }) => {
   await page.goto('/');
   await page.locator('.scenario-card').nth(1).getByRole('button', { name: '进入此局' }).click();
+  await expect(page.getByRole('heading', { name: '大兵压境，扬州已成江北孤城' })).toBeVisible();
   await page.getByRole('button', { name: '跳过序章' }).click();
   const council = page.locator('.council');
   await expect(council).toContainText('刘肇基');
   await expect(council).toContainText('扬州绅民');
   await expect(council).toContainText('坚守扬州');
   await expect(council).not.toContainText('户部尚书');
+  await page.getByRole('button', { name: '召集会议' }).click();
+  await expect(page.getByRole('heading', { name: '扬州守御会商' })).toBeVisible();
 });

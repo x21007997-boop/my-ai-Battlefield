@@ -4,7 +4,7 @@ import { createInitialWorld, resolveTurn } from '../src/simulation.js';
 import { currentOutcome } from '../src/scenario.js';
 
 const scenarioDir = resolve(process.argv[2] ?? 'scenarios/hongguang-1645');
-const requiredFiles = ['manifest.json', 'initial-world.json', 'cities.json', 'characters.json', 'council.json', 'events.json', 'endings.json', 'reports.json'];
+const requiredFiles = ['manifest.json', 'initial-world.json', 'cities.json', 'characters.json', 'council.json', 'presentation.json', 'events.json', 'endings.json', 'reports.json'];
 const errors = [];
 const data = {};
 
@@ -21,6 +21,7 @@ if (!errors.length) {
   const cities = data['cities.json'];
   const characters = data['characters.json'];
   const council = data['council.json'];
+  const presentation = data['presentation.json'];
   const definitions = [...data['events.json'], ...data['endings.json']];
   const reports = data['reports.json'];
   const cityNames = new Set(cities.map((city) => city.name));
@@ -44,6 +45,11 @@ if (!errors.length) {
     Object.values(adviser.reactions ?? {}).forEach((reaction) => {
       if (!reaction.title || !reaction.detail || !reaction.effects) errors.push(`council.json:${adviser.id}: reaction 缺少 title、detail 或 effects`);
     });
+  });
+  for (const key of ['eraLabel', 'meetingTitle', 'archiveTitle']) if (!presentation[key]) errors.push(`presentation.json: 缺少 ${key}`);
+  if (!Array.isArray(presentation.opening) || presentation.opening.length < 3) errors.push('presentation.json: opening 至少需要三幕');
+  presentation.opening?.forEach((card, index) => {
+    for (const key of ['eyebrow', 'title', 'body']) if (!card[key]) errors.push(`presentation.json: opening[${index}] 缺少 ${key}`);
   });
   Object.entries(reports).forEach(([id, report]) => {
     if (!cityNames.has(report.region)) errors.push(`reports.json:${id}: region “${report.region}” 不存在`);
