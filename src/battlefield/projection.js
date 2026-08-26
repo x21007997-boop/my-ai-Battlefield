@@ -145,7 +145,7 @@ export function buildCommanderMapModel(world, {
   const areaById = Object.fromEntries(areas.map((area) => [area.id, area]));
   const activeOrdersByUnitId = Object.fromEntries(
     world.orders
-      .filter((order) => order.type === 'move' && ['transmitting', 'executing'].includes(order.status))
+      .filter((order) => order.type !== 'hold' && ['transmitting', 'executing'].includes(order.status))
       .map((order) => [order.unitId, order]),
   );
   const friendlyUnits = belief.ownUnits
@@ -162,6 +162,7 @@ export function buildCommanderMapModel(world, {
           ?? null;
       })(),
       status: unit.status,
+      posture: unit.posture ?? 'standard',
       symbolType: 'friendly-flag',
       movement: (() => {
         const activeOrder = activeOrdersByUnitId[unit.id];

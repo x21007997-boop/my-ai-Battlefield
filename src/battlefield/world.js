@@ -152,6 +152,8 @@ export function createBattleWorld({
     observations: [],
     beliefs: beliefMap,
     engagements: [],
+    blockades: [],
+    supplyInterdictions: [],
     combat: { intervalSeconds: BATTLEFIELD_CONFIG.defaults.combatIntervalSeconds, lastResolutionAt: 0 },
     logistics: { intervalSeconds: BATTLEFIELD_CONFIG.defaults.supplyTickSeconds, lastSupplyTickAt: 0 },
     ai: {

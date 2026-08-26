@@ -68,12 +68,15 @@ export interface BattleUnit {
   supplyDays: number;
   readiness: number;
   status: string;
+  posture?: string;
   currentOrderId: string | null;
 }
 
 export interface BattleOrder {
   id: string;
-  type: 'move' | 'hold';
+  type: string;
+  taskType?: string | null;
+  taskLabel?: string | null;
   unitId: string;
   targetAreaId: string;
   originAreaId: string;
@@ -91,6 +94,9 @@ export interface BattleOrder {
   lastTerrainTransition?: Record<string, unknown> | null;
   totalTravelSeconds?: number;
   rawText?: string;
+  taskStatus?: string | null;
+  blockedAt?: number | null;
+  blockReason?: string | null;
 }
 
 export interface BattleObservation {

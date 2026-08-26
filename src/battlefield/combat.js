@@ -30,7 +30,8 @@ function combatPower(unit) {
   const fatigueFactor = Math.max(0.35, 1 - (unit.fatigue / 200));
   const readinessFactor = Math.max(0.25, unit.readiness ?? 1);
   const supplyFactor = unit.supplyDays > 0 ? 1 : 0.72;
-  return unit.strength * moraleFactor * fatigueFactor * readinessFactor * supplyFactor;
+  const postureFactor = BATTLEFIELD_CONFIG.postureCombatFactors[unit.posture] ?? BATTLEFIELD_CONFIG.postureCombatFactors.standard;
+  return unit.strength * moraleFactor * fatigueFactor * readinessFactor * supplyFactor * postureFactor;
 }
 
 function chooseTarget(units) {

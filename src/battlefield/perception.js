@@ -98,6 +98,7 @@ export function queueObservation(world, {
     confidence: report.confidence,
     sourceId: report.sourceId,
     sourceType: report.sourceType,
+    sourceIndependenceGroup: report.sourceIndependenceGroup,
     arrivesAt: report.arrivesAt,
     uncertainty: report.uncertainty,
   });
@@ -150,6 +151,7 @@ export function applyObservation(world, observation) {
     reportedAreaId: report.areaId,
     sourceId: report.sourceId,
     sourceType: report.sourceType,
+    sourceIndependenceGroup: report.sourceIndependenceGroup,
     confidence: report.confidence,
     text: report.text,
     uncertainty: report.uncertainty,

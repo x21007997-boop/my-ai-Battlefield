@@ -1,4 +1,4 @@
-import { applyObservation } from './perception.js';
+import { applyObservation, queueObservation } from './perception.js';
 import { resolveCombat } from './combat.js';
 import { consumeLogistics } from './logistics.js';
 import { expireBeliefs } from './reconnaissance.js';
@@ -91,6 +91,88 @@ function advanceTerrainTransitions(next, order, unit, currentElapsed) {
     : 1;
 }
 
+function opposingSide(world, side) {
+  return Object.keys(world.sides ?? {}).find((candidate) => candidate !== side) ?? null;
+}
+
+function isBlockedByOpposingUnit(world, areaId, side) {
+  return (world.blockades ?? []).some((blockade) => (
+    blockade.status === 'active'
+    && blockade.areaId === areaId
+    && blockade.side !== side
+    && world.units?.[blockade.unitId]?.location === blockade.areaId
+    && !['destroyed', 'routed'].includes(world.units?.[blockade.unitId]?.status)
+  ));
+}
+
+function applyTaskEffects(next, order, unit) {
+  if (!unit || !order.taskType) return next;
+  const taskType = order.taskType;
+  const taskLabel = order.taskLabel ?? taskType;
+  const effect = { posture: taskType };
+  unit.posture = taskType;
+  order.taskStatus = 'active';
+
+  if (taskType === 'blockade') {
+    next.blockades ??= [];
+    next.blockades.push({
+      id: `blockade-${String(next.blockades.length + 1).padStart(4, '0')}`,
+      unitId: unit.id,
+      side: unit.side,
+      areaId: order.targetAreaId,
+      startedAt: next.simTime,
+      status: 'active',
+    });
+    effect.areaControl = 'opposing-movement-blocked';
+  }
+
+  if (taskType === 'interdict_supply') {
+    next.supplyInterdictions ??= [];
+    next.supplyInterdictions.push({
+      id: `supply-interdiction-${String(next.supplyInterdictions.length + 1).padStart(4, '0')}`,
+      unitId: unit.id,
+      side: unit.side,
+      areaId: order.targetAreaId,
+      startedAt: next.simTime,
+      status: 'active',
+    });
+    effect.supplyPressure = 'opposing-supply-disrupted';
+  }
+
+  if (taskType === 'decoy') {
+    const recipientSide = opposingSide(next, unit.side);
+    if (recipientSide && next.beliefs?.[recipientSide]) {
+      const report = queueObservation(next, {
+        observerSide: recipientSide,
+        targetUnitId: unit.id,
+        reportedAreaId: order.targetAreaId,
+        actualAreaId: unit.location,
+        delaySeconds: BATTLEFIELD_CONFIG.defaults.taskReportDelaySeconds,
+        confidence: 'medium',
+        sourceReliability: 'variable',
+        sourceIndependenceGroup: `decoy:${order.id}`,
+        freshnessSeconds: BATTLEFIELD_CONFIG.defaults.enemyActionReportFreshnessSeconds,
+        sourceType: 'decoy-signal',
+        observation: `前线来报：${unit.name}方向似有一支孤立部队，可尝试诱其出动。`,
+      });
+      next = report.world;
+      effect.signal = report.error ? 'signal_failed' : 'decoy_signal_queued';
+    }
+  }
+
+  appendBattleEvent(next, {
+    type: 'task_effect_applied',
+    orderId: order.id,
+    unitId: unit.id,
+    side: unit.side,
+    taskType,
+    taskLabel,
+    areaId: order.targetAreaId,
+    effect,
+  });
+  return next;
+}
+
 function advanceOneSecond(world) {
   if (world.status === 'ended') return cloneBattleWorld(world);
   let next = cloneBattleWorld(world);
@@ -108,10 +190,30 @@ function advanceOneSecond(world) {
   for (const order of next.orders) {
     if (order.status !== 'executing') continue;
     if (order.type === 'hold') {
+      order.taskStatus = 'active';
       order.status = 'completed';
       order.completedAt = next.simTime;
-      if (next.units[order.unitId]) next.units[order.unitId].currentOrderId = null;
+      if (next.units[order.unitId]) {
+        next.units[order.unitId].currentOrderId = null;
+        next.units[order.unitId].posture = 'hold';
+      }
       appendBattleEvent(next, { type: 'order_completed', orderId: order.id, unitId: order.unitId, side: next.units[order.unitId]?.side, outcome: 'held' });
+      continue;
+    }
+    const movingUnit = next.units[order.unitId];
+    if (movingUnit && isBlockedByOpposingUnit(next, order.targetAreaId, movingUnit.side)) {
+      order.status = 'blocked';
+      order.blockedAt = next.simTime;
+      order.blockReason = 'opposing_blockade';
+      movingUnit.currentOrderId = null;
+      appendBattleEvent(next, {
+        type: 'order_blocked',
+        orderId: order.id,
+        unitId: order.unitId,
+        side: movingUnit.side,
+        targetAreaId: order.targetAreaId,
+        reason: 'opposing_blockade',
+      });
       continue;
     }
     const previousElapsed = Math.max(0, order.totalTravelSeconds - order.remainingTravelSeconds);
@@ -127,6 +229,7 @@ function advanceOneSecond(world) {
     }
     order.status = 'completed';
     order.completedAt = next.simTime;
+    next = applyTaskEffects(next, order, unit);
     appendBattleEvent(next, { type: 'unit_arrived', orderId: order.id, unitId: order.unitId, side: unit?.side, areaId: order.targetAreaId });
   }
 

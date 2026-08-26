@@ -37,6 +37,8 @@ export function buildCommanderSessionSnapshot(world, {
     .map((order) => ({
       id: order.id,
       type: order.type,
+      taskType: order.taskType ?? null,
+      taskLabel: order.taskLabel ?? null,
       unitId: order.unitId,
       targetAreaId: order.targetAreaId,
       originAreaId: order.originAreaId ?? null,
@@ -54,6 +56,9 @@ export function buildCommanderSessionSnapshot(world, {
       currentTerrain: order.currentTerrain ?? null,
       lastTerrainTransition: order.lastTerrainTransition ?? null,
       rawText: order.rawText ?? '',
+      taskStatus: order.taskStatus ?? null,
+      blockedAt: order.blockedAt ?? null,
+      blockReason: order.blockReason ?? null,
     }));
   const ownObservations = world.observations
     .filter((observation) => observation.observerSide === side)

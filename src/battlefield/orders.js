@@ -5,7 +5,26 @@ import { BATTLE_ERROR_CODES, battleError } from './errors.js';
 export const BATTLE_ORDER_TYPES = Object.freeze({
   MOVE: 'move',
   HOLD: 'hold',
+  GUARD: 'guard',
+  COVER: 'cover',
+  BLOCKADE: 'blockade',
+  DECOY: 'decoy',
+  INTERDICT_SUPPLY: 'interdict_supply',
+  RETREAT: 'retreat',
 });
+
+export const BATTLE_TASK_ORDER_TYPES = Object.freeze([
+  BATTLE_ORDER_TYPES.GUARD,
+  BATTLE_ORDER_TYPES.COVER,
+  BATTLE_ORDER_TYPES.BLOCKADE,
+  BATTLE_ORDER_TYPES.DECOY,
+  BATTLE_ORDER_TYPES.INTERDICT_SUPPLY,
+  BATTLE_ORDER_TYPES.RETREAT,
+]);
+
+function isTaskOrderType(type) {
+  return BATTLE_TASK_ORDER_TYPES.includes(type);
+}
 
 function nextId(world) {
   return `order-${String(world.orders.length + 1).padStart(4, '0')}`;
@@ -79,19 +98,26 @@ export function findRoute(areas, fromAreaId, toAreaId) {
 
 function validateDraft(world, draft) {
   if (!draft?.unitId || !world.units[draft.unitId]) return battleError(BATTLE_ERROR_CODES.UNIT_NOT_FOUND, '命令引用了不存在的部队。', { unitId: draft?.unitId ?? null });
-  if (!Object.values(BATTLE_ORDER_TYPES).includes(draft.type)) return battleError(BATTLE_ERROR_CODES.ORDER_TYPE_UNSUPPORTED, '当前只支持移动和坚守命令。', { type: draft?.type ?? null });
+  if (!Object.values(BATTLE_ORDER_TYPES).includes(draft.type)) return battleError(BATTLE_ERROR_CODES.ORDER_TYPE_UNSUPPORTED, '当前只支持机动、坚守和六类任务命令。', { type: draft?.type ?? null });
   if (draft.type === BATTLE_ORDER_TYPES.MOVE && !draft.targetAreaId) return battleError(BATTLE_ERROR_CODES.ORDER_TARGET_REQUIRED, '移动命令必须指定目标区域。');
-  if (draft.type === BATTLE_ORDER_TYPES.MOVE) {
+  if (isTaskOrderType(draft.type) && draft.type !== BATTLE_ORDER_TYPES.GUARD && !draft.targetAreaId) {
+    return battleError(BATTLE_ERROR_CODES.ORDER_TARGET_REQUIRED, `${BATTLEFIELD_CONFIG.taskLabels[draft.type]}命令必须指定目标区域。`, { type: draft.type });
+  }
+  if (draft.type === BATTLE_ORDER_TYPES.MOVE || isTaskOrderType(draft.type)) {
     const unit = world.units[draft.unitId];
-    if (!world.areas[draft.targetAreaId]) return battleError(BATTLE_ERROR_CODES.AREA_NOT_FOUND, '移动命令引用了不存在的区域。', { areaId: draft.targetAreaId });
-    if (!findRoute(world.areas, unit.location, draft.targetAreaId)) return battleError(BATTLE_ERROR_CODES.ROUTE_UNREACHABLE, '目标区域当前不可达。', { fromAreaId: unit.location, toAreaId: draft.targetAreaId });
+    const targetAreaId = draft.targetAreaId ?? unit.location;
+    if (!world.areas[targetAreaId]) {
+      const label = draft.type === BATTLE_ORDER_TYPES.MOVE ? '移动' : (BATTLEFIELD_CONFIG.taskLabels[draft.type] ?? '任务');
+      return battleError(BATTLE_ERROR_CODES.AREA_NOT_FOUND, `${label}命令引用了不存在的区域。`, { areaId: targetAreaId });
+    }
+    if (!findRoute(world.areas, unit.location, targetAreaId)) return battleError(BATTLE_ERROR_CODES.ROUTE_UNREACHABLE, '目标区域当前不可达。', { fromAreaId: unit.location, toAreaId: targetAreaId });
   }
   return null;
 }
 
 /**
  * @param {import('./contracts').BattleWorld} world
- * @param {{ type: 'move' | 'hold', unitId: string, targetAreaId?: string, priority?: string, constraints?: string[], rawText?: string }} draft
+ * @param {{ type: string, unitId: string, targetAreaId?: string, priority?: string, constraints?: string[], rawText?: string }} draft
  * @param {{ delaySeconds?: number }} [options]
  * @returns {import('./contracts').BattleResult<import('./contracts').BattleOrder>}
  */
@@ -101,14 +127,17 @@ export function issueOrder(world, draft, { delaySeconds = 0 } = {}) {
   if (error) return { world: next, order: null, ...error };
 
   const unit = next.units[draft.unitId];
-  const route = draft.type === BATTLE_ORDER_TYPES.MOVE
-    ? findRoute(next.areas, unit.location, draft.targetAreaId)
+  const routeTargetAreaId = draft.targetAreaId ?? unit.location;
+  const route = draft.type === BATTLE_ORDER_TYPES.MOVE || isTaskOrderType(draft.type)
+    ? findRoute(next.areas, unit.location, routeTargetAreaId)
     : { areaIds: [unit.location], travelSeconds: 0, segments: [] };
   const order = {
     id: nextId(next),
     type: draft.type,
     unitId: draft.unitId,
-    targetAreaId: draft.targetAreaId ?? unit.location,
+    targetAreaId: routeTargetAreaId,
+    taskType: isTaskOrderType(draft.type) ? draft.type : null,
+    taskLabel: BATTLEFIELD_CONFIG.taskLabels[draft.type] ?? null,
     priority: draft.priority ?? 'normal',
     constraints: [...(draft.constraints ?? [])],
     originAreaId: unit.location,
@@ -134,6 +163,8 @@ export function issueOrder(world, draft, { delaySeconds = 0 } = {}) {
     targetAreaId: order.targetAreaId,
     originAreaId: order.originAreaId,
     route: order.route,
+    taskType: order.taskType,
+    taskLabel: order.taskLabel,
     routeSegments: order.routeSegments,
     terrainTransitions: order.terrainTransitions,
     totalTravelSeconds: order.totalTravelSeconds,

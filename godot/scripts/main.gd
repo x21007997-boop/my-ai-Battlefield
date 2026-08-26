@@ -42,6 +42,7 @@ var log_label: RichTextLabel
 var run_button: Button
 var scout_button: Button
 var deception_button: Button
+var task_option: OptionButton
 var move_button: Button
 var hold_button: Button
 var zoom_label: Label
@@ -57,6 +58,15 @@ var hud_metrics_label: Label
 var log_panel: Panel
 var log_button: Button
 var replay_panel: Panel
+
+const TASK_COMMANDS := [
+	{"type": "guard", "label": "警戒"},
+	{"type": "cover", "label": "掩护"},
+	{"type": "blockade", "label": "封锁"},
+	{"type": "decoy", "label": "诱敌"},
+	{"type": "interdict_supply", "label": "截粮"},
+	{"type": "retreat", "label": "撤退"},
+]
 
 func _ready() -> void:
 	scenario = _load_json("res://data/changping-260.json")
@@ -482,6 +492,18 @@ func _build_interface() -> void:
 	deception_button.size = Vector2(76, 36)
 	command_card.add_child(deception_button)
 
+	task_option = OptionButton.new()
+	task_option.text = "任务"
+	task_option.position = Vector2(966, 103)
+	task_option.size = Vector2(78, 36)
+	task_option.tooltip_text = "选择警戒、掩护、封锁、诱敌、截粮或撤退"
+	_style_button(task_option)
+	for task in TASK_COMMANDS:
+		task_option.add_item(str(task.get("label", "任务")))
+		task_option.set_item_metadata(task_option.item_count - 1, str(task.get("type", "")))
+	task_option.item_selected.connect(_on_task_selected)
+	command_card.add_child(task_option)
+
 	outcome_label = _add_label(hud, "", Rect2(420, 100, 400, 80), 14, Color("#b8d2a4"))
 	outcome_label.visible = false
 
@@ -600,6 +622,81 @@ func _issue_hold() -> void:
 	_set_feedback("坚守命令已接收：%s将在命令抵达后保持阵地。" % unit.get("name", "部队"), "success")
 	_refresh()
 
+func _on_task_selected(index: int) -> void:
+	if task_option == null:
+		return
+	var task_type := str(task_option.get_item_metadata(index))
+	_issue_task(task_type)
+
+func _task_label(task_type: String) -> String:
+	for task in TASK_COMMANDS:
+		if str(task.get("type", "")) == task_type:
+			return str(task.get("label", task_type))
+	return task_type
+
+func _issue_task(task_type: String) -> void:
+	if replay_mode:
+		_set_feedback("回放模式不能下达新任务。", "error")
+		return
+	if task_type == "":
+		_set_feedback("任务未提交：没有选择任务类型。", "error")
+		return
+	if selected_unit_id == "":
+		_set_feedback("任务未提交：请先选择部队。", "error")
+		return
+	var selected_unit_index: int = _unit_index(selected_unit_id)
+	var selected_unit: Dictionary = friendly_units[selected_unit_index] if selected_unit_index >= 0 else {}
+	if selected_unit.is_empty():
+		_set_feedback("任务未提交：没有选中的己方部队。", "error")
+		return
+	var target_area := selected_target_area_id
+	if target_area == "" and task_type == "guard":
+		target_area = str(selected_unit.get("areaId", ""))
+	if target_area == "":
+		_set_feedback("任务未提交：请先在沙盘选择任务区域。", "error")
+		return
+	if engine_connected:
+		engine_gateway.send_command({
+			"type": task_type,
+			"unitId": selected_unit_id,
+			"targetAreaId": target_area,
+		})
+		_set_feedback("正在提交%s任务：目标%s……" % [_task_label(task_type), _area_name(target_area)], "info")
+		return
+	if not order.is_empty() and order.get("status", "") in ["transmitting", "executing"]:
+		_set_feedback("任务未提交：当前部队已有命令正在传递或执行。", "error")
+		return
+	var travel_seconds: int = 0 if target_area == str(selected_unit.get("areaId", "")) else _travel_seconds(str(selected_unit.get("areaId", "")), target_area)
+	var deliver_at := sim_time + int(scenario.get("commandDelaySeconds", 3))
+	order = {
+		"status": "transmitting",
+		"type": task_type,
+		"taskType": task_type,
+		"taskLabel": _task_label(task_type),
+		"unitId": selected_unit_id,
+		"originAreaId": selected_unit.get("areaId", ""),
+		"targetAreaId": target_area,
+		"deliverAt": deliver_at,
+		"completeAt": deliver_at + max(1, travel_seconds),
+		"route": [selected_unit.get("areaId", ""), target_area],
+		"totalTravelSeconds": travel_seconds,
+		"remainingTravelSeconds": travel_seconds,
+	}
+	event_log.append(sim_time, "order_issued", {
+		"type": task_type,
+		"taskType": task_type,
+		"taskLabel": _task_label(task_type),
+		"unitId": selected_unit_id,
+		"originAreaId": selected_unit.get("areaId", ""),
+		"targetAreaId": target_area,
+		"deliverAt": deliver_at,
+		"completeAt": order["completeAt"],
+		"travelSeconds": travel_seconds,
+	})
+	_add_log("已发令：%s执行%s任务，目标%s。" % [selected_unit.get("name", "部队"), _task_label(task_type), _area_name(target_area)])
+	_set_feedback("%s任务已接收：目标%s，命令正在传递。" % [_task_label(task_type), _area_name(target_area)], "success")
+	_refresh()
+
 func _submit_free_order(_submitted_text: String = "") -> void:
 	if free_order_input == null:
 		return
@@ -628,6 +725,10 @@ func _submit_free_order(_submitted_text: String = "") -> void:
 				_dispatch_scout()
 			"deception":
 				_issue_deception()
+			_:
+				if str(command.get("type", "")) in _task_types():
+					selected_target_area_id = str(command.get("targetAreaId", selected_target_area_id))
+					_issue_task(str(command.get("type", "")))
 	free_order_input.clear()
 	_refresh()
 
@@ -648,6 +749,12 @@ func _parse_free_order(raw_text: String) -> Dictionary:
 	var unit_id := _unit_from_order_text(raw_text)
 	if unit_id == "":
 		return {"error": "没有识别出要指挥的秦军部队，请写出‘秦军主力’或先在沙盘选中部队。"}
+	var task_type := _task_type_from_order_text(lowered)
+	if task_type != "":
+		var task_target := _area_from_order_text(raw_text)
+		if task_target == "":
+			task_target = selected_target_area_id
+		return {"command": {"type": task_type, "unitId": unit_id, "targetAreaId": task_target}}
 	if lowered.contains("坚守") or lowered.contains("固守") or lowered.contains("防守") or lowered.contains("原地"):
 		return {"command": {"type": "hold", "unitId": unit_id}}
 
@@ -657,6 +764,27 @@ func _parse_free_order(raw_text: String) -> Dictionary:
 	if target_area_id == "":
 		return {"error": "没有识别出目标区域，请写出‘向丹水河谷机动’这类目标。"}
 	return {"command": {"type": "move", "unitId": unit_id, "targetAreaId": target_area_id}}
+
+func _task_types() -> Array:
+	var types: Array = []
+	for task in TASK_COMMANDS:
+		types.append(str(task.get("type", "")))
+	return types
+
+func _task_type_from_order_text(lowered: String) -> String:
+	if lowered.contains("警戒") or lowered.contains("戒备"):
+		return "guard"
+	if lowered.contains("掩护") or lowered.contains("保护"):
+		return "cover"
+	if lowered.contains("封锁") or lowered.contains("堵住"):
+		return "blockade"
+	if lowered.contains("诱敌") or lowered.contains("诱出"):
+		return "decoy"
+	if lowered.contains("截粮") or lowered.contains("断粮") or lowered.contains("粮道"):
+		return "interdict_supply"
+	if lowered.contains("撤退") or lowered.contains("退却") or lowered.contains("回撤"):
+		return "retreat"
+	return ""
 
 func _unit_from_order_text(raw_text: String) -> String:
 	for unit in friendly_units:
@@ -738,7 +866,12 @@ func _step_second() -> void:
 				"unitId": order.get("unitId", ""),
 				"targetAreaId": order.get("targetAreaId", ""),
 			})
-			_add_log("命令抵达：部队%s。" % ("坚守当前阵地" if order.get("type", "move") == "hold" else "开始执行机动"))
+			var delivery_action := "坚守当前阵地"
+			if order.get("taskType", "") != "":
+				delivery_action = "执行%s" % str(order.get("taskLabel", "任务"))
+			elif order.get("type", "move") != "hold":
+				delivery_action = "开始执行机动"
+			_add_log("命令抵达：部队%s。" % delivery_action)
 		if order.get("status", "") == "executing" and order.get("type", "move") == "hold":
 			order["status"] = "completed"
 			event_log.append(sim_time, "order_completed", {
@@ -750,12 +883,17 @@ func _step_second() -> void:
 			var unit_index: int = _unit_index(str(order.get("unitId", "")))
 			if unit_index >= 0:
 				friendly_units[unit_index]["areaId"] = order.get("targetAreaId", "")
+				if order.get("taskType", "") != "":
+					friendly_units[unit_index]["posture"] = order.get("taskType", "standard")
 			order["status"] = "completed"
 			event_log.append(sim_time, "unit_arrived", {
 				"unitId": order.get("unitId", ""),
 				"areaId": order.get("targetAreaId", ""),
 			})
-			_add_log("部队到达：已进入%s。" % _area_name(str(order.get("targetAreaId", ""))))
+			if order.get("taskType", "") != "":
+				_add_log("部队到达：已进入%s，%s任务生效。" % [_area_name(str(order.get("targetAreaId", ""))), str(order.get("taskLabel", "任务"))])
+			else:
+				_add_log("部队到达：已进入%s。" % _area_name(str(order.get("targetAreaId", ""))))
 		elif order.get("status", "") == "executing" and order.get("type", "move") != "hold":
 			order["remainingTravelSeconds"] = max(0, int(order.get("remainingTravelSeconds", 0)) - 1)
 
@@ -960,6 +1098,8 @@ func _replay_event_text(event: Dictionary) -> String:
 	var payload: Dictionary = event.get("payload", {})
 	match str(event.get("type", "")):
 		"order_issued":
+			if str(payload.get("taskLabel", "")) != "":
+				return "回放：已发令，部队执行%s任务，目标%s。" % [str(payload.get("taskLabel", "任务")), _area_name(str(payload.get("targetAreaId", "")))]
 			return "回放：已发令，部队向%s机动。" % _area_name(str(payload.get("targetAreaId", "")))
 		"order_delivered":
 			return "回放：命令抵达，部队开始执行。"
@@ -1064,6 +1204,9 @@ func _refresh() -> void:
 	move_button.tooltip_text = "向%s机动" % selected_target_name if selected_target_area_id != "" else "请先在沙盘选择目标区域"
 	move_button.disabled = replay_mode or outcome.size() > 0 or selected_target_area_id == "" or (not order.is_empty() and order.get("status", "") in ["transmitting", "executing"])
 	hold_button.disabled = replay_mode or outcome.size() > 0 or selected_unit_id == "" or (not order.is_empty() and order.get("status", "") in ["transmitting", "executing"])
+	if task_option != null:
+		task_option.disabled = replay_mode or outcome.size() > 0 or selected_unit_id == "" or (not order.is_empty() and order.get("status", "") in ["transmitting", "executing"])
+		task_option.tooltip_text = "先选部队和目标区域，再选择任务" if selected_target_area_id == "" else "选择警戒、掩护、封锁、诱敌、截粮或撤退"
 	scout_button.disabled = replay_mode or outcome.size() > 0 or pending_count > 0
 	deception_button.text = "计策"
 	deception_button.tooltip_text = str(deception_actions[0].get("name", "暂无可用计策")) if not deception_actions.is_empty() else "暂无可用计策"
@@ -1103,12 +1246,13 @@ func _order_status_text(status: String) -> String:
 		"rejected": return "已驳回"
 		"expired": return "已失效"
 		"awaiting_report": return "等待前线报告"
+		"blocked": return "被封锁"
 		_: return status if status != "" else "暂无军令"
 
 func _command_state_text() -> String:
 	if order.is_empty():
 		return "军令状态\n尚未下达军令\n先选部队，再在沙盘选择目标。"
-	var order_type := "坚守" if order.get("type", "move") == "hold" else "机动"
+	var order_type := str(order.get("taskLabel", "")) if order.get("taskType", "") != "" else ("坚守" if order.get("type", "move") == "hold" else "机动")
 	var status := _order_status_text(str(order.get("status", "")))
 	var target := _area_name(str(order.get("targetAreaId", "")))
 	if order.get("type", "move") == "hold":

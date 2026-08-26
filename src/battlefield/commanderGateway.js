@@ -59,7 +59,7 @@ export function applyCommanderCommand(world, command, {
       errorDetails: result.errorDetails ?? {},
     };
   }
-  if (command.type === 'move' || command.type === 'hold') {
+  if (['move', 'hold', 'guard', 'cover', 'blockade', 'decoy', 'interdict_supply', 'retreat'].includes(command.type)) {
     if (!ownsUnit(world, side, command.unitId)) return { world, accepted: false, ...battleError(BATTLE_ERROR_CODES.UNIT_NOT_OWNED, '只能指挥本方部队。', { unitId: command.unitId, side }) };
     const result = issueOrder(world, {
       type: command.type,

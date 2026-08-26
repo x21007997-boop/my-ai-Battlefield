@@ -749,6 +749,7 @@
         "y": 48
       },
       "status": "active",
+      "posture": "standard",
       "symbolType": "friendly-flag",
       "movement": null,
       "strength": 86,
@@ -764,6 +765,7 @@
         "y": 43
       },
       "status": "active",
+      "posture": "standard",
       "symbolType": "friendly-flag",
       "movement": null,
       "strength": 42,
@@ -1700,6 +1702,7 @@
             "y": 48
           },
           "status": "active",
+          "posture": "standard",
           "symbolType": "friendly-flag",
           "movement": null
         },
@@ -1713,6 +1716,7 @@
             "y": 43
           },
           "status": "active",
+          "posture": "standard",
           "symbolType": "friendly-flag",
           "movement": null
         }

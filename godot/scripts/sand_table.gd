@@ -243,10 +243,14 @@ func _draw_order_feedback() -> void:
 	if str(active_order.get("type", "move")) == "hold":
 		_draw_status_pulse(_area_point(origin_id), Color("#76a48a"), "坚守中")
 		return
+	if str(active_order.get("status", "")) == "blocked":
+		_draw_status_pulse(_area_point(origin_id), Color("#b86756"), "被封锁")
+		return
 	var points := _order_path_points(active_order, origin_id, target_id)
 	if points.size() < 1:
 		return
 	var status := str(active_order.get("status", ""))
+	var task_label := str(active_order.get("taskLabel", ""))
 	var accent := Color("#d8a95f") if status == "transmitting" else Color("#76a48a")
 	for index in range(points.size() - 1):
 		if status == "transmitting":
@@ -262,12 +266,13 @@ func _draw_order_feedback() -> void:
 		progress = 1.0
 	var marker_point := _point_along_path(points, progress)
 	if status == "transmitting":
-		_draw_status_pulse(points[0], accent, "传令中")
+		_draw_status_pulse(points[0], accent, "传令中" if task_label == "" else "%s传令中" % task_label)
 	else:
 		var terrain_label := _movement_terrain_label(active_order)
-		_draw_marching_marker(marker_point, accent, terrain_label if terrain_label != "" else "行军中")
+		var movement_label := terrain_label if terrain_label != "" else ("%s执行中" % task_label if task_label != "" else "行军中")
+		_draw_marching_marker(marker_point, accent, movement_label)
 	if status == "completed":
-		_draw_status_pulse(points[points.size() - 1], Color("#b8d2a4"), "已抵达")
+		_draw_status_pulse(points[points.size() - 1], Color("#b8d2a4"), "任务完成" if task_label != "" else "已抵达")
 	elif status == "executing":
 		var last_transition_value = active_order.get("lastTerrainTransition", {})
 		var last_transition: Dictionary = last_transition_value if last_transition_value is Dictionary else {}
