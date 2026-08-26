@@ -20,13 +20,14 @@ function buildReportUncertainty(world, reportedAreaId, confidence) {
   };
 }
 
-function resolveSource(next, sourceId, sourceReliability) {
+function resolveSource(next, sourceId, sourceReliability, sourceType, sourceIndependenceGroup) {
   const source = sourceId ? next.intelligenceSources?.[sourceId] : null;
   const reliability = source?.reliability ?? sourceReliability ?? 'unknown';
   return {
     source,
     reliability,
     reliabilityScore: source?.reliabilityScore ?? SOURCE_RELIABILITY_SCORES[reliability] ?? SOURCE_RELIABILITY_SCORES.unknown,
+    independenceGroup: sourceIndependenceGroup ?? source?.independenceGroup ?? sourceId ?? sourceType ?? 'unknown',
   };
 }
 
@@ -53,6 +54,7 @@ export function queueObservation(world, {
   confidence = 'medium',
   sourceId = null,
   sourceReliability = null,
+  sourceIndependenceGroup = null,
   freshnessSeconds = BATTLEFIELD_CONFIG.defaults.reportFreshnessSeconds,
   sourceType = 'scout',
   observedAt = world.simTime,
@@ -65,7 +67,7 @@ export function queueObservation(world, {
   if (!next.areas[reportedAreaId]) return { world: next, observation: null, ...battleError(BATTLE_ERROR_CODES.AREA_NOT_FOUND, '报告区域不存在。', { areaId: reportedAreaId }) };
 
   const target = next.units[targetUnitId];
-  const source = resolveSource(next, sourceId, sourceReliability);
+  const source = resolveSource(next, sourceId, sourceReliability, sourceType, sourceIndependenceGroup);
   const uncertainty = buildReportUncertainty(next, reportedAreaId, confidence);
   const report = {
     id: nextObservationId(next),
@@ -77,6 +79,7 @@ export function queueObservation(world, {
     sourceId,
     sourceReliability: source.reliability,
     reliabilityScore: source.reliabilityScore,
+    sourceIndependenceGroup: source.independenceGroup,
     freshnessSeconds: Math.max(BATTLEFIELD_CONFIG.defaults.minimumReportFreshnessSeconds, Math.floor(freshnessSeconds)),
     sourceType,
     observedAt,
@@ -122,6 +125,7 @@ export function applyObservation(world, observation) {
     sourceReliability: observation.sourceReliability,
     reliabilityScore: observation.reliabilityScore,
     sourceType: observation.sourceType,
+    sourceIndependenceGroup: observation.sourceIndependenceGroup,
     observedAt: observation.observedAt,
     receivedAt: next.simTime,
     expiresAt: next.simTime + observation.freshnessSeconds,

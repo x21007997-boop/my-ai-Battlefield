@@ -67,6 +67,7 @@ export function issueDeception(world, {
     confidence: confidence ?? action.confidence ?? 'medium',
     sourceId: action.sourceId ?? null,
     sourceReliability: action.sourceReliability ?? 'variable',
+    sourceIndependenceGroup: action.sourceIndependenceGroup ?? `deception:${actionId}`,
     freshnessSeconds: freshnessSeconds ?? action.freshnessSeconds ?? BATTLEFIELD_CONFIG.defaults.reportFreshnessSeconds,
     sourceType: sourceType ?? action.sourceType ?? 'deception',
     observation: observation ?? action.observation ?? action.name ?? '敌军传来一则未经证实的消息',

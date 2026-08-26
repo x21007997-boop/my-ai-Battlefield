@@ -12,6 +12,10 @@ function createBeliefState(side, units) {
     side,
     sightings: {},
     reports: [],
+    counterIntelligence: {
+      reviews: {},
+      history: [],
+    },
     knownOwnUnitIds: units.filter((unit) => unit.side === side).map((unit) => unit.id),
   };
 }
@@ -153,7 +157,13 @@ export function createBattleWorld({
     ai: {
       intervalSeconds: BATTLEFIELD_CONFIG.defaults.aiIntervalSeconds,
       lastDecisionAt: 0,
-      sides: { enemy: { enabled: true, commandDelaySeconds: BATTLEFIELD_CONFIG.defaults.aiCommandDelaySeconds } },
+      sides: {
+        enemy: {
+          enabled: true,
+          commandDelaySeconds: BATTLEFIELD_CONFIG.defaults.aiCommandDelaySeconds,
+          verificationDelaySeconds: BATTLEFIELD_CONFIG.defaults.aiVerificationDelaySeconds,
+        },
+      },
     },
     eventLog: [],
     outcome: null,

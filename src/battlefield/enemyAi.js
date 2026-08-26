@@ -2,6 +2,7 @@ import { appendBattleEvent, cloneBattleWorld } from './world.js';
 import { issueOrder } from './orders.js';
 import { queueObservation, viewBelief } from './perception.js';
 import { BATTLEFIELD_CONFIG } from './config.js';
+import { assessReport, queueReportVerification, resolveReportVerifications } from './counterIntelligence.js';
 
 export const DEFAULT_AI_INTERVAL_SECONDS = BATTLEFIELD_CONFIG.defaults.aiIntervalSeconds;
 export const DEFAULT_ENEMY_ACTION_REPORT_DELAY_SECONDS = BATTLEFIELD_CONFIG.defaults.enemyActionReportDelaySeconds;
@@ -10,7 +11,7 @@ const CONFIDENCE_RANK = BATTLEFIELD_CONFIG.confidenceRank;
 
 function chooseReportedTarget(belief) {
   return Object.values(belief.sightings ?? {})
-    .filter((sighting) => sighting.status !== 'expired' && sighting.areaId)
+    .filter((sighting) => sighting.status === 'active' && sighting.areaId)
     .sort((left, right) => {
       const confidenceDelta = (CONFIDENCE_RANK[right.confidence] ?? 0) - (CONFIDENCE_RANK[left.confidence] ?? 0);
       if (confidenceDelta !== 0) return confidenceDelta;
@@ -37,7 +38,52 @@ export function runEnemyDecision(world, { side = 'enemy', intervalSeconds } = {}
   if (!sideConfig.enabled || next.simTime <= 0 || next.simTime - next.ai.lastDecisionAt < cadence) return next;
   next.ai.lastDecisionAt = next.simTime;
 
-  const belief = viewBelief(next, side);
+  next = resolveReportVerifications(next, side, {
+    reliabilityPenalty: sideConfig.reliabilityPenalty ?? BATTLEFIELD_CONFIG.defaults.aiReliabilityPenalty,
+  });
+  let belief = viewBelief(next, side);
+  const candidateReports = belief.reports.filter((report) => report.status === 'active' && report.sourceType !== 'counter-scout');
+  const assessments = candidateReports
+    .map((report) => ({ report, assessment: assessReport(belief, report) }));
+  const conflicting = assessments
+    .filter(({ assessment }) => assessment.conflictingReportIds.length > 0)
+    .sort((left, right) => right.assessment.conflictingReportIds.length - left.assessment.conflictingReportIds.length)[0];
+  if (conflicting) {
+    next = queueReportVerification(next, {
+      side,
+      report: conflicting.report,
+      delaySeconds: sideConfig.verificationDelaySeconds ?? BATTLEFIELD_CONFIG.defaults.aiVerificationDelaySeconds,
+      reason: 'conflicting_sources',
+    });
+    const review = next.beliefs[side].counterIntelligence.reviews[conflicting.report.id];
+    if (review && review.holdNotifiedAt == null) {
+      review.holdNotifiedAt = next.simTime;
+      appendBattleEvent(next, {
+        type: 'ai_hold_position',
+        side,
+        targetUnitId: conflicting.report.targetUnitId,
+        reportId: conflicting.report.id,
+        reason: 'conflicting_sources',
+      });
+    }
+    return next;
+  }
+
+  const verificationCandidate = assessments
+    .filter(({ report, assessment }) => {
+      const review = next.beliefs[side].counterIntelligence.reviews[report.id];
+      return !review && (assessment.suspicion === 'medium' || assessment.suspicion === 'high');
+    })
+    .sort((left, right) => (right.report.receivedAt ?? 0) - (left.report.receivedAt ?? 0))[0];
+  if (verificationCandidate) {
+    next = queueReportVerification(next, {
+      side,
+      report: verificationCandidate.report,
+      delaySeconds: sideConfig.verificationDelaySeconds ?? BATTLEFIELD_CONFIG.defaults.aiVerificationDelaySeconds,
+      reason: 'weak_source',
+    });
+    belief = viewBelief(next, side);
+  }
   const reportedTarget = chooseReportedTarget(belief);
   if (!reportedTarget) return next;
 
@@ -56,6 +102,11 @@ export function runEnemyDecision(world, { side = 'enemy', intervalSeconds } = {}
       }, { delaySeconds: sideConfig.commandDelaySeconds ?? 3 });
       if (result.error) return;
       next = result.world;
+      const issuedOrder = next.orders.find((candidate) => candidate.id === result.order?.id);
+      if (issuedOrder) {
+        issuedOrder.sourceReportId = reportedTarget.id;
+        issuedOrder.sourceReportStatus = 'belief_reaction';
+      }
       reactedUnitId ??= unit.id;
       appendBattleEvent(next, {
         type: 'ai_decision',

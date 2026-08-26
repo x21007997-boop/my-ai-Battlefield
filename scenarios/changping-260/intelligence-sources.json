@@ -4,6 +4,7 @@
       "id": "qin-forward-scouts",
       "side": "qin",
       "type": "forward-scouts",
+      "independenceGroup": "qin-western-scout-network",
       "areaIds": ["qin-west-camp", "western-gate", "dan-river-valley"],
       "reliability": "to-be-calibrated",
       "evidenceGrade": "X"
@@ -12,6 +13,7 @@
       "id": "zhao-forward-scouts",
       "side": "zhao",
       "type": "forward-scouts",
+      "independenceGroup": "zhao-eastern-scout-network",
       "areaIds": ["zhao-main-camp", "zhao-relief-route", "dan-river-valley"],
       "reliability": "to-be-calibrated",
       "evidenceGrade": "X"
@@ -20,6 +22,7 @@
       "id": "prisoner-and-rumor-reports",
       "side": "qin",
       "type": "human-source",
+      "independenceGroup": "qin-human-source-network",
       "areaIds": ["western-gate", "zhao-main-camp", "zhao-relief-route"],
       "reliability": "variable",
       "evidenceGrade": "A",

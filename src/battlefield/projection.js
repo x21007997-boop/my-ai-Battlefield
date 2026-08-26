@@ -190,6 +190,7 @@ export function buildCommanderMapModel(world, {
           .filter(Boolean),
         confidence: sighting.confidence,
         sourceId: sighting.sourceId,
+        sourceIndependenceGroup: sighting.sourceIndependenceGroup ?? null,
         sourceType: sighting.sourceType,
         text: sighting.text ?? '',
         receivedAt: sighting.receivedAt,

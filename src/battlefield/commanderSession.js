@@ -62,6 +62,7 @@ export function buildCommanderSessionSnapshot(world, {
       status: observation.status,
       sourceType: observation.sourceType,
       sourceId: observation.sourceId ?? null,
+      sourceIndependenceGroup: observation.sourceIndependenceGroup ?? null,
       confidence: observation.confidence ?? 'unknown',
       reportedAreaId: observation.reportedAreaId,
       observation: observation.observation ?? '',

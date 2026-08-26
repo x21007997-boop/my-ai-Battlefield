@@ -103,6 +103,7 @@ export interface BattleObservation {
   confidence: 'high' | 'medium' | 'low' | string;
   sourceId?: string | null;
   sourceReliability?: string | null;
+  sourceIndependenceGroup?: string | null;
   reliabilityScore?: number;
   freshnessSeconds?: number;
   sourceType: string;
@@ -127,6 +128,7 @@ export interface QueueObservationOptions {
   confidence?: string;
   sourceId?: string | null;
   sourceReliability?: string | null;
+  sourceIndependenceGroup?: string | null;
   freshnessSeconds?: number;
   sourceType?: string;
   observedAt?: number;
@@ -141,6 +143,7 @@ export interface BeliefReport {
   areaId: string;
   confidence: string;
   sourceType: string;
+  sourceIndependenceGroup?: string;
   receivedAt: number;
   expiresAt: number;
   status: 'active' | 'expired' | string;
@@ -162,6 +165,10 @@ export interface BattleWorld {
     side: SideId;
     sightings: Record<string, BeliefReport>;
     reports: BeliefReport[];
+    counterIntelligence?: {
+      reviews: Record<string, Record<string, unknown>>;
+      history: Array<Record<string, unknown>>;
+    };
     knownOwnUnitIds: string[];
   }>;
   sides: Record<SideId, { id: SideId; name: string }>;
