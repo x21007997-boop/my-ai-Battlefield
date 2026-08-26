@@ -1,4 +1,6 @@
 export { BATTLEFIELD_SCHEMA_VERSION, BATTLEFIELD_SIMULATOR_VERSION, appendBattleEvent, cloneBattleWorld, createBattleWorld } from './world.js';
+export { BATTLEFIELD_CONFIG } from './config.js';
+export { BATTLE_ERROR_CODES, BattleValidationError, battleError } from './errors.js';
 export { COMMANDER_EVENT_SCHEMA_VERSION, serializeCommanderEvent, serializeCommanderEvents } from './eventProtocol.js';
 export { COMMANDER_SESSION_SCHEMA_VERSION, buildCommanderSessionSnapshot } from './commanderSession.js';
 export {

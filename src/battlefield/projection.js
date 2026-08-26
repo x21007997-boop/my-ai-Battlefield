@@ -1,7 +1,8 @@
 import { viewBelief } from './perception.js';
+import { BATTLEFIELD_CONFIG } from './config.js';
 
-export const BATTLEFIELD_MAP_SCHEMA_VERSION = 1;
-export const BATTLEFIELD_MAP_COORDINATE_SYSTEM = 'normalized-2d';
+export const BATTLEFIELD_MAP_SCHEMA_VERSION = BATTLEFIELD_CONFIG.schemaVersions.map;
+export const BATTLEFIELD_MAP_COORDINATE_SYSTEM = BATTLEFIELD_CONFIG.coordinateSystem;
 
 function validPoint(position) {
   return position && Number.isFinite(position.x) && Number.isFinite(position.y)
@@ -111,6 +112,12 @@ function normalizeReportUncertainty(sighting, areaById) {
   };
 }
 
+/**
+ * Project only known friendly units, landmarks and reported enemy signals.
+ *
+ * @param {import('./contracts').BattleWorld} world
+ * @param {import('./contracts').CommanderMapOptions} [options]
+ */
 export function buildCommanderMapModel(world, {
   side = 'player',
   mapAsset = null,
@@ -195,7 +202,7 @@ export function buildCommanderMapModel(world, {
   return {
     schemaVersion: BATTLEFIELD_MAP_SCHEMA_VERSION,
     coordinateSystem: mapConfig.coordinateSystem ?? BATTLEFIELD_MAP_COORDINATE_SYSTEM,
-    bounds: mapConfig.bounds ?? { x: [0, 100], y: [0, 100] },
+    bounds: mapConfig.bounds ?? BATTLEFIELD_CONFIG.mapBounds,
     backgroundAsset: mapAsset,
     renderMode: mapConfig.renderMode ?? (mapAsset ? 'texture' : 'vector-terrain'),
     terrainFeatures: terrainFeatures.length > 0

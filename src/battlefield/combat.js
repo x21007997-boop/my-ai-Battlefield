@@ -1,8 +1,9 @@
 import { appendBattleEvent, cloneBattleWorld } from './world.js';
 import { queueObservation } from './perception.js';
+import { BATTLEFIELD_CONFIG } from './config.js';
 
-export const DEFAULT_COMBAT_INTERVAL_SECONDS = 10;
-export const DEFAULT_COMBAT_REPORT_DELAY_SECONDS = 5;
+export const DEFAULT_COMBAT_INTERVAL_SECONDS = BATTLEFIELD_CONFIG.defaults.combatIntervalSeconds;
+export const DEFAULT_COMBAT_REPORT_DELAY_SECONDS = BATTLEFIELD_CONFIG.defaults.combatReportDelaySeconds;
 
 function stableHash(value) {
   let hash = 2166136261;
@@ -108,6 +109,13 @@ function updateEngagements(next) {
   });
 }
 
+/**
+ * Resolve due combat exchanges and queue commander-safe frontline reports.
+ *
+ * @param {import('./contracts').BattleWorld} world
+ * @param {{ intervalSeconds?: number }} [options]
+ * @returns {import('./contracts').BattleWorld}
+ */
 export function resolveCombat(world, { intervalSeconds = DEFAULT_COMBAT_INTERVAL_SECONDS } = {}) {
   let next = cloneBattleWorld(world);
   next.combat ??= { intervalSeconds, lastResolutionAt: 0 };

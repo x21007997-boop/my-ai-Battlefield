@@ -1,4 +1,6 @@
-export const COMMANDER_EVENT_SCHEMA_VERSION = 1;
+import { BATTLEFIELD_CONFIG } from './config.js';
+
+export const COMMANDER_EVENT_SCHEMA_VERSION = BATTLEFIELD_CONFIG.schemaVersions.commanderEvent;
 
 const EVENT_FIELDS = new Set(['id', 'schemaVersion', 'simTime', 'type', 'payload']);
 

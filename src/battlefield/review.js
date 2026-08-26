@@ -1,6 +1,8 @@
-export const BATTLE_REVIEW_SCHEMA_VERSION = 1;
+import { BATTLEFIELD_CONFIG } from './config.js';
 
-const HIDDEN_EVENT_TYPES = new Set(['engagement_started', 'engagement_ended', 'combat_exchange']);
+export const BATTLE_REVIEW_SCHEMA_VERSION = BATTLEFIELD_CONFIG.schemaVersions.battleReview;
+
+const HIDDEN_EVENT_TYPES = new Set(BATTLEFIELD_CONFIG.hiddenEventTypes);
 
 const RESULT_LABELS = {
   'qin-advantage': '秦军达成战役目标',
@@ -87,6 +89,12 @@ function buildMilestones(world, side) {
     }));
 }
 
+/**
+ * Build an audit-safe post-battle summary for one commander side.
+ *
+ * @param {import('./contracts').BattleWorld} world
+ * @param {{ side?: string }} [options]
+ */
 export function buildCommanderReview(world, { side = 'player' } = {}) {
   const events = visibleEvents(world, side);
   const ownUnitIds = new Set(Object.values(world.units ?? {})

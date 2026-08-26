@@ -1,20 +1,10 @@
 import { appendBattleEvent, cloneBattleWorld } from './world.js';
+import { BATTLEFIELD_CONFIG } from './config.js';
+import { BATTLE_ERROR_CODES, BattleValidationError, battleError } from './errors.js';
 
-const SOURCE_RELIABILITY_SCORES = {
-  high: 0.85,
-  medium: 0.65,
-  low: 0.4,
-  variable: 0.5,
-  'to-be-calibrated': 0.5,
-  unknown: 0.5,
-};
+const SOURCE_RELIABILITY_SCORES = BATTLEFIELD_CONFIG.sourceReliabilityScores;
 
-export const REPORT_UNCERTAINTY_PROFILES = Object.freeze({
-  high: { radiusNormalized: 0.04, maxCandidateNeighbors: 0, label: '误差较小' },
-  medium: { radiusNormalized: 0.09, maxCandidateNeighbors: 1, label: '可能偏离相邻区域' },
-  low: { radiusNormalized: 0.16, maxCandidateNeighbors: 2, label: '可能偏离附近区域' },
-  unknown: { radiusNormalized: 0.2, maxCandidateNeighbors: 3, label: '仅供参考' },
-});
+export const REPORT_UNCERTAINTY_PROFILES = BATTLEFIELD_CONFIG.reportUncertaintyProfiles;
 
 function buildReportUncertainty(world, reportedAreaId, confidence) {
   const profile = REPORT_UNCERTAINTY_PROFILES[confidence] ?? REPORT_UNCERTAINTY_PROFILES.unknown;
@@ -48,24 +38,31 @@ function nextReportId(belief) {
   return `report-${String(belief.reports.length + 1).padStart(4, '0')}`;
 }
 
+/**
+ * Queue information for one observer. `actualAreaId` remains engine-only.
+ *
+ * @param {import('./contracts').BattleWorld} world
+ * @param {import('./contracts').QueueObservationOptions} [options]
+ * @returns {import('./contracts').BattleResult<import('./contracts').BattleObservation> & { observation: import('./contracts').BattleObservation | null }}
+ */
 export function queueObservation(world, {
   observerSide,
   targetUnitId,
   reportedAreaId,
-  delaySeconds = 0,
+  delaySeconds = BATTLEFIELD_CONFIG.defaults.observationDelaySeconds,
   confidence = 'medium',
   sourceId = null,
   sourceReliability = null,
-  freshnessSeconds = 30,
+  freshnessSeconds = BATTLEFIELD_CONFIG.defaults.reportFreshnessSeconds,
   sourceType = 'scout',
   observedAt = world.simTime,
   actualAreaId,
   observation = '发现目标活动迹象',
-} = {}) {
+} = /** @type {import('./contracts').QueueObservationOptions} */ ({})) {
   const next = cloneBattleWorld(world);
-  if (!next.beliefs[observerSide]) return { world: next, observation: null, error: '观察者阵营不存在。' };
-  if (!next.units[targetUnitId]) return { world: next, observation: null, error: '观察目标部队不存在。' };
-  if (!next.areas[reportedAreaId]) return { world: next, observation: null, error: '报告区域不存在。' };
+  if (!next.beliefs[observerSide]) return { world: next, observation: null, ...battleError(BATTLE_ERROR_CODES.OBSERVER_SIDE_NOT_FOUND, '观察者阵营不存在。', { observerSide }) };
+  if (!next.units[targetUnitId]) return { world: next, observation: null, ...battleError(BATTLE_ERROR_CODES.OBSERVATION_TARGET_NOT_FOUND, '观察目标部队不存在。', { targetUnitId }) };
+  if (!next.areas[reportedAreaId]) return { world: next, observation: null, ...battleError(BATTLE_ERROR_CODES.AREA_NOT_FOUND, '报告区域不存在。', { areaId: reportedAreaId }) };
 
   const target = next.units[targetUnitId];
   const source = resolveSource(next, sourceId, sourceReliability);
@@ -80,7 +77,7 @@ export function queueObservation(world, {
     sourceId,
     sourceReliability: source.reliability,
     reliabilityScore: source.reliabilityScore,
-    freshnessSeconds: Math.max(1, Math.floor(freshnessSeconds)),
+    freshnessSeconds: Math.max(BATTLEFIELD_CONFIG.defaults.minimumReportFreshnessSeconds, Math.floor(freshnessSeconds)),
     sourceType,
     observedAt,
     arrivesAt: next.simTime + Math.max(0, delaySeconds),
@@ -101,14 +98,19 @@ export function queueObservation(world, {
     arrivesAt: report.arrivesAt,
     uncertainty: report.uncertainty,
   });
-  return { world: next, observation: report, error: null };
+  return { world: next, observation: report, error: null, errorCode: null, errorDetails: {} };
 }
 
+/**
+ * @param {import('./contracts').BattleWorld} world
+ * @param {import('./contracts').BattleObservation} observation
+ * @returns {import('./contracts').BattleResult<import('./contracts').BeliefReport> & { report?: import('./contracts').BeliefReport }}
+ */
 export function applyObservation(world, observation) {
   const next = cloneBattleWorld(world);
   const belief = next.beliefs[observation.observerSide];
-  if (!belief) return { world: next, error: '观察者认知状态不存在。' };
-  if (observation.status === 'delivered') return { world: next, error: null };
+  if (!belief) return { world: next, ...battleError(BATTLE_ERROR_CODES.BELIEF_NOT_FOUND, '观察者认知状态不存在。', { observerSide: observation.observerSide }) };
+  if (observation.status === 'delivered') return { world: next, error: null, errorCode: null, errorDetails: {} };
 
   const report = {
     id: nextReportId(belief),
@@ -149,12 +151,18 @@ export function applyObservation(world, observation) {
     uncertainty: report.uncertainty,
     expiresAt: report.expiresAt,
   });
-  return { world: next, report, error: null };
+  return { world: next, report, error: null, errorCode: null, errorDetails: {} };
 }
 
+/**
+ * Return a deep-cloned commander/AI belief projection, never the mutable world.
+ *
+ * @param {import('./contracts').BattleWorld} world
+ * @param {string} side
+ */
 export function viewBelief(world, side) {
   const belief = world.beliefs[side];
-  if (!belief) throw new Error(`阵营 ${side} 不存在。`);
+  if (!belief) throw new BattleValidationError(BATTLE_ERROR_CODES.BELIEF_NOT_FOUND, `阵营 ${side} 不存在。`, { side });
   const ownUnits = Object.values(world.units)
     .filter((unit) => unit.side === side)
     .map((unit) => ({ ...unit }));

@@ -1,5 +1,7 @@
-export const BATTLEFIELD_SCHEMA_VERSION = 1;
-export const BATTLEFIELD_SIMULATOR_VERSION = 'battlefield-core-0.1.0';
+import { BATTLEFIELD_CONFIG } from './config.js';
+
+export const BATTLEFIELD_SCHEMA_VERSION = BATTLEFIELD_CONFIG.schemaVersions.world;
+export const BATTLEFIELD_SIMULATOR_VERSION = BATTLEFIELD_CONFIG.simulatorVersion;
 
 function clone(value) {
   return JSON.parse(JSON.stringify(value));
@@ -26,10 +28,10 @@ function normalizeArea(area) {
     evidenceGrade: area.evidenceGrade ?? null,
     sourceIds: [...(area.sourceIds ?? [])],
     neighbors: (area.neighbors ?? []).map((neighbor) => {
-      if (typeof neighbor === 'string') return { id: neighbor, travelSeconds: 10, terrainTransitions: [] };
+      if (typeof neighbor === 'string') return { id: neighbor, travelSeconds: BATTLEFIELD_CONFIG.defaults.areaTravelSeconds, terrainTransitions: [] };
       return {
         id: neighbor.id,
-        travelSeconds: neighbor.travelSeconds ?? 10,
+        travelSeconds: neighbor.travelSeconds ?? BATTLEFIELD_CONFIG.defaults.areaTravelSeconds,
         routeId: neighbor.routeId ?? null,
         terrainTransitions: clone(neighbor.terrainTransitions ?? []),
       };
@@ -79,10 +81,16 @@ function normalizeDeceptionActions(actions = []) {
   return Object.fromEntries(actions.map((action) => [action.id, clone(action)]));
 }
 
+/** @param {import('./contracts').BattleWorld} world */
 export function cloneBattleWorld(world) {
   return clone(world);
 }
 
+/**
+ * @param {import('./contracts').BattleWorld} world
+ * @param {Record<string, unknown>} event
+ * @returns {import('./contracts').BattleWorld}
+ */
 export function appendBattleEvent(world, event) {
   world.eventLog.push({
     id: `event-${world.eventLog.length + 1}`,
@@ -92,6 +100,12 @@ export function appendBattleEvent(world, event) {
   return world;
 }
 
+/**
+ * Create the authoritative mutable-by-copy battlefield state.
+ *
+ * @param {import('./contracts').CreateBattleWorldOptions} [options]
+ * @returns {import('./contracts').BattleWorld}
+ */
 export function createBattleWorld({
   scenarioId = 'battle-test',
   seed = 1,
@@ -134,9 +148,13 @@ export function createBattleWorld({
     observations: [],
     beliefs: beliefMap,
     engagements: [],
-    combat: { intervalSeconds: 10, lastResolutionAt: 0 },
-    logistics: { intervalSeconds: 60, lastSupplyTickAt: 0 },
-    ai: { intervalSeconds: 15, lastDecisionAt: 0, sides: { enemy: { enabled: true, commandDelaySeconds: 3 } } },
+    combat: { intervalSeconds: BATTLEFIELD_CONFIG.defaults.combatIntervalSeconds, lastResolutionAt: 0 },
+    logistics: { intervalSeconds: BATTLEFIELD_CONFIG.defaults.supplyTickSeconds, lastSupplyTickAt: 0 },
+    ai: {
+      intervalSeconds: BATTLEFIELD_CONFIG.defaults.aiIntervalSeconds,
+      lastDecisionAt: 0,
+      sides: { enemy: { enabled: true, commandDelaySeconds: BATTLEFIELD_CONFIG.defaults.aiCommandDelaySeconds } },
+    },
     eventLog: [],
     outcome: null,
   };

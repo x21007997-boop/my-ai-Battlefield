@@ -1,10 +1,11 @@
 import { buildCommanderMapModel } from './projection.js';
 import { serializeCommanderEvents } from './eventProtocol.js';
 import { buildCommanderObjectiveSnapshot, buildCommanderReview } from './review.js';
+import { BATTLEFIELD_CONFIG } from './config.js';
 
-export const COMMANDER_SESSION_SCHEMA_VERSION = 1;
+export const COMMANDER_SESSION_SCHEMA_VERSION = BATTLEFIELD_CONFIG.schemaVersions.commanderSession;
 
-const HIDDEN_EVENT_TYPES = new Set(['engagement_started', 'engagement_ended', 'combat_exchange']);
+const HIDDEN_EVENT_TYPES = new Set(BATTLEFIELD_CONFIG.hiddenEventTypes);
 
 function eventVisibleToCommander(event, side) {
   if (HIDDEN_EVENT_TYPES.has(event.type)) return false;
@@ -15,6 +16,12 @@ function eventVisibleToCommander(event, side) {
   return true;
 }
 
+/**
+ * Build the commander-facing projection; raw enemy units never cross here.
+ *
+ * @param {import('./contracts').BattleWorld} world
+ * @param {import('./contracts').CommanderMapOptions} [options]
+ */
 export function buildCommanderSessionSnapshot(world, {
   side = 'player',
   mapAsset = null,
@@ -75,7 +82,7 @@ export function buildCommanderSessionSnapshot(world, {
     delaySeconds: action.delaySeconds ?? 0,
     freshnessSeconds: action.freshnessSeconds ?? null,
     confidence: action.confidence ?? 'medium',
-    cooldownSeconds: action.cooldownSeconds ?? 30,
+    cooldownSeconds: action.cooldownSeconds ?? BATTLEFIELD_CONFIG.defaults.deceptionCooldownSeconds,
     status: action.status ?? 'simulation-action-candidate',
     evidenceGrade: action.evidenceGrade ?? null,
   }));

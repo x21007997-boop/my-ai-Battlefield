@@ -1,4 +1,7 @@
-export const COMMANDER_REPLAY_SCHEMA_VERSION = 1;
+import { BATTLEFIELD_CONFIG } from './config.js';
+import { BATTLE_ERROR_CODES, BattleValidationError } from './errors.js';
+
+export const COMMANDER_REPLAY_SCHEMA_VERSION = BATTLEFIELD_CONFIG.schemaVersions.commanderReplay;
 
 const FORBIDDEN_KEYS = new Set([
   'actualAreaId',
@@ -175,7 +178,7 @@ export function applyCommanderReplayEvent(state, event) {
 
 export function replayCommanderEvents(snapshot, { friendlyUnits = [], selectedUnitId = null, untilTime = Infinity } = {}) {
   const errors = validateCommanderReplay(snapshot);
-  if (errors.length) throw new Error(errors.join(' '));
+  if (errors.length) throw new BattleValidationError(BATTLE_ERROR_CODES.REPLAY_INVALID, errors.join(' '), { errorCount: errors.length });
   let state = createCommanderReplayState({ friendlyUnits, selectedUnitId });
   for (const event of snapshot.events) {
     if (event.simTime > untilTime) break;

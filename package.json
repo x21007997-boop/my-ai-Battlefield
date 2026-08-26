@@ -7,12 +7,13 @@
     "dev": "vite",
     "build": "vite build && node scripts/prepare-sites-build.mjs",
     "preview": "vite preview",
-    "test": "node --test tests/simulation.test.mjs tests/battlefield.test.mjs tests/replay.test.mjs tests/resolution.test.mjs tests/commander-session.test.mjs tests/commander-gateway.test.mjs tests/commander-engine-server.test.mjs tests/battle-scenario-validator.test.mjs tests/changping-level.test.mjs tests/deepseek.test.mjs tests/storage.test.mjs tests/docx.test.mjs",
+    "test": "node --test tests/simulation.test.mjs tests/battlefield.test.mjs tests/battlefield-quality.test.mjs tests/replay.test.mjs tests/resolution.test.mjs tests/commander-session.test.mjs tests/commander-gateway.test.mjs tests/commander-engine-server.test.mjs tests/battle-scenario-validator.test.mjs tests/changping-level.test.mjs tests/deepseek.test.mjs tests/storage.test.mjs tests/docx.test.mjs",
     "validate:battle": "node scripts/validate-battle-scenario.mjs tests/fixtures/battle-scenario && node scripts/validate-battle-scenario.mjs scenarios/changping-260",
     "test:e2e": "playwright test",
-    "test:ci": "npm run validate:scenario && npm run validate:battle && npm run godot:sync && npm run test:godot-data && npm test && npm run test:e2e && npm run build && npm run test:sites",
+    "test:ci": "npm run validate:scenario && npm run validate:battle && npm run typecheck:battlefield && npm run godot:sync && npm run test:godot-data && npm test && npm run test:e2e && npm run build && npm run test:sites",
     "test:godot-data": "node --test tests/godot-data.test.mjs",
     "test:sites": "node --test tests/sites-worker.test.mjs",
+    "typecheck:battlefield": "tsc --project tsconfig.json",
     "validate:scenario": "node scripts/validate-scenario.mjs scenarios/hongguang-1645 && node scripts/validate-scenario.mjs scenarios/yangzhou-1645",
     "godot:sync": "node scripts/export-godot-scenario.mjs",
     "battle-engine:server": "node scripts/battle-engine-server.mjs",
@@ -27,6 +28,7 @@
     "vite": "6.4.2"
   },
   "devDependencies": {
-    "@playwright/test": "^1.62.1"
+    "@playwright/test": "^1.62.1",
+    "typescript": "^7.0.2"
   }
 }

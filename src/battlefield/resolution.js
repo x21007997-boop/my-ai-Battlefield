@@ -1,6 +1,7 @@
 import { appendBattleEvent, cloneBattleWorld } from './world.js';
+import { BATTLEFIELD_CONFIG } from './config.js';
 
-export const BATTLE_RESOLUTION_SCHEMA_VERSION = 1;
+export const BATTLE_RESOLUTION_SCHEMA_VERSION = BATTLEFIELD_CONFIG.schemaVersions.battleResolution;
 
 function positionConditionsMet(world, conditions = []) {
   return conditions.every((condition) => world.units[condition.unitId]?.location === condition.areaId);

@@ -1,6 +1,7 @@
 import { appendBattleEvent, cloneBattleWorld } from './world.js';
+import { BATTLEFIELD_CONFIG } from './config.js';
 
-export const DEFAULT_REPORT_FRESHNESS_SECONDS = 30;
+export const DEFAULT_REPORT_FRESHNESS_SECONDS = BATTLEFIELD_CONFIG.defaults.reportFreshnessSeconds;
 
 export function expireBeliefs(world) {
   const next = cloneBattleWorld(world);

@@ -5,11 +5,9 @@ import { expireBeliefs } from './reconnaissance.js';
 import { runEnemyDecision } from './enemyAi.js';
 import { appendBattleEvent, cloneBattleWorld } from './world.js';
 import { evaluateBattleOutcome } from './resolution.js';
+import { BATTLEFIELD_CONFIG } from './config.js';
 
-const TERRAIN_LABELS = {
-  river: '渡河',
-  mountain: '翻山',
-};
+const TERRAIN_LABELS = BATTLEFIELD_CONFIG.terrainLabels;
 
 function terrainEventPayload(order, unit, transition, status) {
   return {
@@ -141,6 +139,13 @@ function advanceOneSecond(world) {
   return evaluateBattleOutcome(next);
 }
 
+/**
+ * Advance a cloned world in one-second simulation steps.
+ *
+ * @param {import('./contracts').BattleWorld} world
+ * @param {number} [seconds]
+ * @returns {import('./contracts').BattleWorld}
+ */
 export function stepBattle(world, seconds = 1) {
   const duration = Math.max(0, Math.floor(seconds));
   let next = cloneBattleWorld(world);
@@ -148,6 +153,14 @@ export function stepBattle(world, seconds = 1) {
   return next;
 }
 
+/**
+ * Advance the battlefield with a safety cap for gateway requests.
+ *
+ * @param {import('./contracts').BattleWorld} world
+ * @param {number} seconds
+ * @param {{ maxSeconds?: number }} [options]
+ * @returns {import('./contracts').BattleWorld}
+ */
 export function advanceBattle(world, seconds, { maxSeconds = 3600 } = {}) {
   const duration = Math.min(Math.max(0, Math.floor(seconds)), maxSeconds);
   return stepBattle(world, duration);

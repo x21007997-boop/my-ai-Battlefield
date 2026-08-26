@@ -1,6 +1,7 @@
 import { appendBattleEvent, cloneBattleWorld } from './world.js';
+import { BATTLEFIELD_CONFIG } from './config.js';
 
-export const DEFAULT_SUPPLY_TICK_SECONDS = 60;
+export const DEFAULT_SUPPLY_TICK_SECONDS = BATTLEFIELD_CONFIG.defaults.supplyTickSeconds;
 
 export function consumeLogistics(world, { intervalSeconds = DEFAULT_SUPPLY_TICK_SECONDS } = {}) {
   const next = cloneBattleWorld(world);

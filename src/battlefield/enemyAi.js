@@ -1,11 +1,12 @@
 import { appendBattleEvent, cloneBattleWorld } from './world.js';
 import { issueOrder } from './orders.js';
 import { queueObservation, viewBelief } from './perception.js';
+import { BATTLEFIELD_CONFIG } from './config.js';
 
-export const DEFAULT_AI_INTERVAL_SECONDS = 15;
-export const DEFAULT_ENEMY_ACTION_REPORT_DELAY_SECONDS = 5;
+export const DEFAULT_AI_INTERVAL_SECONDS = BATTLEFIELD_CONFIG.defaults.aiIntervalSeconds;
+export const DEFAULT_ENEMY_ACTION_REPORT_DELAY_SECONDS = BATTLEFIELD_CONFIG.defaults.enemyActionReportDelaySeconds;
 
-const CONFIDENCE_RANK = { high: 3, medium: 2, low: 1 };
+const CONFIDENCE_RANK = BATTLEFIELD_CONFIG.confidenceRank;
 
 function chooseReportedTarget(belief) {
   return Object.values(belief.sightings ?? {})
@@ -17,12 +18,19 @@ function chooseReportedTarget(belief) {
     })[0] ?? null;
 }
 
+/**
+ * Let an AI side act on its own belief projection, never on commander data.
+ *
+ * @param {import('./contracts').BattleWorld} world
+ * @param {{ side?: string, intervalSeconds?: number }} [options]
+ * @returns {import('./contracts').BattleWorld}
+ */
 export function runEnemyDecision(world, { side = 'enemy', intervalSeconds } = {}) {
   let next = cloneBattleWorld(world);
   const cadence = intervalSeconds ?? next.ai?.intervalSeconds ?? DEFAULT_AI_INTERVAL_SECONDS;
   next.ai ??= { intervalSeconds: cadence, lastDecisionAt: 0, sides: {} };
   next.ai.sides ??= {};
-  next.ai.sides[side] ??= { enabled: true, commandDelaySeconds: 3 };
+  next.ai.sides[side] ??= { enabled: true, commandDelaySeconds: BATTLEFIELD_CONFIG.defaults.aiCommandDelaySeconds };
   next.ai.intervalSeconds = cadence;
 
   const sideConfig = next.ai.sides[side];

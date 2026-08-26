@@ -20,6 +20,7 @@ import {
   WaveSine,
 } from '@phosphor-icons/react';
 import { buildCommanderMapModel, cancelOrder, createBattleWorld, issueDeception, issueOrder, queueObservation, stepBattle, viewBelief } from '../../battlefield/index.js';
+import { BATTLEFIELD_CONFIG } from '../../battlefield/config.js';
 import { CHANGPING_PROFILE } from '../../battlefield/changpingScenario.js';
 
 const FIXTURE_AREAS = [
@@ -56,7 +57,7 @@ const FIXTURE_PROFILE = {
   dataNote: '只显示我方已知信息。敌军位置来自侦报，不读取世界真值。',
   mapTitle: '北坡—谷地—东侧山脊',
   mapNote: '沙盘示意图 · 仅用于内核联调',
-  mapConfig: { coordinateSystem: 'normalized-2d', bounds: { x: [0, 100], y: [0, 100] } },
+  mapConfig: { coordinateSystem: BATTLEFIELD_CONFIG.coordinateSystem, bounds: BATTLEFIELD_CONFIG.mapBounds },
   playerName: '秦军态势',
   playerSideLabel: '秦军',
   enemySideLabel: '赵军',
@@ -66,12 +67,12 @@ const FIXTURE_PROFILE = {
     { areaId: 'valley', type: 'pass', label: '通道' },
     { areaId: 'ridge', type: 'highland', label: '山脊' },
   ],
-  commandDelaySeconds: 3,
+  commandDelaySeconds: BATTLEFIELD_CONFIG.defaults.commanderCommandDelaySeconds,
   scout: {
     targetUnitId: 'zhao-scout',
     reportedAreaId: 'valley',
     actualAreaId: 'ridge',
-    delaySeconds: 5,
+    delaySeconds: BATTLEFIELD_CONFIG.defaults.scoutReportDelaySeconds,
     confidence: 'medium',
     sourceType: '前出侦骑',
     observation: '发现赵军前出侦骑活动，判断其位于谷地通道。',
@@ -89,7 +90,7 @@ const MAP_ICON_BY_TYPE = {
   highland: Mountains,
 };
 
-const HIDDEN_FROM_COMMANDER_EVENTS = new Set(['engagement_started', 'engagement_ended', 'combat_exchange']);
+const HIDDEN_FROM_COMMANDER_EVENTS = new Set(BATTLEFIELD_CONFIG.hiddenEventTypes);
 
 function isVisibleToCommander(event) {
   if (HIDDEN_FROM_COMMANDER_EVENTS.has(event.type)) return false;
@@ -414,7 +415,7 @@ export function BattlefieldPrototype({ mode = 'fixture', onBack = () => { window
             {sightingEntries.length > 0 && <div className="report-list"><small>已进入我方认知的情报</small>{sightingEntries.slice(-3).reverse().map((report) => <div className="report-row" key={report.id}><span className="report-confidence">{confidenceShort(report.confidence)}</span><p><strong>{world.areas[report.areaId]?.name}</strong><small>{report.text} · {report.sourceType} · {confidenceLabel(report.confidence)} · {uncertaintyLabel(report)} · 余 {Math.max(0, (report.expiresAt ?? world.simTime) - world.simTime)} 秒</small></p></div>)}</div>}
             {deceptionActions.length > 0 && <div className="deception-list"><small>可用计策 · 影响敌方认知</small>{deceptionActions.map((action) => {
               const lastIssuedAt = world.deception?.lastIssuedAtBySide?.[`player:${action.id}`];
-              const cooldownRemaining = lastIssuedAt == null ? 0 : Math.max(0, (action.cooldownSeconds ?? 30) - (world.simTime - lastIssuedAt));
+              const cooldownRemaining = lastIssuedAt == null ? 0 : Math.max(0, (action.cooldownSeconds ?? BATTLEFIELD_CONFIG.defaults.deceptionCooldownSeconds) - (world.simTime - lastIssuedAt));
               return <button className="deception-action" key={action.id} disabled={battleEnded || cooldownRemaining > 0} onClick={() => issueDeceptionAction(action.id)}><WaveSine size={16} /><span><strong>{action.name}</strong><small>误导至 {world.areas[action.reportedAreaId]?.name ?? '指定区域'} · {cooldownRemaining > 0 ? `冷却 ${cooldownRemaining} 秒` : '可施行'}</small></span></button>;
             })}</div>}
             {deceptionHistory.length > 0 && <div className="deception-history"><small>计策记录</small>{deceptionHistory.slice(-2).reverse().map((item) => <div className="deception-history-row" key={item.id}><span>●</span><p><strong>{deceptionActions.find((action) => action.id === item.actionId)?.name ?? '未命名计策'}</strong><small>{deceptionDeliveryLabel(item, world)} · 敌方将按其认知行动</small></p></div>)}</div>}
