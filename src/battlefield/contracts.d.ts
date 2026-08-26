@@ -140,6 +140,33 @@ export interface QueueObservationOptions {
   observedAt?: number;
   actualAreaId?: string;
   observation?: string;
+  reliabilityScoreOverride?: number | null;
+}
+
+export interface StrategyAction {
+  id: string;
+  kind: string;
+  side: SideId;
+  actionId?: string | null;
+  targetSide?: SideId | null;
+  targetUnitId: string;
+  reportedAreaId?: string | null;
+  actualAreaId?: string;
+  status: string;
+  issuedAt: number;
+  readyAt: number;
+  preparedAt?: number | null;
+  dispatchedAt?: number | null;
+  deliveredAt?: number | null;
+  observationId?: string | null;
+  exposureStatus?: string | null;
+  exposureProbability?: number;
+  failureReliabilityPenalty?: number;
+  failedAt?: number | null;
+  exposedAt?: number | null;
+  failureReason?: string | null;
+  cost?: Record<string, number>;
+  [key: string]: unknown;
 }
 
 export interface BeliefReport {
@@ -186,6 +213,13 @@ export interface BattleWorld {
     history: Array<Record<string, unknown>>;
     lastIssuedAtBySide: Record<string, number>;
   };
+  resources?: Record<SideId, Record<string, number>>;
+  strategy?: {
+    schemaVersion: number;
+    actions: StrategyAction[];
+    lastIssuedAtByKey: Record<string, number>;
+    reliabilityBySide: Record<SideId, number>;
+  };
   objectives?: Array<Record<string, unknown>>;
   endings?: Array<Record<string, unknown>>;
   resolution?: Record<string, unknown> | null;
@@ -224,6 +258,7 @@ export interface CreateBattleWorldOptions {
   objectives?: Array<Record<string, unknown>>;
   endings?: Array<Record<string, unknown>>;
   resolution?: Record<string, unknown> | null;
+  resources?: Record<SideId, Record<string, number>>;
 }
 
 export interface BattleCommand {
@@ -262,6 +297,7 @@ export interface BattleScenarioPackage {
   objectives?: { objectives?: Array<Record<string, unknown>>; [key: string]: unknown };
   endings?: { endings?: Array<Record<string, unknown>>; [key: string]: unknown };
   resolution?: Record<string, unknown> | null;
+  resources?: Record<SideId, Record<string, number>>;
 }
 
 export interface CommanderMapOptions {

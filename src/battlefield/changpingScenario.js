@@ -28,6 +28,10 @@ function mapSide(item) {
   return { ...item, side: sideMap[item.side] ?? item.side };
 }
 
+function mapResources(resources = {}) {
+  return Object.fromEntries(Object.entries(resources).map(([side, ledger]) => [sideMap[side] ?? side, ledger]));
+}
+
 function mapResolution(resolution) {
   if (!resolution) return resolution;
   return {
@@ -111,6 +115,7 @@ function buildChangpingGamePackage() {
     },
     endings,
     initialWorld: { ...initialWorld, units: mappedInitialUnits },
+    resources: mapResources(simulationParameters.resources),
     resolution: mapResolution(simulationParameters.resolution),
   };
 }
@@ -137,6 +142,7 @@ export const CHANGPING_PROFILE = {
   })),
   mapMarkers: presentation.mapMarkers,
   commandDelaySeconds: simulationParameters.commandDelaySeconds,
+  resources: mapResources(simulationParameters.resources),
   scout: simulationParameters.scout,
   deceptionActions: deception.actions,
   createWorld: () => createBattleWorldFromScenario(changpingGamePackage),

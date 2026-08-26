@@ -147,7 +147,7 @@ test('opens the formal Changping battle level', async ({ page }) => {
   await expect(deceptionButton).toBeVisible();
   await deceptionButton.click();
   await expect(page.locator('.battle-notice')).toContainText('计策已接收');
-  await expect(page.locator('.deception-history')).toContainText('传递中');
-  for (let i = 0; i < 4; i += 1) await page.getByRole('button', { name: '手动推进 1 秒' }).click();
+  await expect(page.locator('.deception-history')).toContainText('准备中');
+  for (let i = 0; i < 9; i += 1) await page.getByRole('button', { name: '手动推进 1 秒' }).click();
   await expect(page.locator('.deception-history')).toContainText('已送达敌方认知');
 });

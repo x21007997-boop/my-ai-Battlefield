@@ -114,6 +114,7 @@ const simulationWorld = createBattleWorld({
   deceptionActions: deception.actions,
   objectives: simulationObjectives,
   endings: endings.endings,
+  resources: Object.fromEntries(Object.entries(simulationParameters.resources ?? {}).map(([side, ledger]) => [side === 'qin' ? 'player' : side === 'zhao' ? 'enemy' : side, ledger])),
   resolution: simulationResolution,
 });
 const commanderSession = buildCommanderSessionSnapshot(simulationWorld, {
@@ -157,6 +158,7 @@ const clientScenario = {
   terrainFeatures: commanderSession.map.terrainFeatures,
   friendlyUnits,
   commandDelaySeconds: simulationParameters.commandDelaySeconds,
+  resources: commanderSession.resources,
   scout: commanderScout,
   deceptionActions: commanderSession.deceptionActions,
   objectives: simulationObjectives,

@@ -20,13 +20,15 @@ function buildReportUncertainty(world, reportedAreaId, confidence) {
   };
 }
 
-function resolveSource(next, sourceId, sourceReliability, sourceType, sourceIndependenceGroup) {
+function resolveSource(next, sourceId, sourceReliability, sourceType, sourceIndependenceGroup, reliabilityScoreOverride) {
   const source = sourceId ? next.intelligenceSources?.[sourceId] : null;
   const reliability = source?.reliability ?? sourceReliability ?? 'unknown';
   return {
     source,
     reliability,
-    reliabilityScore: source?.reliabilityScore ?? SOURCE_RELIABILITY_SCORES[reliability] ?? SOURCE_RELIABILITY_SCORES.unknown,
+    reliabilityScore: Number.isFinite(reliabilityScoreOverride)
+      ? Math.max(0, Math.min(1, reliabilityScoreOverride))
+      : source?.reliabilityScore ?? SOURCE_RELIABILITY_SCORES[reliability] ?? SOURCE_RELIABILITY_SCORES.unknown,
     independenceGroup: sourceIndependenceGroup ?? source?.independenceGroup ?? sourceId ?? sourceType ?? 'unknown',
   };
 }
@@ -60,6 +62,7 @@ export function queueObservation(world, {
   observedAt = world.simTime,
   actualAreaId,
   observation = '发现目标活动迹象',
+  reliabilityScoreOverride = null,
 } = /** @type {import('./contracts').QueueObservationOptions} */ ({})) {
   const next = cloneBattleWorld(world);
   if (!next.beliefs[observerSide]) return { world: next, observation: null, ...battleError(BATTLE_ERROR_CODES.OBSERVER_SIDE_NOT_FOUND, '观察者阵营不存在。', { observerSide }) };
@@ -67,7 +70,7 @@ export function queueObservation(world, {
   if (!next.areas[reportedAreaId]) return { world: next, observation: null, ...battleError(BATTLE_ERROR_CODES.AREA_NOT_FOUND, '报告区域不存在。', { areaId: reportedAreaId }) };
 
   const target = next.units[targetUnitId];
-  const source = resolveSource(next, sourceId, sourceReliability, sourceType, sourceIndependenceGroup);
+  const source = resolveSource(next, sourceId, sourceReliability, sourceType, sourceIndependenceGroup, reliabilityScoreOverride);
   const uncertainty = buildReportUncertainty(next, reportedAreaId, confidence);
   const report = {
     id: nextObservationId(next),

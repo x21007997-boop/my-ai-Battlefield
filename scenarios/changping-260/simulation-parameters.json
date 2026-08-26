@@ -4,6 +4,18 @@
   "parameterType": "scenario_assumption",
   "note": "以下数值只用于让历史背景进入可玩的实时窗口，不代表史料中的真实人数、距离或士气。",
   "commandDelaySeconds": 3,
+  "resources": {
+    "qin": {
+      "intelligencePoints": 3,
+      "scoutTeams": 2,
+      "deceptionAssets": 2
+    },
+    "zhao": {
+      "intelligencePoints": 2,
+      "scoutTeams": 2,
+      "deceptionAssets": 1
+    }
+  },
   "routeTravelSeconds": {
     "qin-west-camp->western-gate": 10,
     "qin-west-camp->dan-river-valley": 14,
@@ -24,6 +36,12 @@
     "reportedAreaId": "zhao-main-camp",
     "actualAreaId": "zhao-relief-route",
     "delaySeconds": 5,
+    "preparationSeconds": 3,
+    "cost": { "intelligencePoints": 1, "scoutTeams": 1 },
+    "cooldownSeconds": 20,
+    "exposureProbability": 0.18,
+    "exposureDelaySeconds": 3,
+    "failureReliabilityPenalty": 0.12,
     "freshnessSeconds": 24,
     "confidence": "medium",
     "sourceId": "qin-forward-scouts",

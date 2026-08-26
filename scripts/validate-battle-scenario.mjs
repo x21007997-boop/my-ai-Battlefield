@@ -63,6 +63,14 @@ function positiveNumber(value) {
   return typeof value === 'number' && Number.isFinite(value) && value > 0;
 }
 
+function nonNegativeInteger(value) {
+  return Number.isInteger(value) && value >= 0;
+}
+
+function probability(value) {
+  return typeof value === 'number' && Number.isFinite(value) && value >= 0 && value <= 1;
+}
+
 for (const file of requiredJson) {
   try {
     data[file] = JSON.parse(await readFile(resolve(scenarioDir, file), 'utf8'));
@@ -160,6 +168,22 @@ if (!errors.length) {
     if (simulationParameters.status !== 'experimental') add('simulation-parameters.json: status 必须是 experimental');
     if (simulationParameters.parameterType !== 'scenario_assumption') add('simulation-parameters.json: parameterType 必须是 scenario_assumption');
     if (!positiveNumber(simulationParameters.commandDelaySeconds)) add('simulation-parameters.json: commandDelaySeconds 必须是正数');
+    if (simulationParameters.resources !== undefined) {
+      if (!simulationParameters.resources || typeof simulationParameters.resources !== 'object' || Array.isArray(simulationParameters.resources)) {
+        add('simulation-parameters.json: resources 必须是按阵营划分的对象');
+      } else {
+        Object.entries(simulationParameters.resources).forEach(([side, ledger]) => {
+          if (!sideIds.has(side)) add(`simulation-parameters.json: resources 引用了不存在的阵营 ${side}`);
+          if (!ledger || typeof ledger !== 'object' || Array.isArray(ledger)) {
+            add(`simulation-parameters.json:${side}: resources 必须是对象`);
+            return;
+          }
+          Object.entries(ledger).forEach(([resource, amount]) => {
+            if (!nonNegativeInteger(amount)) add(`simulation-parameters.json:${side}.${resource}: 资源数量必须是非负整数`);
+          });
+        });
+      }
+    }
     if (!Array.isArray(simulationParameters.initialUnits)) add('simulation-parameters.json: initialUnits 必须是数组');
     const parameterUnitIds = new Set((simulationParameters.initialUnits ?? []).map((unit) => unit.id));
     (simulationParameters.initialUnits ?? []).forEach((unit) => {
@@ -178,6 +202,12 @@ if (!errors.length) {
       if (!areaIds.has(scout.reportedAreaId) || !areaIds.has(scout.actualAreaId)) add('simulation-parameters.json: scout 的区域引用无效');
       if (scout.sourceId && !intelSourceIds.has(scout.sourceId)) add('simulation-parameters.json: scout.sourceId 引用了不存在的情报来源');
       if (!positiveNumber(scout.delaySeconds) || !positiveNumber(scout.freshnessSeconds)) add('simulation-parameters.json: scout.delaySeconds 和 freshnessSeconds 必须是正数');
+      if (scout.preparationSeconds !== undefined && !nonNegativeInteger(scout.preparationSeconds)) add('simulation-parameters.json: scout.preparationSeconds 必须是非负整数');
+      if (scout.cost !== undefined && (!scout.cost || typeof scout.cost !== 'object' || Array.isArray(scout.cost))) add('simulation-parameters.json: scout.cost 必须是对象');
+      if (scout.cooldownSeconds !== undefined && !nonNegativeInteger(scout.cooldownSeconds)) add('simulation-parameters.json: scout.cooldownSeconds 必须是非负整数');
+      if (scout.exposureProbability !== undefined && !probability(scout.exposureProbability)) add('simulation-parameters.json: scout.exposureProbability 必须在 0-1 范围内');
+      if (scout.exposureDelaySeconds !== undefined && !nonNegativeInteger(scout.exposureDelaySeconds)) add('simulation-parameters.json: scout.exposureDelaySeconds 必须是非负整数');
+      if (scout.failureReliabilityPenalty !== undefined && !probability(scout.failureReliabilityPenalty)) add('simulation-parameters.json: scout.failureReliabilityPenalty 必须在 0-1 范围内');
     }
     const resolution = simulationParameters.resolution;
     if (resolution) {
@@ -293,6 +323,12 @@ if (!errors.length) {
   });
   deception.forEach((action) => {
     if (!action.name || !action.effect) add(`deception.json:${action.id}: 缺少 name 或 effect`);
+    if (action.preparationSeconds !== undefined && !nonNegativeInteger(action.preparationSeconds)) add(`deception.json:${action.id}: preparationSeconds 必须是非负整数`);
+    if (action.cost !== undefined && (!action.cost || typeof action.cost !== 'object' || Array.isArray(action.cost))) add(`deception.json:${action.id}: cost 必须是对象`);
+    if (action.cooldownSeconds !== undefined && !nonNegativeInteger(action.cooldownSeconds)) add(`deception.json:${action.id}: cooldownSeconds 必须是非负整数`);
+    if (action.exposureProbability !== undefined && !probability(action.exposureProbability)) add(`deception.json:${action.id}: exposureProbability 必须在 0-1 范围内`);
+    if (action.exposureDelaySeconds !== undefined && !nonNegativeInteger(action.exposureDelaySeconds)) add(`deception.json:${action.id}: exposureDelaySeconds 必须是非负整数`);
+    if (action.failureReliabilityPenalty !== undefined && !probability(action.failureReliabilityPenalty)) add(`deception.json:${action.id}: failureReliabilityPenalty 必须在 0-1 范围内`);
   });
   events.forEach((event) => {
     if (!event.type || !event.title) add(`events.json:${event.id}: 缺少 type 或 title`);

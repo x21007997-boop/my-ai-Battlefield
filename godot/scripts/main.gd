@@ -19,6 +19,9 @@ var pending_scout: Dictionary = {}
 var pending_observations: Array = []
 var deception_actions: Array = []
 var deception_history: Array = []
+var strategy_actions: Array = []
+var resource_state: Dictionary = {}
+var strategy_reliability := 1.0
 var objectives: Array = []
 var review: Dictionary = {}
 var log_lines: Array[String] = []
@@ -76,6 +79,7 @@ func _ready() -> void:
 	event_log.append(0, "scenario_loaded", {"commanderSide": "qin", "rawEnemyTruthIncluded": false})
 	friendly_units = scenario.get("friendlyUnits", []).duplicate(true)
 	deception_actions = scenario.get("deceptionActions", []).duplicate(true)
+	resource_state = scenario.get("resources", {}).duplicate(true)
 	objectives = scenario.get("objectives", []).duplicate(true)
 	if friendly_units.size() > 0:
 		selected_unit_id = str(friendly_units[0].get("id", ""))
@@ -165,7 +169,11 @@ func _on_engine_response(operation: String, response: Dictionary) -> void:
 			match event_type:
 				"order_issued": _set_feedback("命令已接收：部队进入传递状态。", "success")
 				"observation_created": _set_feedback("侦察已接收：报告正在返回指挥部。", "success")
-				"deception_issued": _set_feedback("计策已接收：敌方将依据自己的认知行动。", "success")
+				"reconnaissance_issued": _set_feedback("侦察已接收：斥候正在准备，资源已扣除。", "success")
+				"reconnaissance_exposed": _set_feedback("侦察受阻：斥候行迹暴露，回报可信度下降。", "error")
+				"deception_issued": _set_feedback("计策已接收：正在准备投放，资源已扣除。" if str(result.get("status", "")) == "preparing" else "计策已接收：敌方将依据自己的认知行动。", "success")
+				"deception_exposed": _set_feedback("计策暴露：敌方可能已经识破，后续误导可信度下降。", "error")
+				"strategy_reliability_reduced": _set_feedback("情报链可信度下降：后续同类行动更容易被识破。", "error")
 				_: _set_feedback("操作已接收，战场状态正在刷新。", "success")
 	_refresh()
 
@@ -202,6 +210,9 @@ func _apply_engine_session(session: Dictionary) -> void:
 		pending_scout = pending_observations[0].duplicate(true)
 	deception_actions = session.get("deceptionActions", deception_actions).duplicate(true)
 	deception_history = session.get("deceptionHistory", []).duplicate(true)
+	strategy_actions = session.get("strategyActions", []).duplicate(true)
+	resource_state = session.get("resources", resource_state).duplicate(true)
+	strategy_reliability = float(session.get("strategyReliability", strategy_reliability))
 	objectives = session.get("objectives", objectives).duplicate(true)
 	review = session.get("review", {}).duplicate(true) if session.get("review", {}) is Dictionary else {}
 	outcome = session.get("outcome", {}).duplicate(true) if session.get("outcome", {}) is Dictionary else {}
@@ -831,8 +842,15 @@ func _dispatch_scout() -> void:
 	if scout.is_empty():
 		_set_feedback("侦察未派出：当前战役没有配置侦察方式。", "error")
 		return
+	if not _can_afford(scout.get("cost", {})):
+		_set_feedback("侦察未派出：侦察资源不足。", "error")
+		return
+	_spend_resources(scout.get("cost", {}))
 	pending_scout = scout.duplicate(true)
-	pending_scout["arrivesAt"] = sim_time + int(scout.get("delaySeconds", 5))
+	var preparation_seconds := int(scout.get("preparationSeconds", 0))
+	pending_scout["preparationAt"] = sim_time + preparation_seconds
+	pending_scout["arrivesAt"] = sim_time + preparation_seconds + int(scout.get("delaySeconds", 5))
+	pending_scout["status"] = "preparing" if preparation_seconds > 0 else "in_transit"
 	pending_observations = [pending_scout.duplicate(true)]
 	event_log.append(sim_time, "observation_queued", {
 		"reportedAreaId": scout.get("reportedAreaId", ""),
@@ -840,8 +858,8 @@ func _dispatch_scout() -> void:
 		"confidence": scout.get("confidence", "medium"),
 		"arrivesAt": pending_scout["arrivesAt"],
 	})
-	_add_log("前出斥候已派出，报告正在返回指挥部。")
-	_set_feedback("侦察已接收：报告正在返回指挥部。", "success")
+	_add_log("前出斥候已接收军令，正在整备。")
+	_set_feedback("侦察已接收：斥候准备 %d 秒，资源已扣除。" % preparation_seconds, "success")
 	_refresh()
 
 func _issue_deception() -> void:
@@ -897,7 +915,12 @@ func _step_second() -> void:
 		elif order.get("status", "") == "executing" and order.get("type", "move") != "hold":
 			order["remainingTravelSeconds"] = max(0, int(order.get("remainingTravelSeconds", 0)) - 1)
 
-	if not pending_scout.is_empty() and sim_time >= int(pending_scout.get("arrivesAt", 0)):
+	if not pending_scout.is_empty() and pending_scout.get("status", "in_transit") == "preparing" and sim_time >= int(pending_scout.get("preparationAt", 0)):
+		pending_scout["status"] = "in_transit"
+		pending_observations = [pending_scout.duplicate(true)]
+		event_log.append(sim_time, "reconnaissance_prepared", {})
+		_add_log("侦察准备完成，斥候已出发。")
+	if not pending_scout.is_empty() and pending_scout.get("status", "in_transit") == "in_transit" and sim_time >= int(pending_scout.get("arrivesAt", 0)):
 		var report := {
 			"id": "report-%04d" % (reported_signals.size() + 1),
 			"areaId": pending_scout.get("reportedAreaId", ""),
@@ -1115,12 +1138,21 @@ func _replay_event_text(event: Dictionary) -> String:
 			if str(payload.get("sourceType", "")) == "frontline-report":
 				return "回放：前线来报正在返回，疑似敌军调动。"
 			return "回放：侦察报告正在返回指挥部。"
+		"reconnaissance_issued": return "回放：侦察已接收，斥候正在准备。"
+		"reconnaissance_prepared": return "回放：斥候准备完成，已出发。"
+		"reconnaissance_exposed": return "回放：斥候行迹暴露，回报可信度下降。"
+		"reconnaissance_dispatched": return "回放：侦察报告正在返回指挥部。"
 		"report_arrived":
 			return "回放：情报抵达，敌情位于%s（%s，%s）。" % [_area_name(str(payload.get("reportedAreaId", payload.get("areaId", "")))), _confidence_label(str(payload.get("confidence", "unknown"))), _uncertainty_label(payload)]
 		"report_expired":
 			return "回放：前线情报失效。"
 		"deception_issued":
+			if str(payload.get("status", "")) == "preparing":
+				return "回放：计策已接收，正在准备投放。"
 			return "回放：已施行计策，敌方将依据自己的认知行动。"
+		"deception_prepared": return "回放：计策准备完成，正在投放。"
+		"deception_exposed": return "回放：计策暴露，后续误导可信度下降。"
+		"strategy_reliability_reduced": return "回放：情报链可信度下降。"
 		"commander_unit_selected":
 			return "回放：选中部队。"
 		"commander_target_selected":
@@ -1184,10 +1216,11 @@ func _refresh() -> void:
 	var order_status: String = _order_status_text(str(order.get("status", ""))) if not order.is_empty() else "暂无军令"
 	var report_status := "%d 条前线报告" % reported_signals.size()
 	var pending_count := _pending_observation_count()
-	var pending_status := " · %d 份回传中" % pending_count
+	var preparation_count := _preparing_strategy_count()
+	var pending_status := " · %d 份回传中 · %d 项准备中" % [pending_count, preparation_count]
 	status_label.text = "%s\n军令：%s · %s%s" % [mode, order_status, report_status, pending_status]
 	if hud_metrics_label != null:
-		hud_metrics_label.text = "秦军 %d 部  ·  前线报告 %d 条  ·  回传中 %d 份  ·  敌情仅凭认知" % [friendly_units.size(), reported_signals.size(), pending_count]
+		hud_metrics_label.text = "秦军 %d 部  ·  情报 %s  ·  斥候 %s\n计策 %s  ·  情报链 %d%%" % [friendly_units.size(), _resource_text("intelligencePoints"), _resource_text("scoutTeams"), _resource_text("deceptionAssets"), int(strategy_reliability * 100.0)]
 	command_state_label.text = _command_state_text()
 	outcome_label.visible = outcome.size() > 0
 	if outcome.size() > 0:
@@ -1207,7 +1240,7 @@ func _refresh() -> void:
 	if task_option != null:
 		task_option.disabled = replay_mode or outcome.size() > 0 or selected_unit_id == "" or (not order.is_empty() and order.get("status", "") in ["transmitting", "executing"])
 		task_option.tooltip_text = "先选部队和目标区域，再选择任务" if selected_target_area_id == "" else "选择警戒、掩护、封锁、诱敌、截粮或撤退"
-	scout_button.disabled = replay_mode or outcome.size() > 0 or pending_count > 0
+	scout_button.disabled = replay_mode or outcome.size() > 0 or pending_count > 0 or preparation_count > 0 or not _can_afford(scenario.get("scout", {}).get("cost", {}))
 	deception_button.text = "计策"
 	deception_button.tooltip_text = str(deception_actions[0].get("name", "暂无可用计策")) if not deception_actions.is_empty() else "暂无可用计策"
 	deception_button.disabled = replay_mode or outcome.size() > 0 or not engine_connected or deception_actions.is_empty()
@@ -1237,6 +1270,39 @@ func _pending_observation_count() -> int:
 	if engine_connected:
 		return pending_observations.size()
 	return 1 if not pending_scout.is_empty() else 0
+
+func _preparing_strategy_count() -> int:
+	if engine_connected:
+		var count := 0
+		for action in strategy_actions:
+			if action.get("status", "") == "preparing":
+				count += 1
+		return count
+	return 1 if pending_scout.get("status", "") == "preparing" else 0
+
+func _resource_ledger() -> Dictionary:
+	if resource_state.has("player") and resource_state.get("player") is Dictionary:
+		return resource_state.get("player", {})
+	return resource_state
+
+func _resource_text(resource_key: String) -> String:
+	var value := int(_resource_ledger().get(resource_key, -1))
+	return "—" if value < 0 else str(value)
+
+func _can_afford(cost: Variant) -> bool:
+	if not cost is Dictionary:
+		return true
+	for key in cost.keys():
+		if int(_resource_ledger().get(str(key), 0)) < int(cost[key]):
+			return false
+	return true
+
+func _spend_resources(cost: Variant) -> void:
+	if not cost is Dictionary:
+		return
+	var ledger := _resource_ledger()
+	for key in cost.keys():
+		ledger[str(key)] = max(0, int(ledger.get(str(key), 0)) - int(cost[key]))
 
 func _order_status_text(status: String) -> String:
 	match status:

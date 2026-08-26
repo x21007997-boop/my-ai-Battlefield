@@ -19,7 +19,7 @@ import {
   ShieldChevron,
   WaveSine,
 } from '@phosphor-icons/react';
-import { buildCommanderMapModel, cancelOrder, createBattleWorld, issueDeception, issueOrder, queueObservation, stepBattle, viewBelief } from '../../battlefield/index.js';
+import { buildCommanderMapModel, cancelOrder, createBattleWorld, dispatchReconnaissance, issueDeception, issueOrder, stepBattle, viewBelief } from '../../battlefield/index.js';
 import { BATTLEFIELD_CONFIG } from '../../battlefield/config.js';
 import { CHANGPING_PROFILE } from '../../battlefield/changpingScenario.js';
 
@@ -130,6 +130,8 @@ function candidateAreaLabel(report, areas) {
 }
 
 function deceptionDeliveryLabel(deception, world) {
+  if (deception.status === 'exposed') return '已暴露 · 未进入敌方认知';
+  if (deception.status === 'preparing') return `准备中 · 余 ${Math.max(0, (deception.readyAt ?? world.simTime) - world.simTime)} 秒`;
   const observation = world.observations.find((item) => item.id === deception.observationId);
   if (!observation || observation.status === 'in_transit') {
     const remaining = observation ? Math.max(0, observation.arrivesAt - world.simTime) : null;
@@ -151,7 +153,20 @@ function orderStatus(order) {
   if (order.status === 'executing') return '执行中';
   if (order.status === 'completed') return '已完成';
   if (order.status === 'cancelled') return '已取消';
+  if (order.status === 'blocked') return '被封锁';
   return order.status;
+}
+
+function resourceLabel(key) {
+  return BATTLEFIELD_CONFIG.resourceLabels?.[key] ?? ({ intelligencePoints: '情报点', scoutTeams: '侦察队', deceptionAssets: '计策资源' }[key] ?? key);
+}
+
+function canAfford(resources, cost = {}) {
+  return Object.entries(cost ?? {}).every(([key, amount]) => Number(resources?.[key] ?? 0) >= Number(amount ?? 0));
+}
+
+function resourceCostText(cost = {}) {
+  return Object.entries(cost ?? {}).filter(([, amount]) => Number(amount) > 0).map(([key, amount]) => `${resourceLabel(key)} ${amount}`).join(' · ');
 }
 
 function eventText(event, world) {
@@ -162,9 +177,16 @@ function eventText(event, world) {
   if (event.type === 'unit_arrived') return `部队到达：${unit?.name ?? event.unitId} 进入${area?.name ?? event.areaId}`;
   if (event.type === 'order_completed') return `命令完成：${unit?.name ?? event.unitId} 暂守原地`;
   if (event.type === 'observation_created') return event.sourceType === 'frontline-report' ? '前线来报：疑似接敌报告正在返回指挥部' : '侦查派出：报告正在返回指挥部';
+  if (event.type === 'reconnaissance_issued') return `侦查已接收：斥候准备中，${Math.max(0, (event.readyAt ?? world.simTime) - world.simTime)} 秒后出发`;
+  if (event.type === 'reconnaissance_prepared') return '侦查准备完成：斥候已出发，等待回报';
+  if (event.type === 'reconnaissance_exposed') return '侦查受阻：斥候行迹暴露，回报可信度下降';
+  if (event.type === 'reconnaissance_dispatched') return '侦查已出发：报告正在返回指挥部';
   if (event.type === 'report_arrived') return `情报抵达：${area?.name ?? event.areaId}出现${event.sourceType === 'frontline-report' ? '疑似敌情' : '侦报标记'} · ${confidenceLabel(event.confidence)} · ${uncertaintyLabel(event)}`;
   if (event.type === 'report_expired') return `情报失效：${area?.name ?? event.areaId}的敌情标记已超过有效时限`;
-  if (event.type === 'deception_issued') return `计策发出：敌方将收到关于${area?.name ?? event.reportedAreaId}的疑似情报`;
+  if (event.type === 'deception_issued') return event.status === 'preparing' ? '计策已接收：正在准备，尚未送入敌方认知' : `计策发出：敌方将收到关于${area?.name ?? event.reportedAreaId}的疑似情报`;
+  if (event.type === 'deception_prepared') return '计策准备完成：正在向敌方认知投放';
+  if (event.type === 'deception_exposed') return '计策暴露：敌方可能识破了这次误导';
+  if (event.type === 'strategy_reliability_reduced') return `计策可信度下降：当前约 ${Math.round((event.reliability ?? 0) * 100)}%`;
   if (event.type === 'order_cancelled') return `命令取消：${unit?.name ?? event.unitId}`;
   if (event.type === 'supply_consumed') return `后勤：${unit?.name ?? event.unitId} 消耗一日补给，余 ${event.after} 天`;
   if (event.type === 'supply_depleted') return `缺粮：${unit?.name ?? event.unitId} 补给耗尽，士气与战力开始下降`;
@@ -213,6 +235,8 @@ export function BattlefieldPrototype({ mode = 'fixture', onBack = () => { window
   const selectedUnit = world.units[selectedUnitId] ?? ownUnits[0];
   const activeOrders = world.orders.filter((order) => ['transmitting', 'executing'].includes(order.status));
   const inTransitReports = world.observations.filter((observation) => observation.status === 'in_transit');
+  const preparingStrategies = (world.strategy?.actions ?? []).filter((action) => action.side === 'player' && action.status === 'preparing');
+  const resources = world.resources?.player ?? {};
   const deceptionActions = Object.values(world.deception?.actions ?? {});
   const deceptionHistory = (world.deception?.history ?? []).filter((item) => item.side === 'player');
   const recentEvents = world.eventLog.filter(isVisibleToCommander).slice(-9).reverse();
@@ -245,7 +269,7 @@ export function BattlefieldPrototype({ mode = 'fixture', onBack = () => { window
   }
 
   function dispatchScout() {
-    const result = queueObservation(world, {
+    const result = dispatchReconnaissance(world, {
       observerSide: 'player',
       ...profile.scout,
     });
@@ -254,7 +278,10 @@ export function BattlefieldPrototype({ mode = 'fixture', onBack = () => { window
       return;
     }
     setWorld(result.world);
-    notify(`侦查已接收：报告预计 ${profile.scout.delaySeconds} 秒后抵达，当前处于返回途中。`);
+    const preparationSeconds = result.action?.preparationSeconds ?? 0;
+    notify(preparationSeconds > 0
+      ? `侦查已接收：斥候准备 ${preparationSeconds} 秒后出发，资源已扣除。`
+      : `侦查已接收：报告预计 ${profile.scout.delaySeconds} 秒后抵达，当前处于返回途中。`);
   }
 
   function issueDeceptionAction(actionId) {
@@ -266,8 +293,9 @@ export function BattlefieldPrototype({ mode = 'fixture', onBack = () => { window
       return;
     }
     setWorld(result.world);
+    const preparation = action.preparationSeconds ?? 0;
     const delay = action.delaySeconds ?? 0;
-    notify(`计策已接收：${action.name}。${delay > 0 ? `预计 ${delay} 秒后影响敌方认知。` : '正在影响敌方认知。'}`);
+    notify(`计策已接收：${action.name}。${preparation > 0 ? `准备 ${preparation} 秒后投放` : '正在投放'}，资源已扣除。`);
   }
 
   function cancelActiveOrder(orderId) {
@@ -332,6 +360,7 @@ export function BattlefieldPrototype({ mode = 'fixture', onBack = () => { window
               <div><span>执行中命令</span><strong>{activeOrders.length}</strong><small>条</small></div>
               <div><span>已报敌情</span><strong>{sightingEntries.length}</strong><small>处</small></div>
               <div><span>延迟侦报</span><strong>{inTransitReports.length}</strong><small>份</small></div>
+              <div><span>情报点</span><strong>{resources.intelligencePoints ?? '—'}</strong><small>可用</small></div>
             </div>
           </div>
 
@@ -409,14 +438,17 @@ export function BattlefieldPrototype({ mode = 'fixture', onBack = () => { window
           <div className="battle-panel command-panel">
             <div className="panel-kicker"><Broadcast size={16} /> 侦查与欺骗</div>
             <h2>{profile.id === 'changping' ? '派出前出斥候' : '派出前出侦骑'}</h2>
-            <p className="panel-note">{profile.id === 'changping' ? '本关使用长平战役的场景参数：报告可能把援军位置误判为赵军主壁。' : '本按钮会生成一份延迟 5 秒、内容可能失真的侦报：敌军实际在山脊，但报告声称在谷地。'}</p>
-            <button className="scout-button" disabled={battleEnded} onClick={dispatchScout}><Eye size={17} /> 派出侦查</button>
+            <p className="panel-note">{profile.id === 'changping' ? '斥候需要整备时间和资源；行迹暴露时，回报会延迟且可信度下降。' : '本按钮会生成一份延迟侦报，内容可能失真。'}</p>
+            <p className="command-hint">侦察队 {resources.scoutTeams ?? '—'} · {resourceCostText(profile.scout?.cost) || '无需额外资源'} · 准备 {profile.scout?.preparationSeconds ?? 0} 秒</p>
+            <button className="scout-button" disabled={battleEnded || !canAfford(resources, profile.scout?.cost)} onClick={dispatchScout}><Eye size={17} /> 派出侦查</button>
+            {preparingStrategies.length > 0 && <div className="report-list report-pending"><small>正在准备的计策</small>{preparingStrategies.slice(-3).reverse().map((action) => <div className="report-row" key={action.id}><span className="report-confidence pending">⌛</span><p><strong>{action.kind === 'scout' ? '前出斥候' : '计策准备'}</strong><small>{Math.max(0, (action.readyAt ?? world.simTime) - world.simTime)} 秒后进入执行阶段 · {resourceCostText(action.cost) || '无资源消耗'}</small></p></div>)}</div>}
             {inTransitReports.length > 0 && <div className="report-list report-pending"><small>返回中的情报</small>{inTransitReports.slice(-3).reverse().map((report) => <div className="report-row" key={report.id}><span className="report-confidence pending">…</span><p><strong>{report.sourceType ?? '前线报告'}</strong><small>{report.observation ?? '报告尚未抵达，内容暂不进入沙盘。'} · {Math.max(0, (report.arrivesAt ?? world.simTime) - world.simTime)} 秒后抵达</small></p></div>)}</div>}
             {sightingEntries.length > 0 && <div className="report-list"><small>已进入我方认知的情报</small>{sightingEntries.slice(-3).reverse().map((report) => <div className="report-row" key={report.id}><span className="report-confidence">{confidenceShort(report.confidence)}</span><p><strong>{world.areas[report.areaId]?.name}</strong><small>{report.text} · {report.sourceType} · {confidenceLabel(report.confidence)} · {uncertaintyLabel(report)} · 余 {Math.max(0, (report.expiresAt ?? world.simTime) - world.simTime)} 秒</small></p></div>)}</div>}
             {deceptionActions.length > 0 && <div className="deception-list"><small>可用计策 · 影响敌方认知</small>{deceptionActions.map((action) => {
               const lastIssuedAt = world.deception?.lastIssuedAtBySide?.[`player:${action.id}`];
               const cooldownRemaining = lastIssuedAt == null ? 0 : Math.max(0, (action.cooldownSeconds ?? BATTLEFIELD_CONFIG.defaults.deceptionCooldownSeconds) - (world.simTime - lastIssuedAt));
-              return <button className="deception-action" key={action.id} disabled={battleEnded || cooldownRemaining > 0} onClick={() => issueDeceptionAction(action.id)}><WaveSine size={16} /><span><strong>{action.name}</strong><small>误导至 {world.areas[action.reportedAreaId]?.name ?? '指定区域'} · {cooldownRemaining > 0 ? `冷却 ${cooldownRemaining} 秒` : '可施行'}</small></span></button>;
+              const affordable = canAfford(resources, action.cost);
+              return <button className="deception-action" key={action.id} disabled={battleEnded || cooldownRemaining > 0 || !affordable} onClick={() => issueDeceptionAction(action.id)}><WaveSine size={16} /><span><strong>{action.name}</strong><small>误导至 {world.areas[action.reportedAreaId]?.name ?? '指定区域'} · 准备 {action.preparationSeconds ?? 0} 秒 · {resourceCostText(action.cost) || '无需资源'} · {!affordable ? '资源不足' : cooldownRemaining > 0 ? `冷却 ${cooldownRemaining} 秒` : '可施行'}</small></span></button>;
             })}</div>}
             {deceptionHistory.length > 0 && <div className="deception-history"><small>计策记录</small>{deceptionHistory.slice(-2).reverse().map((item) => <div className="deception-history-row" key={item.id}><span>●</span><p><strong>{deceptionActions.find((action) => action.id === item.actionId)?.name ?? '未命名计策'}</strong><small>{deceptionDeliveryLabel(item, world)} · 敌方将按其认知行动</small></p></div>)}</div>}
           </div>

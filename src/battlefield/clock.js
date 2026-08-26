@@ -1,8 +1,9 @@
 import { applyObservation, queueObservation } from './perception.js';
 import { resolveCombat } from './combat.js';
 import { consumeLogistics } from './logistics.js';
-import { expireBeliefs } from './reconnaissance.js';
+import { expireBeliefs, resolveReconnaissanceActions, syncStrategyActions } from './reconnaissance.js';
 import { runEnemyDecision } from './enemyAi.js';
+import { resolvePendingDeceptions } from './deception.js';
 import { appendBattleEvent, cloneBattleWorld } from './world.js';
 import { evaluateBattleOutcome } from './resolution.js';
 import { BATTLEFIELD_CONFIG } from './config.js';
@@ -233,8 +234,11 @@ function advanceOneSecond(world) {
     appendBattleEvent(next, { type: 'unit_arrived', orderId: order.id, unitId: order.unitId, side: unit?.side, areaId: order.targetAreaId });
   }
 
+  next = resolveReconnaissanceActions(next);
+  next = resolvePendingDeceptions(next);
   const dueObservations = next.observations.filter((observation) => observation.status === 'in_transit' && observation.arrivesAt <= next.simTime);
   for (const observation of dueObservations) next = applyObservation(next, observation).world;
+  next = syncStrategyActions(next);
   next = expireBeliefs(next);
   next = consumeLogistics(next);
   next = resolveCombat(next);

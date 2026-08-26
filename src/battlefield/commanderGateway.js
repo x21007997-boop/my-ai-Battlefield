@@ -1,7 +1,7 @@
 import { buildCommanderSessionSnapshot } from './commanderSession.js';
 import { advanceBattle } from './clock.js';
 import { cancelOrder, issueOrder } from './orders.js';
-import { queueObservation } from './perception.js';
+import { dispatchReconnaissance } from './reconnaissance.js';
 import { issueDeception } from './deception.js';
 import { BATTLEFIELD_CONFIG } from './config.js';
 import { BATTLE_ERROR_CODES, battleError } from './errors.js';
@@ -80,7 +80,7 @@ export function applyCommanderCommand(world, command, {
   }
   if (command.type === 'scout') {
     if (!scout) return { world, accepted: false, ...battleError(BATTLE_ERROR_CODES.SCOUT_NOT_CONFIGURED, '当前场景没有配置侦查方式。') };
-    const result = queueObservation(world, {
+    const result = dispatchReconnaissance(world, {
       ...scout,
       observerSide: side,
       // actualAreaId stays in the engine-side scenario configuration and is
@@ -89,7 +89,13 @@ export function applyCommanderCommand(world, command, {
     return {
       world: result.world,
       accepted: result.error === null,
-      result: result.observation ? { id: result.observation.id, arrivesAt: result.observation.arrivesAt } : null,
+      result: result.action ? {
+        id: result.action.id,
+        status: result.action.status,
+        readyAt: result.action.readyAt,
+        observationId: result.action.observationId ?? null,
+        arrivesAt: result.observation?.arrivesAt ?? null,
+      } : null,
       error: result.error,
       errorCode: result.errorCode ?? null,
       errorDetails: result.errorDetails ?? {},

@@ -13,6 +13,11 @@
       "confidence": "medium",
       "sourceType": "间谍与谣言",
       "cooldownSeconds": 45,
+      "preparationSeconds": 5,
+      "cost": { "intelligencePoints": 1, "deceptionAssets": 1 },
+      "exposureProbability": 0.18,
+      "exposureDelaySeconds": 3,
+      "failureReliabilityPenalty": 0.18,
       "status": "historical-event-candidate",
       "evidenceGrade": "A",
       "sourceIds": ["shiji-baiqi"]
@@ -30,6 +35,11 @@
       "confidence": "high",
       "sourceType": "佯动与烟尘",
       "cooldownSeconds": 30,
+      "preparationSeconds": 4,
+      "cost": { "deceptionAssets": 1 },
+      "exposureProbability": 0.22,
+      "exposureDelaySeconds": 3,
+      "failureReliabilityPenalty": 0.12,
       "status": "simulation-action-candidate",
       "evidenceGrade": "X",
       "sourceIds": []

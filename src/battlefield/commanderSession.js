@@ -89,12 +89,56 @@ export function buildCommanderSessionSnapshot(world, {
     freshnessSeconds: action.freshnessSeconds ?? null,
     confidence: action.confidence ?? 'medium',
     cooldownSeconds: action.cooldownSeconds ?? BATTLEFIELD_CONFIG.defaults.deceptionCooldownSeconds,
+    preparationSeconds: action.preparationSeconds ?? 0,
+    cost: action.cost ?? {},
+    exposureProbability: action.exposureProbability ?? 0,
+    failureReliabilityPenalty: action.failureReliabilityPenalty ?? BATTLEFIELD_CONFIG.defaults.strategyFailureReliabilityPenalty,
     status: action.status ?? 'simulation-action-candidate',
     evidenceGrade: action.evidenceGrade ?? null,
   }));
   const deceptionHistory = (world.deception?.history ?? [])
     .filter((item) => item.side === side)
-    .map((item) => ({ ...item }));
+    .map((item) => ({
+      id: item.id,
+      schemaVersion: item.schemaVersion,
+      side: item.side,
+      actionId: item.actionId,
+      targetSide: item.targetSide,
+      targetUnitId: item.targetUnitId,
+      reportedAreaId: item.reportedAreaId,
+      observationId: item.observationId ?? null,
+      issuedAt: item.issuedAt,
+      readyAt: item.readyAt ?? null,
+      preparationSeconds: item.preparationSeconds ?? 0,
+      status: item.status,
+      exposedAt: item.exposedAt ?? null,
+      failedAt: item.failedAt ?? null,
+      failureReason: item.failureReason ?? null,
+      cost: item.cost ?? {},
+      exposureProbability: item.exposureProbability ?? 0,
+    }));
+  const strategyActions = (world.strategy?.actions ?? [])
+    .filter((action) => action.side === side)
+    .map((action) => ({
+      id: action.id,
+      kind: action.kind,
+      actionId: action.actionId ?? null,
+      side: action.side,
+      targetSide: action.targetSide ?? null,
+      targetUnitId: action.targetUnitId,
+      reportedAreaId: action.reportedAreaId ?? null,
+      status: action.status,
+      issuedAt: action.issuedAt,
+      readyAt: action.readyAt,
+      preparedAt: action.preparedAt ?? null,
+      dispatchedAt: action.dispatchedAt ?? null,
+      deliveredAt: action.deliveredAt ?? null,
+      observationId: action.observationId ?? null,
+      exposureStatus: action.exposureStatus ?? null,
+      failedAt: action.failedAt ?? null,
+      failureReason: action.failureReason ?? null,
+      cost: action.cost ?? {},
+    }));
   const eventLog = serializeCommanderEvents(
     world.eventLog.filter((event) => eventVisibleToCommander(event, side)),
   );
@@ -112,6 +156,9 @@ export function buildCommanderSessionSnapshot(world, {
     ownObservations,
     deceptionActions,
     deceptionHistory,
+    resources: JSON.parse(JSON.stringify(world.resources?.[side] ?? {})),
+    strategyActions,
+    strategyReliability: world.strategy?.reliabilityBySide?.[side] ?? 1,
     eventLog,
     disclosure: {
       side,
