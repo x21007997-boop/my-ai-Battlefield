@@ -21,7 +21,7 @@ var scenario: Dictionary = {}
 var friendly_units: Array = []
 var reported_signals: Array = []
 var active_order: Dictionary = {}
-var pending_scout: Dictionary = {}
+var pending_observations: Array = []
 var selected_unit_id := ""
 var selected_area_id := ""
 
@@ -29,13 +29,13 @@ func configure(data: Dictionary) -> void:
 	scenario = data
 	queue_redraw()
 
-func set_commander_layers(units: Array, reports: Array, commander_order: Dictionary = {}, scout: Dictionary = {}) -> void:
+func set_commander_layers(units: Array, reports: Array, commander_order: Dictionary = {}, pending_reports: Array = []) -> void:
 	# This node intentionally receives only the commander projection layers.
 	# Enemy units and combat exchanges never enter the scene tree.
 	friendly_units = units.duplicate(true)
 	reported_signals = reports.duplicate(true)
 	active_order = commander_order.duplicate(true)
-	pending_scout = scout.duplicate(true)
+	pending_observations = pending_reports.duplicate(true)
 	queue_redraw()
 
 func set_selection(unit_id: String, area_id: String) -> void:
@@ -69,7 +69,7 @@ func _draw() -> void:
 	draw_rect(MAP_RECT.grow(-10), Color(0.18, 0.12, 0.08, 0.15), false, 1.0)
 
 	_draw_order_feedback()
-	_draw_scout_feedback()
+	_draw_pending_observations()
 
 	for area in scenario.get("areas", []):
 		var point := _area_point(area.get("id", ""))
@@ -287,21 +287,26 @@ func _terrain_action_word(terrain_type: String) -> String:
 		"mountain": return "翻山"
 		_: return "通过"
 
-func _draw_scout_feedback() -> void:
-	if pending_scout.is_empty():
-		return
-	var target_id := str(pending_scout.get("reportedAreaId", ""))
-	var origin_id := ""
-	var unit_index := _unit_index(selected_unit_id)
-	if unit_index >= 0:
-		origin_id = str(friendly_units[unit_index].get("areaId", ""))
-	var origin := _area_point(origin_id)
-	var target := _area_point(target_id)
-	if origin == Vector2.ZERO or target == Vector2.ZERO:
-		return
-	_draw_report_uncertainty(pending_scout, target)
-	draw_dashed_line(origin, target, Color(0.83, 0.66, 0.32, 0.62), 2.0, 6.0)
-	_draw_status_pulse(target, Color("#d8a95f"), "侦察返回中")
+func _draw_pending_observations() -> void:
+	for pending in pending_observations:
+		var target_id := str(pending.get("reportedAreaId", ""))
+		var target := _area_point(target_id)
+		if target == Vector2.ZERO:
+			continue
+		_draw_report_uncertainty(pending, target)
+		if str(pending.get("sourceType", "")) == "frontline-report":
+			# The report discloses a direction, not the hidden enemy origin.
+			_draw_status_pulse(target, Color("#b86756"), "敌情回传中")
+			continue
+		var origin_id := ""
+		var unit_index := _unit_index(selected_unit_id)
+		if unit_index >= 0:
+			origin_id = str(friendly_units[unit_index].get("areaId", ""))
+		var origin := _area_point(origin_id)
+		if origin == Vector2.ZERO:
+			continue
+		draw_dashed_line(origin, target, Color(0.83, 0.66, 0.32, 0.62), 2.0, 6.0)
+		_draw_status_pulse(target, Color("#d8a95f"), "侦察返回中")
 
 func _draw_report_uncertainty(report: Dictionary, center: Vector2) -> void:
 	var uncertainty_value = report.get("uncertainty", {})

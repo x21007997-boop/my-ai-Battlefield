@@ -284,6 +284,56 @@ test('enemy decisions follow their reported location and reports later expire', 
   assert.ok(afterExpiry.eventLog.some((event) => event.type === 'report_expired' && event.observerSide === 'enemy'));
 });
 
+test('enemy belief reactions become delayed and imperfect reports for the player', () => {
+  const world = createBattleWorld({
+    scenarioId: 'enemy-reaction-report-test',
+    areas: [
+      { id: 'west', name: '西侧', neighbors: [{ id: 'valley', travelSeconds: 1 }] },
+      { id: 'valley', name: '谷地', neighbors: [{ id: 'west', travelSeconds: 1 }, { id: 'east', travelSeconds: 1 }] },
+      { id: 'east', name: '东侧', neighbors: [{ id: 'valley', travelSeconds: 1 }] },
+    ],
+    units: [
+      { id: 'player', side: 'player', name: '我方部队', location: 'valley', strength: 100, morale: 80, supplyDays: 3 },
+      { id: 'enemy', side: 'enemy', name: '敌方部队', location: 'east', strength: 100, morale: 70, supplyDays: 3 },
+    ],
+  });
+  world.ai.intervalSeconds = 1;
+  const queued = queueObservation(world, {
+    observerSide: 'enemy',
+    targetUnitId: 'player',
+    reportedAreaId: 'west',
+    actualAreaId: 'valley',
+    delaySeconds: 0,
+    freshnessSeconds: 30,
+    confidence: 'low',
+    sourceType: '误报渠道',
+  });
+
+  const afterDecision = stepBattle(queued.world, 1);
+  assert.equal(afterDecision.orders.find((order) => order.unitId === 'enemy')?.targetAreaId, 'west');
+  assert.deepEqual(viewBelief(afterDecision, 'player').sightings, {});
+  const pendingReport = afterDecision.observations.find((observation) => observation.sourceType === 'frontline-report');
+  assert.equal(pendingReport.status, 'in_transit');
+  assert.equal(pendingReport.reportedAreaId, 'west');
+  assert.equal(pendingReport.confidence, 'low');
+  assert.ok(pendingReport.arrivesAt > afterDecision.simTime);
+  const createdEvent = afterDecision.eventLog.find((event) => event.type === 'observation_created' && event.observerSide === 'player');
+  assert.ok(createdEvent);
+  assert.equal(Object.prototype.hasOwnProperty.call(createdEvent, 'actualAreaId'), false);
+  assert.equal(afterDecision.eventLog.some((event) => event.type === 'ai_decision' && event.side === 'enemy'), true);
+
+  const afterReport = stepBattle(afterDecision, 5);
+  const playerView = viewBelief(afterReport, 'player');
+  assert.equal(playerView.sightings.enemy.areaId, 'west');
+  assert.equal(playerView.sightings.enemy.confidence, 'low');
+  assert.deepEqual(playerView.sightings.enemy.uncertainty.candidateAreaIds, ['west', 'valley']);
+  assert.equal(playerView.sightings.enemy.actualAreaId, undefined);
+  const arrivedEvent = afterReport.eventLog.find((event) => event.type === 'report_arrived' && event.observerSide === 'player');
+  assert.ok(arrivedEvent);
+  assert.equal(arrivedEvent.sourceType, 'frontline-report');
+  assert.equal(Object.prototype.hasOwnProperty.call(arrivedEvent, 'actualAreaId'), false);
+});
+
 test('consumes one day of supply and records depletion pressure', () => {
   const world = createBattleWorld({
     scenarioId: 'logistics-test',

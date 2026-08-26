@@ -16,6 +16,7 @@ var friendly_units: Array = []
 var reported_signals: Array = []
 var order: Dictionary = {}
 var pending_scout: Dictionary = {}
+var pending_observations: Array = []
 var deception_actions: Array = []
 var deception_history: Array = []
 var objectives: Array = []
@@ -182,11 +183,13 @@ func _apply_engine_session(session: Dictionary) -> void:
 	if order.is_empty() and not own_orders.is_empty():
 		order = own_orders[own_orders.size() - 1].duplicate(true)
 	var own_observations: Array = session.get("ownObservations", [])
+	pending_observations = []
 	pending_scout = {}
 	for observation in own_observations:
 		if observation.get("status", "") == "in_transit":
-			pending_scout = observation.duplicate(true)
-			break
+			pending_observations.append(observation.duplicate(true))
+	if not pending_observations.is_empty():
+		pending_scout = pending_observations[0].duplicate(true)
 	deception_actions = session.get("deceptionActions", deception_actions).duplicate(true)
 	deception_history = session.get("deceptionHistory", []).duplicate(true)
 	objectives = session.get("objectives", objectives).duplicate(true)
@@ -693,7 +696,7 @@ func _dispatch_scout() -> void:
 		engine_gateway.send_command({"type": "scout"})
 		_set_feedback("正在派出前出斥候……", "info")
 		return
-	if not pending_scout.is_empty():
+	if _pending_observation_count() > 0:
 		_set_feedback("侦察未派出：已有一份报告正在返回。", "error")
 		return
 	var scout: Dictionary = scenario.get("scout", {})
@@ -702,6 +705,7 @@ func _dispatch_scout() -> void:
 		return
 	pending_scout = scout.duplicate(true)
 	pending_scout["arrivesAt"] = sim_time + int(scout.get("delaySeconds", 5))
+	pending_observations = [pending_scout.duplicate(true)]
 	event_log.append(sim_time, "observation_queued", {
 		"reportedAreaId": scout.get("reportedAreaId", ""),
 		"sourceType": scout.get("sourceType", "前出斥候"),
@@ -767,6 +771,7 @@ func _step_second() -> void:
 		}
 		reported_signals.append(report)
 		pending_scout = {}
+		pending_observations = []
 		event_log.append(sim_time, "report_arrived", {
 			"reportId": report["id"],
 			"reportedAreaId": report["areaId"],
@@ -904,6 +909,7 @@ func _exit_replay() -> void:
 	reported_signals = []
 	order = {}
 	pending_scout = {}
+	pending_observations = []
 	outcome = {}
 	objectives = scenario.get("objectives", []).duplicate(true)
 	review = {}
@@ -941,6 +947,7 @@ func _apply_replay_state(replay_state: Dictionary) -> void:
 	order = replay_order.duplicate(true) if replay_order is Dictionary else {}
 	var replay_pending = replay_state.get("pendingObservation", {})
 	pending_scout = replay_pending.duplicate(true) if replay_pending is Dictionary else {}
+	pending_observations = [pending_scout.duplicate(true)] if not pending_scout.is_empty() else []
 	var replay_outcome = replay_state.get("outcome", {})
 	outcome = replay_outcome.duplicate(true) if replay_outcome is Dictionary else {}
 	selected_unit_id = str(replay_state.get("selectedUnitId", selected_unit_id))
@@ -964,6 +971,10 @@ func _replay_event_text(event: Dictionary) -> String:
 			return "回放：部队完成%s。" % str(payload.get("label", "地形通过"))
 		"observation_queued":
 			return "回放：前出斥候报告正在返回。"
+		"observation_created":
+			if str(payload.get("sourceType", "")) == "frontline-report":
+				return "回放：前线来报正在返回，疑似敌军调动。"
+			return "回放：侦察报告正在返回指挥部。"
 		"report_arrived":
 			return "回放：情报抵达，敌情位于%s（%s，%s）。" % [_area_name(str(payload.get("reportedAreaId", payload.get("areaId", "")))), _confidence_label(str(payload.get("confidence", "unknown"))), _uncertainty_label(payload)]
 		"report_expired":
@@ -1032,10 +1043,11 @@ func _refresh() -> void:
 		mode = "回放播放中" if running else "回放已暂停"
 	var order_status: String = _order_status_text(str(order.get("status", ""))) if not order.is_empty() else "暂无军令"
 	var report_status := "%d 条前线报告" % reported_signals.size()
-	var pending_status := " · %d 份回传中" % (1 if not pending_scout.is_empty() else 0)
+	var pending_count := _pending_observation_count()
+	var pending_status := " · %d 份回传中" % pending_count
 	status_label.text = "%s\n军令：%s · %s%s" % [mode, order_status, report_status, pending_status]
 	if hud_metrics_label != null:
-		hud_metrics_label.text = "秦军 %d 部  ·  前线报告 %d 条  ·  回传中 %d 份  ·  敌情仅凭认知" % [friendly_units.size(), reported_signals.size(), 1 if not pending_scout.is_empty() else 0]
+		hud_metrics_label.text = "秦军 %d 部  ·  前线报告 %d 条  ·  回传中 %d 份  ·  敌情仅凭认知" % [friendly_units.size(), reported_signals.size(), pending_count]
 	command_state_label.text = _command_state_text()
 	outcome_label.visible = outcome.size() > 0
 	if outcome.size() > 0:
@@ -1052,7 +1064,7 @@ func _refresh() -> void:
 	move_button.tooltip_text = "向%s机动" % selected_target_name if selected_target_area_id != "" else "请先在沙盘选择目标区域"
 	move_button.disabled = replay_mode or outcome.size() > 0 or selected_target_area_id == "" or (not order.is_empty() and order.get("status", "") in ["transmitting", "executing"])
 	hold_button.disabled = replay_mode or outcome.size() > 0 or selected_unit_id == "" or (not order.is_empty() and order.get("status", "") in ["transmitting", "executing"])
-	scout_button.disabled = replay_mode or outcome.size() > 0 or not pending_scout.is_empty()
+	scout_button.disabled = replay_mode or outcome.size() > 0 or pending_count > 0
 	deception_button.text = "计策"
 	deception_button.tooltip_text = str(deception_actions[0].get("name", "暂无可用计策")) if not deception_actions.is_empty() else "暂无可用计策"
 	deception_button.disabled = replay_mode or outcome.size() > 0 or not engine_connected or deception_actions.is_empty()
@@ -1076,7 +1088,12 @@ func _refresh() -> void:
 	if zoom_label != null:
 		zoom_label.text = "%d%%" % int(map_camera.zoom.x * 100.0)
 	sand_table.set_selection(selected_unit_id, selected_target_area_id)
-	sand_table.set_commander_layers(friendly_units, reported_signals, order, pending_scout)
+	sand_table.set_commander_layers(friendly_units, reported_signals, order, pending_observations)
+
+func _pending_observation_count() -> int:
+	if engine_connected:
+		return pending_observations.size()
+	return 1 if not pending_scout.is_empty() else 0
 
 func _order_status_text(status: String) -> String:
 	match status:

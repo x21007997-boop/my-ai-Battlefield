@@ -1,8 +1,9 @@
 import { appendBattleEvent, cloneBattleWorld } from './world.js';
 import { issueOrder } from './orders.js';
-import { viewBelief } from './perception.js';
+import { queueObservation, viewBelief } from './perception.js';
 
 export const DEFAULT_AI_INTERVAL_SECONDS = 15;
+export const DEFAULT_ENEMY_ACTION_REPORT_DELAY_SECONDS = 5;
 
 const CONFIDENCE_RANK = { high: 3, medium: 2, low: 1 };
 
@@ -32,6 +33,9 @@ export function runEnemyDecision(world, { side = 'enemy', intervalSeconds } = {}
   const reportedTarget = chooseReportedTarget(belief);
   if (!reportedTarget) return next;
 
+  const observerSide = Object.keys(next.sides ?? {})
+    .find((candidate) => candidate !== side && next.beliefs?.[candidate]) ?? null;
+  let reactedUnitId = null;
   belief.ownUnits
     .filter((unit) => unit.status === 'active' && !unit.currentOrderId && unit.location !== reportedTarget.areaId)
     .forEach((unit) => {
@@ -44,6 +48,7 @@ export function runEnemyDecision(world, { side = 'enemy', intervalSeconds } = {}
       }, { delaySeconds: sideConfig.commandDelaySeconds ?? 3 });
       if (result.error) return;
       next = result.world;
+      reactedUnitId ??= unit.id;
       appendBattleEvent(next, {
         type: 'ai_decision',
         side,
@@ -53,5 +58,27 @@ export function runEnemyDecision(world, { side = 'enemy', intervalSeconds } = {}
         reason: 'reported_contact',
       });
     });
+
+  // The opposing commander does not see this internal decision. They only
+  // receive a delayed, imperfect frontline report that the enemy may be
+  // moving toward the area their own belief state selected.
+  if (reactedUnitId && observerSide) {
+    const reportedAreaName = next.areas[reportedTarget.areaId]?.name ?? reportedTarget.areaId;
+    const targetUnit = next.units[reactedUnitId];
+    const confidence = reportedTarget.confidence === 'low' ? 'low' : 'medium';
+    const report = queueObservation(next, {
+      observerSide,
+      targetUnitId: reactedUnitId,
+      reportedAreaId: reportedTarget.areaId,
+      actualAreaId: targetUnit?.location,
+      delaySeconds: DEFAULT_ENEMY_ACTION_REPORT_DELAY_SECONDS,
+      confidence,
+      sourceReliability: 'variable',
+      freshnessSeconds: 20,
+      sourceType: 'frontline-report',
+      observation: `前线来报：${reportedAreaName}方向疑似有敌军调动，可能正向该处机动。`,
+    });
+    next = report.world;
+  }
   return next;
 }

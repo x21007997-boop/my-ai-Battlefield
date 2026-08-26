@@ -12,7 +12,7 @@ export { advanceBattle, stepBattle } from './clock.js';
 export { DEFAULT_COMBAT_INTERVAL_SECONDS, resolveCombat } from './combat.js';
 export { DEFAULT_SUPPLY_TICK_SECONDS, consumeLogistics } from './logistics.js';
 export { DEFAULT_REPORT_FRESHNESS_SECONDS, expireBeliefs } from './reconnaissance.js';
-export { DEFAULT_AI_INTERVAL_SECONDS, runEnemyDecision } from './enemyAi.js';
+export { DEFAULT_AI_INTERVAL_SECONDS, DEFAULT_ENEMY_ACTION_REPORT_DELAY_SECONDS, runEnemyDecision } from './enemyAi.js';
 export { applyObservation, queueObservation, viewBelief, REPORT_UNCERTAINTY_PROFILES } from './perception.js';
 export { DECEPTION_SCHEMA_VERSION, issueDeception } from './deception.js';
 export { BATTLE_RESOLUTION_SCHEMA_VERSION, evaluateBattleOutcome } from './resolution.js';
