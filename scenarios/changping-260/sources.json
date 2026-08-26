@@ -1,0 +1,63 @@
+{
+  "sources": [
+    {
+      "id": "shiji-baiqi",
+      "title": "史记·白起王翦列传",
+      "type": "primary-historical-text",
+      "author": "司马迁",
+      "evidenceGrade": "A",
+      "url": "https://ctext.org/shiji/bai-qi-wu-an-jun-lie-zhuan/zh",
+      "supports": ["qin-commander-bai-qi", "zhao-replaces-lian-po", "qin-rumor-about-zhao-kuo", "zhao-army-encirclement"],
+      "caveat": "成书年代晚于战国，属于关键叙事来源；具体数字和细节仍需与其他材料交叉核对。"
+    },
+    {
+      "id": "shiji-zhao-shijia",
+      "title": "史记·赵世家",
+      "type": "primary-historical-text",
+      "author": "司马迁",
+      "evidenceGrade": "A",
+      "url": "https://ctext.org/shiji/zhao-shi-jia/zh",
+      "supports": ["zhao-commander-change", "zhao-relief-pressure", "zhao-defeat-at-changping"],
+      "caveat": "与白起王翦列传存在叙事侧重点差异，冲突字段必须保留来源并交给审校。"
+    },
+    {
+      "id": "zhanguoce-zhao",
+      "title": "战国策·赵策",
+      "type": "compiled-historical-text",
+      "author": "刘向辑录传统",
+      "evidenceGrade": "B",
+      "url": "https://ctext.org/zhan-guo-ce/zhao-ce/zh",
+      "supports": ["zhao-political-pressure", "diplomatic-context"],
+      "caveat": "偏重说辞与策论，不能单独用来确定兵力、路线或战术结果。"
+    },
+    {
+      "id": "changping-time-study-2016",
+      "title": "有关秦赵长平之战的几个问题",
+      "type": "peer-reviewed-article",
+      "author": "张广志",
+      "publication": "邯郸学院学报，2016年第2期",
+      "evidenceGrade": "B",
+      "url": "https://szhd.cbpt.cnki.net/portal/journal/portal/client/paper/9563777e4bfdf4eedc44877a5e8d76da",
+      "supports": ["battle-duration-debate", "massacre-numbers-contested"],
+      "caveat": "摘要明确列出三年说、二年说和一年说等不同观点；本文倾向一年说，不能把其判断直接写成唯一史实。"
+    },
+    {
+      "id": "gaoping-protection-plan-2024",
+      "title": "山西省高平市长平之战遗址保护规划（2024—2040年）",
+      "type": "official-heritage-planning-document",
+      "publisher": "晋城市人民政府办公室、晋城市文化和旅游局",
+      "evidenceGrade": "C",
+      "url": "https://xxgk.jcgov.gov.cn/jcsrmzf/zc/qt/202502/t20250218_2102261.shtml",
+      "supports": ["modern-changping-heritage-area", "dan-river-geography-lead"],
+      "caveat": "这是现代遗址保护规划，不是战国军事部署原始记录；只能作为空间研究线索，不能单独确定古代营垒坐标。"
+    },
+    {
+      "id": "modern-geography-review-required",
+      "title": "长平战场现代地理与遗址研究（待补正式书目）",
+      "type": "modern-secondary-research",
+      "evidenceGrade": "X",
+      "supports": [],
+      "caveat": "本条只是数据治理占位，未完成书目登记前不得支撑任何地理坐标或路线结论。"
+    }
+  ]
+}

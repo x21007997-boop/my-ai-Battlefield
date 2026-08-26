@@ -1,0 +1,83 @@
+{
+  "edges": [
+    { "id": "route-qin-camp-western-gate", "from": "qin-west-camp", "to": "western-gate", "travelSeconds": 900, "distanceStatus": "simulation_assumption", "historicalClaim": false },
+    {
+      "id": "route-qin-camp-dan-valley",
+      "from": "qin-west-camp",
+      "to": "dan-river-valley",
+      "travelSeconds": 1200,
+      "distanceStatus": "simulation_assumption",
+      "historicalClaim": false,
+      "terrainTransitions": [
+        {
+          "featureId": "dan-river",
+          "terrainType": "river",
+          "transitionType": "river-crossing",
+          "label": "丹水渡河",
+          "method": "ford",
+          "startProgress": 0.58,
+          "endProgress": 0.72,
+          "effects": {
+            "fatiguePerSecond": 0.6,
+            "supplyDaysPerSecond": 0.02,
+            "readinessLossPerSecond": 0.006
+          },
+          "status": "scenario_assumption"
+        }
+      ]
+    },
+    { "id": "route-western-gate-zhao-camp", "from": "western-gate", "to": "zhao-main-camp", "travelSeconds": 1200, "distanceStatus": "simulation_assumption", "historicalClaim": false },
+    { "id": "route-dan-valley-zhao-camp", "from": "dan-river-valley", "to": "zhao-main-camp", "travelSeconds": 1000, "distanceStatus": "simulation_assumption", "historicalClaim": false },
+    {
+      "id": "route-dan-valley-east-highland",
+      "from": "dan-river-valley",
+      "to": "east-highland",
+      "travelSeconds": 1300,
+      "distanceStatus": "simulation_assumption",
+      "historicalClaim": false,
+      "terrainTransitions": [
+        {
+          "featureId": "eastern-ridge",
+          "terrainType": "mountain",
+          "transitionType": "mountain-crossing",
+          "label": "翻越东侧山脊",
+          "method": "ridge-pass",
+          "startProgress": 0.56,
+          "endProgress": 0.76,
+          "effects": {
+            "fatiguePerSecond": 0.9,
+            "supplyDaysPerSecond": 0.025,
+            "readinessLossPerSecond": 0.01
+          },
+          "status": "scenario_assumption"
+        }
+      ]
+    },
+    { "id": "route-zhao-camp-relief", "from": "zhao-main-camp", "to": "zhao-relief-route", "travelSeconds": 1100, "distanceStatus": "simulation_assumption", "historicalClaim": false },
+    {
+      "id": "route-relief-east-highland",
+      "from": "zhao-relief-route",
+      "to": "east-highland",
+      "travelSeconds": 1400,
+      "distanceStatus": "simulation_assumption",
+      "historicalClaim": false,
+      "terrainTransitions": [
+        {
+          "featureId": "eastern-ridge",
+          "terrainType": "mountain",
+          "transitionType": "mountain-crossing",
+          "label": "翻越东侧山脊",
+          "method": "ridge-pass",
+          "startProgress": 0.42,
+          "endProgress": 0.62,
+          "effects": {
+            "fatiguePerSecond": 0.9,
+            "supplyDaysPerSecond": 0.025,
+            "readinessLossPerSecond": 0.01
+          },
+          "status": "scenario_assumption"
+        }
+      ]
+    }
+  ]
+}

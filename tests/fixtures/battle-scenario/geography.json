@@ -1,0 +1,7 @@
+{
+  "areas": [
+    { "id": "north", "name": "北口", "position": { "x": 25, "y": 30 }, "neighbors": [{ "id": "valley", "travelSeconds": 3 }] },
+    { "id": "valley", "name": "谷地", "position": { "x": 52, "y": 55 }, "neighbors": [{ "id": "north", "travelSeconds": 3 }, { "id": "ridge", "travelSeconds": 4 }] },
+    { "id": "ridge", "name": "东岭", "position": { "x": 78, "y": 28 }, "neighbors": [{ "id": "valley", "travelSeconds": 4 }] }
+  ]
+}

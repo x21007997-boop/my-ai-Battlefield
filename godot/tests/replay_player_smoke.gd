@@ -1,0 +1,33 @@
+extends SceneTree
+
+const EventLog = preload("res://scripts/event_log.gd")
+const ReplayPlayer = preload("res://scripts/replay_player.gd")
+
+func _init() -> void:
+	var log := EventLog.new()
+	log.configure("changping-260")
+	log.append(0, "scenario_loaded", {})
+	log.append(0, "order_issued", {"unitId": "qin-main", "targetAreaId": "dan-river-valley", "completeAt": 4})
+	log.append(3, "order_delivered", {"unitId": "qin-main", "targetAreaId": "dan-river-valley"})
+	log.append(4, "unit_arrived", {"unitId": "qin-main", "areaId": "dan-river-valley"})
+	log.append(8, "report_arrived", {"reportId": "report-0001", "reportedAreaId": "zhao-main-camp", "confidence": "medium", "expiresAt": 20})
+	log.append(12, "battle_ended", {"outcomeId": "qin-isolate-relief", "result": "qin-advantage", "reason": "victory_conditions_met"})
+
+	var player := ReplayPlayer.new()
+	player.configure([{"id": "qin-main", "areaId": "qin-west-camp"}], "qin-main")
+	var validation := player.load_snapshot(log.snapshot(), "changping-260")
+	assert(validation == "", validation)
+	player.seek(6)
+	var before_report: Dictionary = player.current_state()
+	assert(before_report.friendlyUnits[0].areaId == "dan-river-valley")
+	assert(before_report.reportedSignals.is_empty())
+	player.advance_to(8)
+	var after_report: Dictionary = player.current_state()
+	assert(after_report.reportedSignals[0].areaId == "zhao-main-camp")
+	assert(after_report.reportedSignals[0].get("actualAreaId", null) == null)
+	player.advance_to(12)
+	var ended: Dictionary = player.current_state()
+	assert(ended.outcome.id == "qin-isolate-relief")
+	assert(ended.outcome.result == "qin-advantage")
+	print("Godot replay player smoke test passed")
+	quit()

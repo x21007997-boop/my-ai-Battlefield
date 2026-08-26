@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "coordinateSystem": "normalized-2d",
+  "areas": [
+    { "areaId": "qin-west-camp", "type": "camp-zone", "status": "provisional", "evidenceGrade": "C" },
+    { "areaId": "western-gate", "type": "passage-zone", "status": "provisional", "evidenceGrade": "C" },
+    { "areaId": "dan-river-valley", "type": "river-valley", "status": "provisional", "evidenceGrade": "C" },
+    { "areaId": "zhao-main-camp", "type": "fortified-camp-zone", "status": "provisional", "evidenceGrade": "C" },
+    { "areaId": "zhao-relief-route", "type": "approach-zone", "status": "provisional", "evidenceGrade": "B" },
+    { "areaId": "east-highland", "type": "highland-zone", "status": "unknown", "evidenceGrade": "X" }
+  ],
+  "features": [
+    {
+      "id": "dan-river",
+      "type": "river",
+      "name": "丹水",
+      "points": [
+        { "x": 6, "y": 78 },
+        { "x": 18, "y": 70 },
+        { "x": 31, "y": 62 },
+        { "x": 44, "y": 54 },
+        { "x": 58, "y": 48 },
+        { "x": 72, "y": 39 },
+        { "x": 92, "y": 27 }
+      ],
+      "width": 3.2,
+      "status": "scenario_assumption",
+      "evidenceGrade": "C",
+      "sourceIds": ["gaoping-protection-plan-2024", "modern-geography-review-required"]
+    },
+    {
+      "id": "western-ridge",
+      "type": "mountain-range",
+      "name": "西侧山脊",
+      "points": [
+        { "x": 7, "y": 38 },
+        { "x": 16, "y": 30 },
+        { "x": 26, "y": 34 },
+        { "x": 35, "y": 26 },
+        { "x": 46, "y": 31 }
+      ],
+      "status": "scenario_assumption",
+      "evidenceGrade": "X",
+      "sourceIds": ["modern-geography-review-required"]
+    },
+    {
+      "id": "eastern-ridge",
+      "type": "mountain-range",
+      "name": "东侧山脊",
+      "points": [
+        { "x": 64, "y": 76 },
+        { "x": 69, "y": 63 },
+        { "x": 72, "y": 51 },
+        { "x": 77, "y": 39 },
+        { "x": 87, "y": 23 }
+      ],
+      "status": "scenario_assumption",
+      "evidenceGrade": "X",
+      "sourceIds": ["modern-geography-review-required"]
+    }
+  ]
+}

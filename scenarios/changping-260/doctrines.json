@@ -1,0 +1,18 @@
+{
+  "items": [
+    {
+      "id": "qin-isolation-doctrine",
+      "name": "围困、断粮与诱离（规则假设待审校）",
+      "side": "qin",
+      "status": "design-hypothesis",
+      "sourceIds": ["shiji-baiqi"]
+    },
+    {
+      "id": "zhao-defensive-doctrine",
+      "name": "坚壁持重（叙事线索，机制待审校）",
+      "side": "zhao",
+      "status": "design-hypothesis",
+      "sourceIds": ["shiji-baiqi", "shiji-zhao-shijia"]
+    }
+  ]
+}

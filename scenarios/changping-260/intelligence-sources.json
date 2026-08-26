@@ -1,0 +1,29 @@
+{
+  "sources": [
+    {
+      "id": "qin-forward-scouts",
+      "side": "qin",
+      "type": "forward-scouts",
+      "areaIds": ["qin-west-camp", "western-gate", "dan-river-valley"],
+      "reliability": "to-be-calibrated",
+      "evidenceGrade": "X"
+    },
+    {
+      "id": "zhao-forward-scouts",
+      "side": "zhao",
+      "type": "forward-scouts",
+      "areaIds": ["zhao-main-camp", "zhao-relief-route", "dan-river-valley"],
+      "reliability": "to-be-calibrated",
+      "evidenceGrade": "X"
+    },
+    {
+      "id": "prisoner-and-rumor-reports",
+      "side": "qin",
+      "type": "human-source",
+      "areaIds": ["western-gate", "zhao-main-camp", "zhao-relief-route"],
+      "reliability": "variable",
+      "evidenceGrade": "A",
+      "sourceIds": ["shiji-baiqi"]
+    }
+  ]
+}

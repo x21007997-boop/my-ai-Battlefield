@@ -1,0 +1,6 @@
+{
+  "items": [
+    { "id": "player-cautious", "name": "谨慎守势", "side": "player" },
+    { "id": "enemy-aggressive", "name": "主动进攻", "side": "enemy" }
+  ]
+}

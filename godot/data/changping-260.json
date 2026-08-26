@@ -1,0 +1,1772 @@
+{
+  "schemaVersion": 1,
+  "sourceScenarioId": "changping-260",
+  "title": "长平之战·认知沙盘（数据草案）",
+  "eraLabel": "战国晚期 · 前262—前260年",
+  "status": "draft",
+  "playability": "experimental",
+  "map": {
+    "renderMode": "vector-terrain",
+    "coordinateSystem": "normalized-2d",
+    "bounds": {
+      "x": [
+        0,
+        100
+      ],
+      "y": [
+        0,
+        100
+      ]
+    }
+  },
+  "areas": [
+    {
+      "id": "qin-west-camp",
+      "name": "秦军西侧营垒",
+      "terrain": "营垒区",
+      "position": {
+        "x": 22,
+        "y": 48
+      },
+      "locationStatus": "provisional",
+      "evidenceGrade": "C",
+      "neighbors": [
+        {
+          "id": "western-gate",
+          "travelSeconds": 10,
+          "routeId": "route-qin-camp-western-gate",
+          "terrainTransitions": []
+        },
+        {
+          "id": "dan-river-valley",
+          "travelSeconds": 14,
+          "routeId": "route-qin-camp-dan-valley",
+          "terrainTransitions": [
+            {
+              "featureId": "dan-river",
+              "terrainType": "river",
+              "transitionType": "river-crossing",
+              "label": "丹水渡河",
+              "method": "ford",
+              "startProgress": 0.58,
+              "endProgress": 0.72,
+              "effects": {
+                "fatiguePerSecond": 0.6,
+                "supplyDaysPerSecond": 0.02,
+                "readinessLossPerSecond": 0.006
+              },
+              "status": "scenario_assumption"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "western-gate",
+      "name": "长平西口",
+      "terrain": "关口",
+      "position": {
+        "x": 40,
+        "y": 43
+      },
+      "locationStatus": "provisional",
+      "evidenceGrade": "C",
+      "neighbors": [
+        {
+          "id": "qin-west-camp",
+          "travelSeconds": 10,
+          "routeId": "route-qin-camp-western-gate",
+          "terrainTransitions": []
+        },
+        {
+          "id": "zhao-main-camp",
+          "travelSeconds": 12,
+          "routeId": "route-western-gate-zhao-camp",
+          "terrainTransitions": []
+        }
+      ]
+    },
+    {
+      "id": "dan-river-valley",
+      "name": "丹水河谷",
+      "terrain": "河谷",
+      "position": {
+        "x": 54,
+        "y": 58
+      },
+      "locationStatus": "provisional",
+      "evidenceGrade": "C",
+      "neighbors": [
+        {
+          "id": "qin-west-camp",
+          "travelSeconds": 14,
+          "routeId": "route-qin-camp-dan-valley",
+          "terrainTransitions": [
+            {
+              "featureId": "dan-river",
+              "terrainType": "river",
+              "transitionType": "river-crossing",
+              "label": "丹水渡河",
+              "method": "ford",
+              "startProgress": 0.28,
+              "endProgress": 0.42000000000000004,
+              "effects": {
+                "fatiguePerSecond": 0.6,
+                "supplyDaysPerSecond": 0.02,
+                "readinessLossPerSecond": 0.006
+              },
+              "status": "scenario_assumption"
+            }
+          ]
+        },
+        {
+          "id": "zhao-main-camp",
+          "travelSeconds": 10,
+          "routeId": "route-dan-valley-zhao-camp",
+          "terrainTransitions": []
+        },
+        {
+          "id": "east-highland",
+          "travelSeconds": 13,
+          "routeId": "route-dan-valley-east-highland",
+          "terrainTransitions": [
+            {
+              "featureId": "eastern-ridge",
+              "terrainType": "mountain",
+              "transitionType": "mountain-crossing",
+              "label": "翻越东侧山脊",
+              "method": "ridge-pass",
+              "startProgress": 0.56,
+              "endProgress": 0.76,
+              "effects": {
+                "fatiguePerSecond": 0.9,
+                "supplyDaysPerSecond": 0.025,
+                "readinessLossPerSecond": 0.01
+              },
+              "status": "scenario_assumption"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "zhao-main-camp",
+      "name": "赵军壁垒",
+      "terrain": "壁垒区",
+      "position": {
+        "x": 60,
+        "y": 37
+      },
+      "locationStatus": "provisional",
+      "evidenceGrade": "C",
+      "neighbors": [
+        {
+          "id": "western-gate",
+          "travelSeconds": 12,
+          "routeId": "route-western-gate-zhao-camp",
+          "terrainTransitions": []
+        },
+        {
+          "id": "dan-river-valley",
+          "travelSeconds": 10,
+          "routeId": "route-dan-valley-zhao-camp",
+          "terrainTransitions": []
+        },
+        {
+          "id": "zhao-relief-route",
+          "travelSeconds": 11,
+          "routeId": "route-zhao-camp-relief",
+          "terrainTransitions": []
+        }
+      ]
+    },
+    {
+      "id": "zhao-relief-route",
+      "name": "赵军援军方向",
+      "terrain": "援军通道",
+      "position": {
+        "x": 79,
+        "y": 29
+      },
+      "locationStatus": "provisional",
+      "evidenceGrade": "B",
+      "neighbors": [
+        {
+          "id": "zhao-main-camp",
+          "travelSeconds": 11,
+          "routeId": "route-zhao-camp-relief",
+          "terrainTransitions": []
+        },
+        {
+          "id": "east-highland",
+          "travelSeconds": 14,
+          "routeId": "route-relief-east-highland",
+          "terrainTransitions": [
+            {
+              "featureId": "eastern-ridge",
+              "terrainType": "mountain",
+              "transitionType": "mountain-crossing",
+              "label": "翻越东侧山脊",
+              "method": "ridge-pass",
+              "startProgress": 0.42,
+              "endProgress": 0.62,
+              "effects": {
+                "fatiguePerSecond": 0.9,
+                "supplyDaysPerSecond": 0.025,
+                "readinessLossPerSecond": 0.01
+              },
+              "status": "scenario_assumption"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "east-highland",
+      "name": "东侧高地",
+      "terrain": "高地",
+      "position": {
+        "x": 76,
+        "y": 58
+      },
+      "locationStatus": "provisional",
+      "evidenceGrade": "X",
+      "neighbors": [
+        {
+          "id": "dan-river-valley",
+          "travelSeconds": 13,
+          "routeId": "route-dan-valley-east-highland",
+          "terrainTransitions": [
+            {
+              "featureId": "eastern-ridge",
+              "terrainType": "mountain",
+              "transitionType": "mountain-crossing",
+              "label": "翻越东侧山脊",
+              "method": "ridge-pass",
+              "startProgress": 0.24,
+              "endProgress": 0.43999999999999995,
+              "effects": {
+                "fatiguePerSecond": 0.9,
+                "supplyDaysPerSecond": 0.025,
+                "readinessLossPerSecond": 0.01
+              },
+              "status": "scenario_assumption"
+            }
+          ]
+        },
+        {
+          "id": "zhao-relief-route",
+          "travelSeconds": 14,
+          "routeId": "route-relief-east-highland",
+          "terrainTransitions": [
+            {
+              "featureId": "eastern-ridge",
+              "terrainType": "mountain",
+              "transitionType": "mountain-crossing",
+              "label": "翻越东侧山脊",
+              "method": "ridge-pass",
+              "startProgress": 0.38,
+              "endProgress": 0.5800000000000001,
+              "effects": {
+                "fatiguePerSecond": 0.9,
+                "supplyDaysPerSecond": 0.025,
+                "readinessLossPerSecond": 0.01
+              },
+              "status": "scenario_assumption"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "routes": [
+    {
+      "id": "route-qin-west-camp-western-gate",
+      "fromAreaId": "qin-west-camp",
+      "toAreaId": "western-gate",
+      "travelSeconds": 10,
+      "routeId": "route-qin-camp-western-gate",
+      "terrainTransitions": [],
+      "points": [
+        {
+          "x": 22,
+          "y": 48
+        },
+        {
+          "x": 40,
+          "y": 43
+        }
+      ]
+    },
+    {
+      "id": "route-dan-river-valley-qin-west-camp",
+      "fromAreaId": "qin-west-camp",
+      "toAreaId": "dan-river-valley",
+      "travelSeconds": 14,
+      "routeId": "route-qin-camp-dan-valley",
+      "terrainTransitions": [
+        {
+          "featureId": "dan-river",
+          "terrainType": "river",
+          "transitionType": "river-crossing",
+          "label": "丹水渡河",
+          "method": "ford",
+          "startProgress": 0.58,
+          "endProgress": 0.72,
+          "effects": {
+            "fatiguePerSecond": 0.6,
+            "supplyDaysPerSecond": 0.02,
+            "readinessLossPerSecond": 0.006
+          },
+          "status": "scenario_assumption"
+        }
+      ],
+      "points": [
+        {
+          "x": 22,
+          "y": 48
+        },
+        {
+          "x": 54,
+          "y": 58
+        }
+      ]
+    },
+    {
+      "id": "route-western-gate-zhao-main-camp",
+      "fromAreaId": "western-gate",
+      "toAreaId": "zhao-main-camp",
+      "travelSeconds": 12,
+      "routeId": "route-western-gate-zhao-camp",
+      "terrainTransitions": [],
+      "points": [
+        {
+          "x": 40,
+          "y": 43
+        },
+        {
+          "x": 60,
+          "y": 37
+        }
+      ]
+    },
+    {
+      "id": "route-dan-river-valley-zhao-main-camp",
+      "fromAreaId": "dan-river-valley",
+      "toAreaId": "zhao-main-camp",
+      "travelSeconds": 10,
+      "routeId": "route-dan-valley-zhao-camp",
+      "terrainTransitions": [],
+      "points": [
+        {
+          "x": 54,
+          "y": 58
+        },
+        {
+          "x": 60,
+          "y": 37
+        }
+      ]
+    },
+    {
+      "id": "route-dan-river-valley-east-highland",
+      "fromAreaId": "dan-river-valley",
+      "toAreaId": "east-highland",
+      "travelSeconds": 13,
+      "routeId": "route-dan-valley-east-highland",
+      "terrainTransitions": [
+        {
+          "featureId": "eastern-ridge",
+          "terrainType": "mountain",
+          "transitionType": "mountain-crossing",
+          "label": "翻越东侧山脊",
+          "method": "ridge-pass",
+          "startProgress": 0.56,
+          "endProgress": 0.76,
+          "effects": {
+            "fatiguePerSecond": 0.9,
+            "supplyDaysPerSecond": 0.025,
+            "readinessLossPerSecond": 0.01
+          },
+          "status": "scenario_assumption"
+        }
+      ],
+      "points": [
+        {
+          "x": 54,
+          "y": 58
+        },
+        {
+          "x": 76,
+          "y": 58
+        }
+      ]
+    },
+    {
+      "id": "route-zhao-main-camp-zhao-relief-route",
+      "fromAreaId": "zhao-main-camp",
+      "toAreaId": "zhao-relief-route",
+      "travelSeconds": 11,
+      "routeId": "route-zhao-camp-relief",
+      "terrainTransitions": [],
+      "points": [
+        {
+          "x": 60,
+          "y": 37
+        },
+        {
+          "x": 79,
+          "y": 29
+        }
+      ]
+    },
+    {
+      "id": "route-east-highland-zhao-relief-route",
+      "fromAreaId": "zhao-relief-route",
+      "toAreaId": "east-highland",
+      "travelSeconds": 14,
+      "routeId": "route-relief-east-highland",
+      "terrainTransitions": [
+        {
+          "featureId": "eastern-ridge",
+          "terrainType": "mountain",
+          "transitionType": "mountain-crossing",
+          "label": "翻越东侧山脊",
+          "method": "ridge-pass",
+          "startProgress": 0.42,
+          "endProgress": 0.62,
+          "effects": {
+            "fatiguePerSecond": 0.9,
+            "supplyDaysPerSecond": 0.025,
+            "readinessLossPerSecond": 0.01
+          },
+          "status": "scenario_assumption"
+        }
+      ],
+      "points": [
+        {
+          "x": 79,
+          "y": 29
+        },
+        {
+          "x": 76,
+          "y": 58
+        }
+      ]
+    }
+  ],
+  "landmarks": [
+    {
+      "id": "qin-west-camp-marker",
+      "areaId": "qin-west-camp",
+      "type": "camp",
+      "label": "营垒",
+      "visibility": "always",
+      "status": "scenario_assumption",
+      "position": {
+        "x": 22,
+        "y": 48
+      },
+      "evidenceGrade": "C"
+    },
+    {
+      "id": "western-gate-marker",
+      "areaId": "western-gate",
+      "type": "pass",
+      "label": "关口",
+      "visibility": "always",
+      "status": "scenario_assumption",
+      "position": {
+        "x": 40,
+        "y": 43
+      },
+      "evidenceGrade": "C"
+    },
+    {
+      "id": "dan-river-valley-marker",
+      "areaId": "dan-river-valley",
+      "type": "valley",
+      "label": "河谷",
+      "visibility": "always",
+      "status": "scenario_assumption",
+      "position": {
+        "x": 54,
+        "y": 58
+      },
+      "evidenceGrade": "C"
+    },
+    {
+      "id": "zhao-main-camp-marker",
+      "areaId": "zhao-main-camp",
+      "type": "fortress",
+      "label": "壁垒",
+      "visibility": "always",
+      "status": "scenario_assumption",
+      "position": {
+        "x": 60,
+        "y": 37
+      },
+      "evidenceGrade": "C"
+    },
+    {
+      "id": "zhao-relief-route-marker",
+      "areaId": "zhao-relief-route",
+      "type": "route",
+      "label": "援军通道",
+      "visibility": "always",
+      "status": "scenario_assumption",
+      "position": {
+        "x": 79,
+        "y": 29
+      },
+      "evidenceGrade": "B"
+    },
+    {
+      "id": "east-highland-marker",
+      "areaId": "east-highland",
+      "type": "highland",
+      "label": "高地",
+      "visibility": "always",
+      "status": "scenario_assumption",
+      "position": {
+        "x": 76,
+        "y": 58
+      },
+      "evidenceGrade": "X"
+    },
+    {
+      "id": "changping-city-marker",
+      "areaId": "western-gate",
+      "type": "city",
+      "label": "长平城",
+      "position": {
+        "x": 45,
+        "y": 36
+      },
+      "visibility": "always",
+      "status": "scenario_assumption",
+      "sourceIds": [
+        "shiji-baiqi",
+        "shiji-zhao-shijia",
+        "modern-geography-review-required"
+      ],
+      "evidenceGrade": "C"
+    },
+    {
+      "id": "qin-granary-marker",
+      "areaId": "qin-west-camp",
+      "type": "granary",
+      "label": "秦军粮仓",
+      "position": {
+        "x": 28,
+        "y": 55
+      },
+      "visibility": "always",
+      "status": "scenario_assumption",
+      "sourceIds": [
+        "shiji-baiqi",
+        "modern-geography-review-required"
+      ],
+      "evidenceGrade": "C"
+    },
+    {
+      "id": "qin-forward-fort-marker",
+      "areaId": "qin-west-camp",
+      "type": "fortress",
+      "label": "前出堡",
+      "position": {
+        "x": 16,
+        "y": 41
+      },
+      "visibility": "always",
+      "status": "scenario_assumption",
+      "sourceIds": [
+        "shiji-baiqi",
+        "modern-geography-review-required"
+      ],
+      "evidenceGrade": "C"
+    },
+    {
+      "id": "zhao-granary-marker",
+      "areaId": "zhao-main-camp",
+      "type": "granary",
+      "label": "赵军粮仓",
+      "position": {
+        "x": 66,
+        "y": 44
+      },
+      "visibility": "always",
+      "status": "scenario_assumption",
+      "sourceIds": [
+        "shiji-zhao-shijia",
+        "modern-geography-review-required"
+      ],
+      "evidenceGrade": "C"
+    },
+    {
+      "id": "eastern-fort-marker",
+      "areaId": "zhao-relief-route",
+      "type": "fortress",
+      "label": "东侧堡",
+      "position": {
+        "x": 84,
+        "y": 34
+      },
+      "visibility": "always",
+      "status": "scenario_assumption",
+      "sourceIds": [
+        "shiji-zhao-shijia",
+        "modern-geography-review-required"
+      ],
+      "evidenceGrade": "B"
+    },
+    {
+      "id": "dan-ford-marker",
+      "areaId": "dan-river-valley",
+      "type": "ford",
+      "label": "丹水渡口",
+      "position": {
+        "x": 49,
+        "y": 66
+      },
+      "visibility": "always",
+      "status": "scenario_assumption",
+      "sourceIds": [
+        "gaoping-protection-plan-2024",
+        "modern-geography-review-required"
+      ],
+      "evidenceGrade": "C"
+    }
+  ],
+  "terrainFeatures": [
+    {
+      "id": "dan-river",
+      "type": "river",
+      "name": "丹水",
+      "points": [
+        {
+          "x": 6,
+          "y": 78
+        },
+        {
+          "x": 18,
+          "y": 70
+        },
+        {
+          "x": 31,
+          "y": 62
+        },
+        {
+          "x": 44,
+          "y": 54
+        },
+        {
+          "x": 58,
+          "y": 48
+        },
+        {
+          "x": 72,
+          "y": 39
+        },
+        {
+          "x": 92,
+          "y": 27
+        }
+      ],
+      "width": 3.2,
+      "status": "scenario_assumption",
+      "evidenceGrade": "C"
+    },
+    {
+      "id": "western-ridge",
+      "type": "mountain-range",
+      "name": "西侧山脊",
+      "points": [
+        {
+          "x": 7,
+          "y": 38
+        },
+        {
+          "x": 16,
+          "y": 30
+        },
+        {
+          "x": 26,
+          "y": 34
+        },
+        {
+          "x": 35,
+          "y": 26
+        },
+        {
+          "x": 46,
+          "y": 31
+        }
+      ],
+      "width": null,
+      "status": "scenario_assumption",
+      "evidenceGrade": "X"
+    },
+    {
+      "id": "eastern-ridge",
+      "type": "mountain-range",
+      "name": "东侧山脊",
+      "points": [
+        {
+          "x": 64,
+          "y": 76
+        },
+        {
+          "x": 69,
+          "y": 63
+        },
+        {
+          "x": 72,
+          "y": 51
+        },
+        {
+          "x": 77,
+          "y": 39
+        },
+        {
+          "x": 87,
+          "y": 23
+        }
+      ],
+      "width": null,
+      "status": "scenario_assumption",
+      "evidenceGrade": "X"
+    }
+  ],
+  "friendlyUnits": [
+    {
+      "id": "qin-main",
+      "name": "秦军主力",
+      "unitType": "field-army",
+      "areaId": "qin-west-camp",
+      "position": {
+        "x": 22,
+        "y": 48
+      },
+      "status": "active",
+      "symbolType": "friendly-flag",
+      "movement": null,
+      "strength": 86,
+      "strengthUnit": "战力指数"
+    },
+    {
+      "id": "qin-detachment",
+      "name": "秦军机动部队",
+      "unitType": "detachment",
+      "areaId": "western-gate",
+      "position": {
+        "x": 40,
+        "y": 43
+      },
+      "status": "active",
+      "symbolType": "friendly-flag",
+      "movement": null,
+      "strength": 42,
+      "strengthUnit": "战力指数"
+    }
+  ],
+  "commandDelaySeconds": 3,
+  "scout": {
+    "targetUnitId": "zhao-relief",
+    "reportedAreaId": "zhao-main-camp",
+    "delaySeconds": 5,
+    "freshnessSeconds": 24,
+    "confidence": "medium",
+    "sourceId": "qin-forward-scouts",
+    "sourceType": "前出斥候",
+    "observation": "侦报称赵军援军正在向主壁靠拢，尚不能确认其真实位置。"
+  },
+  "deceptionActions": [
+    {
+      "id": "qin-rumor-zhao-kuo",
+      "name": "散布秦军惧怕赵括的假情报",
+      "effect": "alter_enemy_belief_and_command_choice",
+      "mode": "false-report",
+      "targetSide": "enemy",
+      "targetUnitId": "qin-main",
+      "reportedAreaId": "western-gate",
+      "delaySeconds": 4,
+      "freshnessSeconds": 30,
+      "confidence": "medium",
+      "cooldownSeconds": 45,
+      "status": "historical-event-candidate",
+      "evidenceGrade": "A"
+    },
+    {
+      "id": "qin-false-retreat",
+      "name": "制造局部退却假象",
+      "effect": "alter_enemy_belief",
+      "mode": "false-report",
+      "targetSide": "enemy",
+      "targetUnitId": "qin-detachment",
+      "reportedAreaId": "western-gate",
+      "delaySeconds": 3,
+      "freshnessSeconds": 24,
+      "confidence": "high",
+      "cooldownSeconds": 30,
+      "status": "simulation-action-candidate",
+      "evidenceGrade": "X"
+    }
+  ],
+  "objectives": [
+    {
+      "id": "qin-cut-supply",
+      "name": "切断赵军粮道并迫使其改变部署",
+      "side": "player",
+      "type": "logistics_pressure",
+      "status": "design_target",
+      "sourceIds": [
+        "shiji-baiqi"
+      ]
+    },
+    {
+      "id": "qin-isolate-main-army",
+      "name": "隔离赵军主力并阻断外援",
+      "side": "player",
+      "type": "isolate_force",
+      "status": "design_target",
+      "sourceIds": [
+        "shiji-baiqi"
+      ]
+    },
+    {
+      "id": "zhao-hold-position",
+      "name": "守住长平并维持粮道",
+      "side": "enemy",
+      "type": "hold_and_supply",
+      "status": "design_target",
+      "sourceIds": [
+        "shiji-zhao-shijia"
+      ]
+    }
+  ],
+  "endings": [
+    {
+      "id": "qin-isolate-relief",
+      "title": "秦军完成隔离态势",
+      "outcome": "qin-advantage",
+      "status": "counterfactual-ending",
+      "sourceIds": []
+    },
+    {
+      "id": "qin-breaks-zhao-army",
+      "title": "赵军主力覆败",
+      "outcome": "qin-victory",
+      "status": "historical-reference",
+      "sourceIds": [
+        "shiji-baiqi",
+        "shiji-zhao-shijia"
+      ]
+    },
+    {
+      "id": "zhao-breaks-encirclement",
+      "title": "赵军突围，长平未决",
+      "outcome": "zhao-survival",
+      "status": "counterfactual-ending",
+      "sourceIds": []
+    },
+    {
+      "id": "qin-fails-to-isolate",
+      "title": "秦军未能完成隔离",
+      "outcome": "strategic-stalemate",
+      "status": "counterfactual-ending",
+      "sourceIds": []
+    }
+  ],
+  "resolution": {
+    "schemaVersion": 1,
+    "status": "experimental",
+    "timeLimitSeconds": 180,
+    "victory": {
+      "id": "qin-isolate-relief",
+      "result": "qin-advantage",
+      "side": "player",
+      "requiredUnitPositions": [
+        {
+          "unitId": "qin-main",
+          "areaId": "dan-river-valley"
+        },
+        {
+          "unitId": "qin-detachment",
+          "areaId": "zhao-relief-route"
+        }
+      ],
+      "requiredBeliefs": [
+        {
+          "side": "player",
+          "targetUnitId": "zhao-relief",
+          "areaId": "zhao-main-camp"
+        }
+      ]
+    },
+    "timeout": {
+      "id": "qin-fails-to-isolate",
+      "result": "strategic-stalemate",
+      "side": null
+    }
+  },
+  "dataNotes": [
+    "本数据包处于 draft 阶段",
+    "地图、兵力和路线尚未完成史料审校",
+    "任何可玩参数都必须标注为事实、估计、假设或模拟变量"
+  ],
+  "exportNotes": {
+    "enemyTruthExcluded": true,
+    "combatTruthExcluded": true,
+    "sourceProjection": "buildCommanderSessionSnapshot",
+    "sourceStateKeys": [
+      "qin-main",
+      "qin-detachment",
+      "zhao-main",
+      "zhao-relief"
+    ]
+  },
+  "commanderSession": {
+    "schemaVersion": 1,
+    "scenarioId": "changping-260",
+    "simTime": 0,
+    "status": "running",
+    "outcome": null,
+    "objectives": [
+      {
+        "id": "qin-cut-supply",
+        "name": "切断赵军粮道并迫使其改变部署",
+        "type": "logistics_pressure",
+        "status": "in_progress",
+        "sourceIds": [
+          "shiji-baiqi"
+        ]
+      },
+      {
+        "id": "qin-isolate-main-army",
+        "name": "隔离赵军主力并阻断外援",
+        "type": "isolate_force",
+        "status": "in_progress",
+        "sourceIds": [
+          "shiji-baiqi"
+        ]
+      }
+    ],
+    "review": null,
+    "map": {
+      "schemaVersion": 1,
+      "coordinateSystem": "normalized-2d",
+      "bounds": {
+        "x": [
+          0,
+          100
+        ],
+        "y": [
+          0,
+          100
+        ]
+      },
+      "backgroundAsset": null,
+      "renderMode": "vector-terrain",
+      "terrainFeatures": [
+        {
+          "id": "dan-river",
+          "type": "river",
+          "name": "丹水",
+          "points": [
+            {
+              "x": 6,
+              "y": 78
+            },
+            {
+              "x": 18,
+              "y": 70
+            },
+            {
+              "x": 31,
+              "y": 62
+            },
+            {
+              "x": 44,
+              "y": 54
+            },
+            {
+              "x": 58,
+              "y": 48
+            },
+            {
+              "x": 72,
+              "y": 39
+            },
+            {
+              "x": 92,
+              "y": 27
+            }
+          ],
+          "width": 3.2,
+          "status": "scenario_assumption",
+          "evidenceGrade": "C"
+        },
+        {
+          "id": "western-ridge",
+          "type": "mountain-range",
+          "name": "西侧山脊",
+          "points": [
+            {
+              "x": 7,
+              "y": 38
+            },
+            {
+              "x": 16,
+              "y": 30
+            },
+            {
+              "x": 26,
+              "y": 34
+            },
+            {
+              "x": 35,
+              "y": 26
+            },
+            {
+              "x": 46,
+              "y": 31
+            }
+          ],
+          "width": null,
+          "status": "scenario_assumption",
+          "evidenceGrade": "X"
+        },
+        {
+          "id": "eastern-ridge",
+          "type": "mountain-range",
+          "name": "东侧山脊",
+          "points": [
+            {
+              "x": 64,
+              "y": 76
+            },
+            {
+              "x": 69,
+              "y": 63
+            },
+            {
+              "x": 72,
+              "y": 51
+            },
+            {
+              "x": 77,
+              "y": 39
+            },
+            {
+              "x": 87,
+              "y": 23
+            }
+          ],
+          "width": null,
+          "status": "scenario_assumption",
+          "evidenceGrade": "X"
+        }
+      ],
+      "title": "西营—长平西口—丹水河谷—赵军壁垒",
+      "note": "历史背景沙盘 · 地标、旗帜与前线报告分层显示",
+      "areas": [
+        {
+          "id": "qin-west-camp",
+          "name": "秦军西侧营垒",
+          "terrain": "营垒区",
+          "position": {
+            "x": 22,
+            "y": 48
+          },
+          "locationStatus": "provisional",
+          "evidenceGrade": "C",
+          "neighbors": [
+            {
+              "id": "western-gate",
+              "travelSeconds": 10,
+              "routeId": "route-qin-camp-western-gate",
+              "terrainTransitions": []
+            },
+            {
+              "id": "dan-river-valley",
+              "travelSeconds": 14,
+              "routeId": "route-qin-camp-dan-valley",
+              "terrainTransitions": [
+                {
+                  "featureId": "dan-river",
+                  "terrainType": "river",
+                  "transitionType": "river-crossing",
+                  "label": "丹水渡河",
+                  "method": "ford",
+                  "startProgress": 0.58,
+                  "endProgress": 0.72,
+                  "effects": {
+                    "fatiguePerSecond": 0.6,
+                    "supplyDaysPerSecond": 0.02,
+                    "readinessLossPerSecond": 0.006
+                  },
+                  "status": "scenario_assumption"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "western-gate",
+          "name": "长平西口",
+          "terrain": "关口",
+          "position": {
+            "x": 40,
+            "y": 43
+          },
+          "locationStatus": "provisional",
+          "evidenceGrade": "C",
+          "neighbors": [
+            {
+              "id": "qin-west-camp",
+              "travelSeconds": 10,
+              "routeId": "route-qin-camp-western-gate",
+              "terrainTransitions": []
+            },
+            {
+              "id": "zhao-main-camp",
+              "travelSeconds": 12,
+              "routeId": "route-western-gate-zhao-camp",
+              "terrainTransitions": []
+            }
+          ]
+        },
+        {
+          "id": "dan-river-valley",
+          "name": "丹水河谷",
+          "terrain": "河谷",
+          "position": {
+            "x": 54,
+            "y": 58
+          },
+          "locationStatus": "provisional",
+          "evidenceGrade": "C",
+          "neighbors": [
+            {
+              "id": "qin-west-camp",
+              "travelSeconds": 14,
+              "routeId": "route-qin-camp-dan-valley",
+              "terrainTransitions": [
+                {
+                  "featureId": "dan-river",
+                  "terrainType": "river",
+                  "transitionType": "river-crossing",
+                  "label": "丹水渡河",
+                  "method": "ford",
+                  "startProgress": 0.28,
+                  "endProgress": 0.42000000000000004,
+                  "effects": {
+                    "fatiguePerSecond": 0.6,
+                    "supplyDaysPerSecond": 0.02,
+                    "readinessLossPerSecond": 0.006
+                  },
+                  "status": "scenario_assumption"
+                }
+              ]
+            },
+            {
+              "id": "zhao-main-camp",
+              "travelSeconds": 10,
+              "routeId": "route-dan-valley-zhao-camp",
+              "terrainTransitions": []
+            },
+            {
+              "id": "east-highland",
+              "travelSeconds": 13,
+              "routeId": "route-dan-valley-east-highland",
+              "terrainTransitions": [
+                {
+                  "featureId": "eastern-ridge",
+                  "terrainType": "mountain",
+                  "transitionType": "mountain-crossing",
+                  "label": "翻越东侧山脊",
+                  "method": "ridge-pass",
+                  "startProgress": 0.56,
+                  "endProgress": 0.76,
+                  "effects": {
+                    "fatiguePerSecond": 0.9,
+                    "supplyDaysPerSecond": 0.025,
+                    "readinessLossPerSecond": 0.01
+                  },
+                  "status": "scenario_assumption"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "zhao-main-camp",
+          "name": "赵军壁垒",
+          "terrain": "壁垒区",
+          "position": {
+            "x": 60,
+            "y": 37
+          },
+          "locationStatus": "provisional",
+          "evidenceGrade": "C",
+          "neighbors": [
+            {
+              "id": "western-gate",
+              "travelSeconds": 12,
+              "routeId": "route-western-gate-zhao-camp",
+              "terrainTransitions": []
+            },
+            {
+              "id": "dan-river-valley",
+              "travelSeconds": 10,
+              "routeId": "route-dan-valley-zhao-camp",
+              "terrainTransitions": []
+            },
+            {
+              "id": "zhao-relief-route",
+              "travelSeconds": 11,
+              "routeId": "route-zhao-camp-relief",
+              "terrainTransitions": []
+            }
+          ]
+        },
+        {
+          "id": "zhao-relief-route",
+          "name": "赵军援军方向",
+          "terrain": "援军通道",
+          "position": {
+            "x": 79,
+            "y": 29
+          },
+          "locationStatus": "provisional",
+          "evidenceGrade": "B",
+          "neighbors": [
+            {
+              "id": "zhao-main-camp",
+              "travelSeconds": 11,
+              "routeId": "route-zhao-camp-relief",
+              "terrainTransitions": []
+            },
+            {
+              "id": "east-highland",
+              "travelSeconds": 14,
+              "routeId": "route-relief-east-highland",
+              "terrainTransitions": [
+                {
+                  "featureId": "eastern-ridge",
+                  "terrainType": "mountain",
+                  "transitionType": "mountain-crossing",
+                  "label": "翻越东侧山脊",
+                  "method": "ridge-pass",
+                  "startProgress": 0.42,
+                  "endProgress": 0.62,
+                  "effects": {
+                    "fatiguePerSecond": 0.9,
+                    "supplyDaysPerSecond": 0.025,
+                    "readinessLossPerSecond": 0.01
+                  },
+                  "status": "scenario_assumption"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "east-highland",
+          "name": "东侧高地",
+          "terrain": "高地",
+          "position": {
+            "x": 76,
+            "y": 58
+          },
+          "locationStatus": "provisional",
+          "evidenceGrade": "X",
+          "neighbors": [
+            {
+              "id": "dan-river-valley",
+              "travelSeconds": 13,
+              "routeId": "route-dan-valley-east-highland",
+              "terrainTransitions": [
+                {
+                  "featureId": "eastern-ridge",
+                  "terrainType": "mountain",
+                  "transitionType": "mountain-crossing",
+                  "label": "翻越东侧山脊",
+                  "method": "ridge-pass",
+                  "startProgress": 0.24,
+                  "endProgress": 0.43999999999999995,
+                  "effects": {
+                    "fatiguePerSecond": 0.9,
+                    "supplyDaysPerSecond": 0.025,
+                    "readinessLossPerSecond": 0.01
+                  },
+                  "status": "scenario_assumption"
+                }
+              ]
+            },
+            {
+              "id": "zhao-relief-route",
+              "travelSeconds": 14,
+              "routeId": "route-relief-east-highland",
+              "terrainTransitions": [
+                {
+                  "featureId": "eastern-ridge",
+                  "terrainType": "mountain",
+                  "transitionType": "mountain-crossing",
+                  "label": "翻越东侧山脊",
+                  "method": "ridge-pass",
+                  "startProgress": 0.38,
+                  "endProgress": 0.5800000000000001,
+                  "effects": {
+                    "fatiguePerSecond": 0.9,
+                    "supplyDaysPerSecond": 0.025,
+                    "readinessLossPerSecond": 0.01
+                  },
+                  "status": "scenario_assumption"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "routes": [
+        {
+          "id": "route-qin-west-camp-western-gate",
+          "fromAreaId": "qin-west-camp",
+          "toAreaId": "western-gate",
+          "travelSeconds": 10,
+          "routeId": "route-qin-camp-western-gate",
+          "terrainTransitions": [],
+          "points": [
+            {
+              "x": 22,
+              "y": 48
+            },
+            {
+              "x": 40,
+              "y": 43
+            }
+          ]
+        },
+        {
+          "id": "route-dan-river-valley-qin-west-camp",
+          "fromAreaId": "qin-west-camp",
+          "toAreaId": "dan-river-valley",
+          "travelSeconds": 14,
+          "routeId": "route-qin-camp-dan-valley",
+          "terrainTransitions": [
+            {
+              "featureId": "dan-river",
+              "terrainType": "river",
+              "transitionType": "river-crossing",
+              "label": "丹水渡河",
+              "method": "ford",
+              "startProgress": 0.58,
+              "endProgress": 0.72,
+              "effects": {
+                "fatiguePerSecond": 0.6,
+                "supplyDaysPerSecond": 0.02,
+                "readinessLossPerSecond": 0.006
+              },
+              "status": "scenario_assumption"
+            }
+          ],
+          "points": [
+            {
+              "x": 22,
+              "y": 48
+            },
+            {
+              "x": 54,
+              "y": 58
+            }
+          ]
+        },
+        {
+          "id": "route-western-gate-zhao-main-camp",
+          "fromAreaId": "western-gate",
+          "toAreaId": "zhao-main-camp",
+          "travelSeconds": 12,
+          "routeId": "route-western-gate-zhao-camp",
+          "terrainTransitions": [],
+          "points": [
+            {
+              "x": 40,
+              "y": 43
+            },
+            {
+              "x": 60,
+              "y": 37
+            }
+          ]
+        },
+        {
+          "id": "route-dan-river-valley-zhao-main-camp",
+          "fromAreaId": "dan-river-valley",
+          "toAreaId": "zhao-main-camp",
+          "travelSeconds": 10,
+          "routeId": "route-dan-valley-zhao-camp",
+          "terrainTransitions": [],
+          "points": [
+            {
+              "x": 54,
+              "y": 58
+            },
+            {
+              "x": 60,
+              "y": 37
+            }
+          ]
+        },
+        {
+          "id": "route-dan-river-valley-east-highland",
+          "fromAreaId": "dan-river-valley",
+          "toAreaId": "east-highland",
+          "travelSeconds": 13,
+          "routeId": "route-dan-valley-east-highland",
+          "terrainTransitions": [
+            {
+              "featureId": "eastern-ridge",
+              "terrainType": "mountain",
+              "transitionType": "mountain-crossing",
+              "label": "翻越东侧山脊",
+              "method": "ridge-pass",
+              "startProgress": 0.56,
+              "endProgress": 0.76,
+              "effects": {
+                "fatiguePerSecond": 0.9,
+                "supplyDaysPerSecond": 0.025,
+                "readinessLossPerSecond": 0.01
+              },
+              "status": "scenario_assumption"
+            }
+          ],
+          "points": [
+            {
+              "x": 54,
+              "y": 58
+            },
+            {
+              "x": 76,
+              "y": 58
+            }
+          ]
+        },
+        {
+          "id": "route-zhao-main-camp-zhao-relief-route",
+          "fromAreaId": "zhao-main-camp",
+          "toAreaId": "zhao-relief-route",
+          "travelSeconds": 11,
+          "routeId": "route-zhao-camp-relief",
+          "terrainTransitions": [],
+          "points": [
+            {
+              "x": 60,
+              "y": 37
+            },
+            {
+              "x": 79,
+              "y": 29
+            }
+          ]
+        },
+        {
+          "id": "route-east-highland-zhao-relief-route",
+          "fromAreaId": "zhao-relief-route",
+          "toAreaId": "east-highland",
+          "travelSeconds": 14,
+          "routeId": "route-relief-east-highland",
+          "terrainTransitions": [
+            {
+              "featureId": "eastern-ridge",
+              "terrainType": "mountain",
+              "transitionType": "mountain-crossing",
+              "label": "翻越东侧山脊",
+              "method": "ridge-pass",
+              "startProgress": 0.42,
+              "endProgress": 0.62,
+              "effects": {
+                "fatiguePerSecond": 0.9,
+                "supplyDaysPerSecond": 0.025,
+                "readinessLossPerSecond": 0.01
+              },
+              "status": "scenario_assumption"
+            }
+          ],
+          "points": [
+            {
+              "x": 79,
+              "y": 29
+            },
+            {
+              "x": 76,
+              "y": 58
+            }
+          ]
+        }
+      ],
+      "landmarks": [
+        {
+          "id": "qin-west-camp-marker",
+          "areaId": "qin-west-camp",
+          "type": "camp",
+          "label": "营垒",
+          "visibility": "always",
+          "status": "scenario_assumption",
+          "position": {
+            "x": 22,
+            "y": 48
+          },
+          "evidenceGrade": "C"
+        },
+        {
+          "id": "western-gate-marker",
+          "areaId": "western-gate",
+          "type": "pass",
+          "label": "关口",
+          "visibility": "always",
+          "status": "scenario_assumption",
+          "position": {
+            "x": 40,
+            "y": 43
+          },
+          "evidenceGrade": "C"
+        },
+        {
+          "id": "dan-river-valley-marker",
+          "areaId": "dan-river-valley",
+          "type": "valley",
+          "label": "河谷",
+          "visibility": "always",
+          "status": "scenario_assumption",
+          "position": {
+            "x": 54,
+            "y": 58
+          },
+          "evidenceGrade": "C"
+        },
+        {
+          "id": "zhao-main-camp-marker",
+          "areaId": "zhao-main-camp",
+          "type": "fortress",
+          "label": "壁垒",
+          "visibility": "always",
+          "status": "scenario_assumption",
+          "position": {
+            "x": 60,
+            "y": 37
+          },
+          "evidenceGrade": "C"
+        },
+        {
+          "id": "zhao-relief-route-marker",
+          "areaId": "zhao-relief-route",
+          "type": "route",
+          "label": "援军通道",
+          "visibility": "always",
+          "status": "scenario_assumption",
+          "position": {
+            "x": 79,
+            "y": 29
+          },
+          "evidenceGrade": "B"
+        },
+        {
+          "id": "east-highland-marker",
+          "areaId": "east-highland",
+          "type": "highland",
+          "label": "高地",
+          "visibility": "always",
+          "status": "scenario_assumption",
+          "position": {
+            "x": 76,
+            "y": 58
+          },
+          "evidenceGrade": "X"
+        },
+        {
+          "id": "changping-city-marker",
+          "areaId": "western-gate",
+          "type": "city",
+          "label": "长平城",
+          "position": {
+            "x": 45,
+            "y": 36
+          },
+          "visibility": "always",
+          "status": "scenario_assumption",
+          "sourceIds": [
+            "shiji-baiqi",
+            "shiji-zhao-shijia",
+            "modern-geography-review-required"
+          ],
+          "evidenceGrade": "C"
+        },
+        {
+          "id": "qin-granary-marker",
+          "areaId": "qin-west-camp",
+          "type": "granary",
+          "label": "秦军粮仓",
+          "position": {
+            "x": 28,
+            "y": 55
+          },
+          "visibility": "always",
+          "status": "scenario_assumption",
+          "sourceIds": [
+            "shiji-baiqi",
+            "modern-geography-review-required"
+          ],
+          "evidenceGrade": "C"
+        },
+        {
+          "id": "qin-forward-fort-marker",
+          "areaId": "qin-west-camp",
+          "type": "fortress",
+          "label": "前出堡",
+          "position": {
+            "x": 16,
+            "y": 41
+          },
+          "visibility": "always",
+          "status": "scenario_assumption",
+          "sourceIds": [
+            "shiji-baiqi",
+            "modern-geography-review-required"
+          ],
+          "evidenceGrade": "C"
+        },
+        {
+          "id": "zhao-granary-marker",
+          "areaId": "zhao-main-camp",
+          "type": "granary",
+          "label": "赵军粮仓",
+          "position": {
+            "x": 66,
+            "y": 44
+          },
+          "visibility": "always",
+          "status": "scenario_assumption",
+          "sourceIds": [
+            "shiji-zhao-shijia",
+            "modern-geography-review-required"
+          ],
+          "evidenceGrade": "C"
+        },
+        {
+          "id": "eastern-fort-marker",
+          "areaId": "zhao-relief-route",
+          "type": "fortress",
+          "label": "东侧堡",
+          "position": {
+            "x": 84,
+            "y": 34
+          },
+          "visibility": "always",
+          "status": "scenario_assumption",
+          "sourceIds": [
+            "shiji-zhao-shijia",
+            "modern-geography-review-required"
+          ],
+          "evidenceGrade": "B"
+        },
+        {
+          "id": "dan-ford-marker",
+          "areaId": "dan-river-valley",
+          "type": "ford",
+          "label": "丹水渡口",
+          "position": {
+            "x": 49,
+            "y": 66
+          },
+          "visibility": "always",
+          "status": "scenario_assumption",
+          "sourceIds": [
+            "gaoping-protection-plan-2024",
+            "modern-geography-review-required"
+          ],
+          "evidenceGrade": "C"
+        }
+      ],
+      "friendlyUnits": [
+        {
+          "id": "qin-main",
+          "name": "秦军主力",
+          "unitType": "field-army",
+          "areaId": "qin-west-camp",
+          "position": {
+            "x": 22,
+            "y": 48
+          },
+          "status": "active",
+          "symbolType": "friendly-flag",
+          "movement": null
+        },
+        {
+          "id": "qin-detachment",
+          "name": "秦军机动部队",
+          "unitType": "detachment",
+          "areaId": "western-gate",
+          "position": {
+            "x": 40,
+            "y": 43
+          },
+          "status": "active",
+          "symbolType": "friendly-flag",
+          "movement": null
+        }
+      ],
+      "reportedEnemySignals": [],
+      "disclosure": {
+        "side": "player",
+        "rawEnemyUnitsIncluded": false,
+        "enemySignalsSource": "belief.sightings",
+        "combatTruthIncluded": false
+      }
+    },
+    "ownOrders": [],
+    "ownObservations": [],
+    "deceptionActions": [
+      {
+        "id": "qin-rumor-zhao-kuo",
+        "name": "散布秦军惧怕赵括的假情报",
+        "effect": "alter_enemy_belief_and_command_choice",
+        "mode": "false-report",
+        "targetSide": "enemy",
+        "targetUnitId": "qin-main",
+        "reportedAreaId": "western-gate",
+        "delaySeconds": 4,
+        "freshnessSeconds": 30,
+        "confidence": "medium",
+        "cooldownSeconds": 45,
+        "status": "historical-event-candidate",
+        "evidenceGrade": "A"
+      },
+      {
+        "id": "qin-false-retreat",
+        "name": "制造局部退却假象",
+        "effect": "alter_enemy_belief",
+        "mode": "false-report",
+        "targetSide": "enemy",
+        "targetUnitId": "qin-detachment",
+        "reportedAreaId": "western-gate",
+        "delaySeconds": 3,
+        "freshnessSeconds": 24,
+        "confidence": "high",
+        "cooldownSeconds": 30,
+        "status": "simulation-action-candidate",
+        "evidenceGrade": "X"
+      }
+    ],
+    "deceptionHistory": [],
+    "eventLog": [],
+    "disclosure": {
+      "side": "player",
+      "rawEnemyUnitsIncluded": false,
+      "combatTruthIncluded": false,
+      "actualEnemyPositionsIncluded": false,
+      "source": "headless-battlefield-core"
+    }
+  }
+}

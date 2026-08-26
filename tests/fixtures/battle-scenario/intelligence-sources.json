@@ -1,0 +1,6 @@
+{
+  "sources": [
+    { "id": "scout-north", "side": "player", "type": "scout", "areaIds": ["north", "valley"], "reliability": "medium" },
+    { "id": "scout-ridge", "side": "enemy", "type": "scout", "areaIds": ["ridge", "valley"], "reliability": "medium" }
+  ]
+}

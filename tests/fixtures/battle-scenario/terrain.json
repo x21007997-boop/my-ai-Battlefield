@@ -1,0 +1,8 @@
+{
+  "areas": [
+    { "areaId": "north", "type": "pass" },
+    { "areaId": "valley", "type": "valley" },
+    { "areaId": "ridge", "type": "highland" }
+  ],
+  "features": []
+}

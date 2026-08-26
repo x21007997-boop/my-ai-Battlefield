@@ -1,0 +1,6 @@
+{
+  "factions": [
+    { "id": "player-faction", "name": "我方", "side": "player" },
+    { "id": "enemy-faction", "name": "敌方", "side": "enemy" }
+  ]
+}

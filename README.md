@@ -1,9 +1,17 @@
-# 弘光元年：江南残局
+# 历史战争认知沙盘
 
-AI 历史分支模拟与叙事平台的首个可运行原型。玩家在弘光元年的特定历史片段中阅读奏报、比较幕僚意见、自由下达决策，并观察国库、粮草、民心和有效防务随回合变化。
+一款基于历史背景的实时战争推演游戏。玩家在沙盘上指挥军队，接收延迟且可能失真的情报，通过连续决策改变战役走向。弘光元年政治推演作为独立的历史决策模式保留，长平之战是当前第一张正式可玩的实时战役关卡。
+
+## 原型与正式项目边界
+
+- `src/prototype/political/` 和弘光/扬州剧本属于之前的历史政治决策原型，继续独立维护，不作为实时战场规则或正式客户端基础；
+- `src/battlefield/`、`scenarios/changping-260/` 和 `godot/` 属于正式的历史战争实时推演项目；
+- `src/prototype/battlefield/BattlefieldPrototype.jsx` 是正式项目迁移期间的浏览器原型验证入口，Godot 才是正式游戏客户端；
+- 原型的完成、测试通过或界面可用，不等于正式项目已经完成。正式项目必须以 Godot 中可玩的战役闭环为验收标准。
 
 ## 当前可用体验
 
+- 长平战役正式关卡：沙盘指挥、连续时间、延迟命令、侦查、欺骗和敌方认知行动；
 - 江南、江北态势主界面；
 - 两份可切换奏报及信息矛盾提示；
 - 三位幕僚的不同处置意见；
@@ -22,7 +30,7 @@ AI 历史分支模拟与叙事平台的首个可运行原型。玩家在弘光�
 - 绑定分支节点的 AI 回合纪事，以及 Markdown、Word 小说卷宗下载。
 - 剧本选择首页，以及“江南残局”“扬州孤城”两套独立可玩内容。
 
-当前是带有确定性规则内核和 DeepSeek 会商能力的前端原型。自动存档和手动快照保存在浏览器本地，尚未包含正式账号或服务端数据库。
+当前版本包含确定性战场规则内核、Godot 正式游戏客户端和浏览器过渡验证入口。自动存档和手动快照暂保存在本地，正式账号、云存档和联机服务尚未接入。
 
 ## 本地运行
 
@@ -44,13 +52,12 @@ npm run test:sites
 
 ## 技术方向
 
-正式版本建议采用：
+正式游戏采用：
 
-- React / TypeScript：产品界面；
-- MapLibre GL JS：历史地图与区域图层；
-- React Flow：因果链、国策树和历史分支；
-- PostgreSQL：事件存储、世界快照和小说资料；
-- Redis + BullMQ：回合结算、人物反应和叙事生成；
+- Godot：正式游戏运行时、沙盘表现、输入和回放界面；
+- JavaScript 无头内核：确定性世界状态、实时推进、战斗、后勤和胜负；
+- 版本化战役包：历史来源、地理、单位、侦查、欺骗和结局数据；
+- React / Vite：迁移期的规则验证和战役数据编辑入口；
 - 自研确定性规则引擎：正式指标和事件结算；
 - 结构化 AI 服务：决策解析、人物反应、奏折和小说叙事。
 
@@ -72,15 +79,17 @@ worker/                      Sites 部署入口
 
 其中：
 
-- `src/App.jsx`：当前可交互主界面；
-- `src/simulation.js`：MVP 确定性结算入口；
-- `src/scenario.js`：通用剧本加载、条件判断与动态奏报；
+- `src/prototype/political/App.jsx`：既有政治决策原型主界面；
+- `godot/`：正式游戏客户端工程；
+- `src/prototype/battlefield/BattlefieldPrototype.jsx`：迁移期浏览器战役验证入口，不作为正式客户端；
+- `src/prototype/political/simulation.js`：既有政治原型的确定性结算入口；
+- `src/prototype/political/scenario.js`：既有政治原型的剧本加载、条件判断与动态奏报；
 - `scenarios/hongguang-1645/`：弘光元年人物、城市、事件、奏报和结局数据；
 - `scenarios/yangzhou-1645/`：扬州守城准备期的独立剧本数据；
-- `src/scenarioRegistry.js`：多剧本注册与按 ID 加载；
+- `src/prototype/political/scenarioRegistry.js`：既有政治原型的多剧本注册与按 ID 加载；
 - `scripts/validate-scenario.mjs`：剧本结构、引用、兜底事件和结局可达性校验；
-- `src/storage.js`：本地快照和历史分支树；
-- `src/docxExport.js`：Word 小说卷宗排版与导出；
+- `src/prototype/political/storage.js`：既有政治原型的本地快照和历史分支树；
+- `src/prototype/political/docxExport.js`：既有政治原型的 Word 小说卷宗排版与导出；
 - `server/deepseek.js`：DeepSeek 服务端安全代理；
 - `docs/deepseek.md`：AI 接入、密钥和部署说明；
 - `docs/narrative.md`：回合纪事、分支卷宗和导出说明；

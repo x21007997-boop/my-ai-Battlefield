@@ -1,0 +1,14 @@
+{
+  "sides": {
+    "qin": {
+      "knownUnitIds": ["qin-main", "qin-detachment"],
+      "sightings": [],
+      "status": "initial-own-forces-only"
+    },
+    "zhao": {
+      "knownUnitIds": ["zhao-main", "zhao-relief"],
+      "sightings": [],
+      "status": "initial-own-forces-only"
+    }
+  }
+}

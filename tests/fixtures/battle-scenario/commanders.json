@@ -1,0 +1,6 @@
+{
+  "commanders": [
+    { "id": "player-commander", "name": "我方指挥官", "side": "player", "riskProfile": "cautious", "sourceIds": ["fixture-source"] },
+    { "id": "enemy-commander", "name": "敌方指挥官", "side": "enemy", "riskProfile": "aggressive", "sourceIds": ["fixture-source"] }
+  ]
+}

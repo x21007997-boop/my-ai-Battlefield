@@ -1,0 +1,64 @@
+{
+  "seed": 260,
+  "simTime": 0,
+  "stateStatus": "draft",
+  "startDate": "前260年（具体起始日待考）",
+  "units": [
+    {
+      "id": "qin-main",
+      "side": "qin",
+      "location": "qin-west-camp",
+      "commanderId": "bai-qi",
+      "strength": 0,
+      "strengthStatus": "unknown",
+      "morale": 0,
+      "moraleStatus": "unknown",
+      "fatigue": 0,
+      "fatigueStatus": "unknown",
+      "supplyDays": 0,
+      "supplyStatus": "unknown"
+    },
+    {
+      "id": "qin-detachment",
+      "side": "qin",
+      "location": "western-gate",
+      "commanderId": "bai-qi",
+      "strength": 0,
+      "strengthStatus": "unknown",
+      "morale": 0,
+      "moraleStatus": "unknown",
+      "fatigue": 0,
+      "fatigueStatus": "unknown",
+      "supplyDays": 0,
+      "supplyStatus": "unknown"
+    },
+    {
+      "id": "zhao-main",
+      "side": "zhao",
+      "location": "zhao-main-camp",
+      "commanderId": "lian-po",
+      "strength": 0,
+      "strengthStatus": "contested",
+      "morale": 0,
+      "moraleStatus": "unknown",
+      "fatigue": 0,
+      "fatigueStatus": "unknown",
+      "supplyDays": 0,
+      "supplyStatus": "unknown"
+    },
+    {
+      "id": "zhao-relief",
+      "side": "zhao",
+      "location": "zhao-relief-route",
+      "commanderId": "zhao-kuo",
+      "strength": 0,
+      "strengthStatus": "unknown",
+      "morale": 0,
+      "moraleStatus": "unknown",
+      "fatigue": 0,
+      "fatigueStatus": "unknown",
+      "supplyDays": 0,
+      "supplyStatus": "unknown"
+    }
+  ]
+}

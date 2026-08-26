@@ -1,0 +1,6 @@
+{
+  "units": [
+    { "id": "player-wing", "name": "我方左翼", "side": "player", "unitType": "formation", "commanderId": "player-commander" },
+    { "id": "enemy-main", "name": "敌军主力", "side": "enemy", "unitType": "formation", "commanderId": "enemy-commander" }
+  ]
+}

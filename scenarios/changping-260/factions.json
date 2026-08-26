@@ -1,0 +1,7 @@
+{
+  "factions": [
+    { "id": "qin-state-army", "name": "秦国中央军", "side": "qin", "sourceIds": ["shiji-baiqi"] },
+    { "id": "zhao-state-army", "name": "赵国野战军", "side": "zhao", "sourceIds": ["shiji-zhao-shijia"] },
+    { "id": "zhao-court", "name": "赵国朝廷", "side": "zhao", "sourceIds": ["shiji-zhao-shijia", "zhanguoce-zhao"] }
+  ]
+}

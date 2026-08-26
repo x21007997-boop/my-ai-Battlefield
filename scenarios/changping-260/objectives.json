@@ -1,0 +1,28 @@
+{
+  "objectives": [
+    {
+      "id": "qin-cut-supply",
+      "name": "切断赵军粮道并迫使其改变部署",
+      "side": "qin",
+      "type": "logistics_pressure",
+      "status": "design_target",
+      "sourceIds": ["shiji-baiqi"]
+    },
+    {
+      "id": "qin-isolate-main-army",
+      "name": "隔离赵军主力并阻断外援",
+      "side": "qin",
+      "type": "isolate_force",
+      "status": "design_target",
+      "sourceIds": ["shiji-baiqi"]
+    },
+    {
+      "id": "zhao-hold-position",
+      "name": "守住长平并维持粮道",
+      "side": "zhao",
+      "type": "hold_and_supply",
+      "status": "design_target",
+      "sourceIds": ["shiji-zhao-shijia"]
+    }
+  ]
+}

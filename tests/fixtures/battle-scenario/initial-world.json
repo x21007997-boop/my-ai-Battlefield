@@ -1,0 +1,8 @@
+{
+  "seed": 20260825,
+  "simTime": 0,
+  "units": [
+    { "id": "player-wing", "side": "player", "location": "north", "commanderId": "player-commander", "strength": 1000, "morale": 70, "fatigue": 10, "supplyDays": 5 },
+    { "id": "enemy-main", "side": "enemy", "location": "ridge", "commanderId": "enemy-commander", "strength": 1200, "morale": 65, "fatigue": 12, "supplyDays": 4 }
+  ]
+}

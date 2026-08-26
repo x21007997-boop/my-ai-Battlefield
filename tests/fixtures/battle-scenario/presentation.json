@@ -1,0 +1,10 @@
+{
+  "eraLabel": "测试场景",
+  "mapAsset": "/assets/test-battle-map.png",
+  "renderMode": "vector-terrain",
+  "map": {
+    "coordinateSystem": "normalized-2d",
+    "bounds": { "x": [0, 100], "y": [0, 100] }
+  },
+  "opening": ["测试夹具，不代表历史事实"]
+}

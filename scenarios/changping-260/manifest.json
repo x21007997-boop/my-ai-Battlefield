@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "id": "changping-260",
+  "title": "长平之战·认知沙盘（数据草案）",
+  "description": "以长平之战的史料节点为核心，逐步复原信息不对称、粮道压力与统帅决策。当前仍为 draft，不代表可玩史实地图。",
+  "eraLabel": "战国晚期 · 前262—前260年",
+  "historyWindow": "262—260 BCE",
+  "ruleVersion": "battlefield-core-0.1.0",
+  "status": "draft",
+  "playability": "experimental",
+  "sides": ["qin", "zhao"],
+  "dataPolicy": "证据不足的兵力、距离和地形位置保留 unknown 或 provisional，不以模拟变量冒充历史事实。"
+}

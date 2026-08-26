@@ -1,0 +1,13 @@
+{
+  "items": [
+    {
+      "id": "changping-historical-area",
+      "name": "长平（古地名范围）",
+      "areaId": "western-gate",
+      "type": "historical-settlement",
+      "locationStatus": "provisional",
+      "evidenceGrade": "B",
+      "sourceIds": ["shiji-baiqi", "shiji-zhao-shijia", "modern-geography-review-required"]
+    }
+  ]
+}

@@ -1,0 +1,58 @@
+{
+  "areas": [
+    {
+      "id": "qin-west-camp",
+      "name": "秦军西侧营垒",
+      "neighbors": [{ "id": "western-gate", "travelSeconds": 900 }, { "id": "dan-river-valley", "travelSeconds": 1200 }],
+      "position": { "x": 22, "y": 48 },
+      "locationStatus": "provisional",
+      "evidenceGrade": "C",
+      "sourceIds": ["shiji-baiqi", "gaoping-protection-plan-2024", "modern-geography-review-required"]
+    },
+    {
+      "id": "western-gate",
+      "name": "长平西口（概念区）",
+      "neighbors": [{ "id": "qin-west-camp", "travelSeconds": 900 }, { "id": "zhao-main-camp", "travelSeconds": 1200 }],
+      "position": { "x": 40, "y": 43 },
+      "locationStatus": "provisional",
+      "evidenceGrade": "C",
+      "sourceIds": ["shiji-baiqi", "gaoping-protection-plan-2024", "modern-geography-review-required"]
+    },
+    {
+      "id": "dan-river-valley",
+      "name": "丹水河谷（相对位置待复核）",
+      "neighbors": [{ "id": "qin-west-camp", "travelSeconds": 1200 }, { "id": "zhao-main-camp", "travelSeconds": 1000 }, { "id": "east-highland", "travelSeconds": 1300 }],
+      "position": { "x": 54, "y": 58 },
+      "locationStatus": "provisional",
+      "evidenceGrade": "C",
+      "sourceIds": ["shiji-baiqi", "gaoping-protection-plan-2024", "modern-geography-review-required"]
+    },
+    {
+      "id": "zhao-main-camp",
+      "name": "赵军壁垒（概念区）",
+      "neighbors": [{ "id": "western-gate", "travelSeconds": 1200 }, { "id": "dan-river-valley", "travelSeconds": 1000 }, { "id": "zhao-relief-route", "travelSeconds": 1100 }],
+      "position": { "x": 60, "y": 37 },
+      "locationStatus": "provisional",
+      "evidenceGrade": "C",
+      "sourceIds": ["shiji-baiqi", "shiji-zhao-shijia", "gaoping-protection-plan-2024", "modern-geography-review-required"]
+    },
+    {
+      "id": "zhao-relief-route",
+      "name": "赵军援军方向（概念区）",
+      "neighbors": [{ "id": "zhao-main-camp", "travelSeconds": 1100 }, { "id": "east-highland", "travelSeconds": 1400 }],
+      "position": { "x": 79, "y": 29 },
+      "locationStatus": "provisional",
+      "evidenceGrade": "B",
+      "sourceIds": ["shiji-zhao-shijia", "gaoping-protection-plan-2024", "modern-geography-review-required"]
+    },
+    {
+      "id": "east-highland",
+      "name": "东侧高地（概念区）",
+      "neighbors": [{ "id": "dan-river-valley", "travelSeconds": 1300 }, { "id": "zhao-relief-route", "travelSeconds": 1400 }],
+      "position": { "x": 76, "y": 58 },
+      "locationStatus": "provisional",
+      "evidenceGrade": "X",
+      "sourceIds": ["modern-geography-review-required"]
+    }
+  ]
+}

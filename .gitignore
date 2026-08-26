@@ -20,3 +20,9 @@ npm-debug.log*
 .DS_Store
 .idea/
 .vscode/
+.godot/
+
+# Local visual audit captures and legacy raster map (formal client uses vector terrain)
+docs/design/screenshots/current-audit/
+godot/assets/jiangnan-map.png
+godot/assets/jiangnan-map.png.import

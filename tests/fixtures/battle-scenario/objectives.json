@@ -1,0 +1,6 @@
+{
+  "objectives": [
+    { "id": "hold-north", "name": "守住北口", "side": "player", "type": "hold_area" },
+    { "id": "take-north", "name": "夺取北口", "side": "enemy", "type": "take_area" }
+  ]
+}

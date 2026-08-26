@@ -1,0 +1,32 @@
+{
+  "endings": [
+    {
+      "id": "qin-isolate-relief",
+      "title": "秦军完成隔离态势",
+      "outcome": "qin-advantage",
+      "status": "counterfactual-ending",
+      "sourceIds": []
+    },
+    {
+      "id": "qin-breaks-zhao-army",
+      "title": "赵军主力覆败",
+      "outcome": "qin-victory",
+      "status": "historical-reference",
+      "sourceIds": ["shiji-baiqi", "shiji-zhao-shijia"]
+    },
+    {
+      "id": "zhao-breaks-encirclement",
+      "title": "赵军突围，长平未决",
+      "outcome": "zhao-survival",
+      "status": "counterfactual-ending",
+      "sourceIds": []
+    },
+    {
+      "id": "qin-fails-to-isolate",
+      "title": "秦军未能完成隔离",
+      "outcome": "strategic-stalemate",
+      "status": "counterfactual-ending",
+      "sourceIds": []
+    }
+  ]
+}

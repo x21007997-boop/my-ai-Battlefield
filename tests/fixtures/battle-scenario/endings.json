@@ -1,0 +1,5 @@
+{
+  "endings": [
+    { "id": "player-holds", "title": "北口守住", "outcome": "player_victory" }
+  ]
+}

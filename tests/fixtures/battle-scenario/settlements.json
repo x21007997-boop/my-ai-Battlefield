@@ -1,0 +1,5 @@
+{
+  "items": [
+    { "id": "village-01", "name": "北口村", "areaId": "north", "type": "village" }
+  ]
+}

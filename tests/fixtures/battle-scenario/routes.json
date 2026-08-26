@@ -1,0 +1,6 @@
+{
+  "edges": [
+    { "id": "route-north-valley", "from": "north", "to": "valley", "travelSeconds": 3 },
+    { "id": "route-valley-ridge", "from": "valley", "to": "ridge", "travelSeconds": 4 }
+  ]
+}

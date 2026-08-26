@@ -1,0 +1,44 @@
+{
+  "units": [
+    {
+      "id": "qin-main",
+      "name": "秦军主力",
+      "historicalNote": "规模待考",
+      "side": "qin",
+      "unitType": "field-army",
+      "commanderId": "bai-qi",
+      "strengthStatus": "unknown",
+      "evidenceGrade": "X"
+    },
+    {
+      "id": "qin-detachment",
+      "name": "秦军机动部队",
+      "historicalNote": "是否独立建制待考",
+      "side": "qin",
+      "unitType": "detachment",
+      "commanderId": "bai-qi",
+      "strengthStatus": "unknown",
+      "evidenceGrade": "X"
+    },
+    {
+      "id": "zhao-main",
+      "name": "赵军主力",
+      "historicalNote": "规模待考",
+      "side": "zhao",
+      "unitType": "field-army",
+      "commanderId": "lian-po",
+      "strengthStatus": "contested",
+      "evidenceGrade": "B"
+    },
+    {
+      "id": "zhao-relief",
+      "name": "赵军援军方向力量",
+      "historicalNote": "编制待考",
+      "side": "zhao",
+      "unitType": "relief-force",
+      "commanderId": "zhao-kuo",
+      "strengthStatus": "unknown",
+      "evidenceGrade": "X"
+    }
+  ]
+}

@@ -1,4 +1,4 @@
-# Prototype Instructions
+# Game Development Instructions
 
 Run the local server yourself and open the preview in the browser available to this environment. Do not give the user server-start instructions when you can run it.
 
@@ -10,9 +10,35 @@ Build app UI in `src/`. Keep `.openai/hosting.json`, `worker/index.js`, `scripts
 
 ## Product direction
 
+- This project is making a game. All product plans, technical priorities, milestones and acceptance criteria must be evaluated against the final playable game experience, not against a generic dashboard, data-visualization tool or historical archive.
 - The selected visual source is `/Users/mac-wu/.codex/generated_images/019fcb59-a523-7251-8523-4c75905b7834/exec-fd316ed5-d4b2-4fa0-b1a0-dbc59bda0ec2.png`.
 - Preserve the warm late-Ming archive aesthetic: walnut frame, rice paper, muted cinnabar, jade green and restrained gold.
 - The primary screen must keep the historical map as the dominant surface, with realm indicators on the left and a two-part right column: selected memorial above, adviser council below.
 - Core interactions are reading memorials, comparing advisers, entering a free-form decision, analysing impact, confirming it, and advancing one monthly turn.
 - Do not turn the product into a generic admin dashboard or a precise modern military planning interface.
 - Historical content belongs in versioned packages under `scenarios/`; keep the generic rule engine free of scenario-specific prose and run `npm run validate:scenario` after changing a scenario package.
+
+### Battlefield simulator direction
+
+- The new product goal is a real-time war simulator grounded in historical backgrounds: historical material defines the initial situation, actors, terrain, resources, constraints and plausible events; the simulator then continuously evolves the battlefield after the player begins issuing commands.
+- The core experience is not historical-data browsing or turn-based replay. It is continuous command → delayed execution → reconnaissance → belief update → deception/counter-deception → emergent outcome.
+- The battlefield view is a sand table: use flags, pennants and landmark/building symbols for armies, camps, forts, passes and terrain. Do not render the true battle or enemy positions directly on the map; the map must be derived from the player's belief state and delayed frontline reports, with confidence, freshness and possible mislocation visible.
+- Combat may resolve inside the authoritative world state, but the commander-facing map and timeline must not expose raw engagement exchanges. Convert battlefield changes into delayed, potentially noisy intelligence reports before showing enemy contacts or suspected fighting on the sand table.
+- A historical scenario may be playable before every disputed fact is settled, provided `historical_fact`, `historical_estimate`, `scenario_assumption` and `simulation_variable` remain separate and visible in the data contract. Do not present simulation assumptions as historical facts.
+- The next product milestone is a playable Changping battle window using a historically grounded initial envelope, not another round of archival work without a playable loop. Keep the scenario `draft` for historical-claim governance if needed, while allowing an explicitly marked experimental build.
+- Keep the current Hongguang political simulator as a separate domain. Do not turn its monthly `resolveTurn()` model into the battlefield engine.
+- Because the product is explicitly a game, introduce a real game engine as the formal runtime and presentation layer once the current core contract is stable. Godot is the current primary candidate for the game client; the existing React/Vite sandbox remains a validation and data-authoring surface during migration, not the final game foundation.
+- Prototype/formal-project boundary (2026-08-26): keep the earlier Hongguang monthly political simulator in `src/prototype/political/` as the existing prototype/legacy product line; it is not the formal battlefield runtime. The formal project is the historical real-time war simulator built from `src/battlefield/`, `scenarios/changping-260/`, and `godot/`. `src/prototype/battlefield/BattlefieldPrototype.jsx` is the browser prototype/validation surface for migration, while Godot is the formal game client. The root-level `src/App.jsx`, `src/simulation.js` and related files are compatibility exports only. Do not mix their milestones, rules, scenario packages, or completion claims. “Experimental” may remain only as a data-governance status for unresolved historical claims or simulation parameters, not as a label for the formal product.
+- Keep the headless battlefield rules, historical scenario packages, replay data and commander-belief projection independent of the engine. The engine must consume these contracts rather than become the source of truth for orders, combat or intelligence.
+- Every battlefield milestone must produce or strengthen a playable loop: player command, delayed execution, imperfect information, continuous simulation and understandable consequence. Pure archival整理, framework replacement or UI polishing without improving the game loop is not a product milestone.
+- Playtest feedback (2026-08-25): the sand table must make the two sides immediately legible without exposing enemy truth. Use a clear Qin-friendly visual language and a separate Zhao-reported/uncertain visual language; keep neutral landmarks visually distinct.
+- Playtest feedback (2026-08-25): commander-facing labels must show decision-useful game information only. Historical caveats such as whether a formation was independently organized belong in scenario/history data or an explicit review view, not in the main unit name or map label.
+- Playtest feedback (2026-08-25): every clickable command must produce an immediate visible state such as accepted, transmitting, executing, rejected, expired or awaiting report. A timeline entry alone is insufficient feedback.
+- Playtest feedback (2026-08-26): the formal Godot client currently has layout distortion/letterboxing and an overly narrow command column; preserve the map asset aspect ratio and make the layout responsive at the project viewport size.
+- Playtest feedback (2026-08-26): the commander must have a genuine free-form order entry, with templates as optional shortcuts rather than the only available actions.
+- Playtest feedback (2026-08-26): every accepted order must create visible map feedback immediately, including a route/intent marker, transmission or execution state, and arrival state; a text notification alone is insufficient.
+- Playtest feedback (2026-08-26): the first screen must create the desire to play by presenting a clear commander fantasy, stakes, tension and a readable next action; a debug-like parameter panel is not acceptable as the formal game experience.
+- Playtest feedback (2026-08-26): map view controls must keep a stable readable geometry across window sizes; use a fixed-width horizontal strip for zoom out, zoom percentage, zoom in and reset rather than a narrow stacked rail.
+- Visual direction (2026-08-26): the formal Godot client uses an immersive tabletop command layout inspired by the supplied reference: the historical map is the dominant stage, with a compact top battle HUD, narrow side rails, and a bottom command card. Detailed reports and replay controls stay secondary so the first screen remains a playable command scene.
+- Playtest feedback (2026-08-26): a battlefield unit does not have a fixed “本局任务”. The commander-level battle objectives belong to the scenario brief/review; the unit-facing command card should show only current order, execution state, target and movement progress.
+- Playtest feedback (2026-08-26): the formal battlefield map cannot depend on a raster map texture. Rivers, ridgelines, crossings and passes must be structured scenario geometry shared by the simulation and renderer, so movement can emit and display states such as “渡河中/已渡河” and “翻山中/已翻山”.

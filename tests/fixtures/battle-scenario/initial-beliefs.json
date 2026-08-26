@@ -1,0 +1,6 @@
+{
+  "sides": {
+    "player": { "knownUnitIds": ["player-wing"], "sightings": [] },
+    "enemy": { "knownUnitIds": ["enemy-main"], "sightings": [] }
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "status": "experimental",
+  "parameterType": "scenario_assumption",
+  "note": "以下数值只用于让历史背景进入可玩的实时窗口，不代表史料中的真实人数、距离或士气。",
+  "commandDelaySeconds": 3,
+  "routeTravelSeconds": {
+    "qin-west-camp->western-gate": 10,
+    "qin-west-camp->dan-river-valley": 14,
+    "western-gate->zhao-main-camp": 12,
+    "dan-river-valley->zhao-main-camp": 10,
+    "dan-river-valley->east-highland": 13,
+    "zhao-main-camp->zhao-relief-route": 11,
+    "zhao-relief-route->east-highland": 14
+  },
+  "initialUnits": [
+    { "id": "qin-main", "strength": 86, "strengthUnit": "战力指数", "strengthStatus": "scenario_assumption", "morale": 72, "fatigue": 18, "supplyDays": 8, "readiness": 0.86 },
+    { "id": "qin-detachment", "strength": 42, "strengthUnit": "战力指数", "strengthStatus": "scenario_assumption", "morale": 68, "fatigue": 15, "supplyDays": 7, "readiness": 0.82 },
+    { "id": "zhao-main", "strength": 92, "strengthUnit": "战力指数", "strengthStatus": "scenario_assumption", "morale": 66, "fatigue": 26, "supplyDays": 5, "readiness": 0.74 },
+    { "id": "zhao-relief", "strength": 38, "strengthUnit": "战力指数", "strengthStatus": "scenario_assumption", "morale": 61, "fatigue": 20, "supplyDays": 6, "readiness": 0.7 }
+  ],
+  "scout": {
+    "targetUnitId": "zhao-relief",
+    "reportedAreaId": "zhao-main-camp",
+    "actualAreaId": "zhao-relief-route",
+    "delaySeconds": 5,
+    "freshnessSeconds": 24,
+    "confidence": "medium",
+    "sourceId": "qin-forward-scouts",
+    "sourceType": "前出斥候",
+    "observation": "侦报称赵军援军正在向主壁靠拢，尚不能确认其真实位置。"
+  },
+  "resolution": {
+    "schemaVersion": 1,
+    "status": "experimental",
+    "timeLimitSeconds": 180,
+    "victory": {
+      "id": "qin-isolate-relief",
+      "result": "qin-advantage",
+      "side": "player",
+      "requiredUnitPositions": [
+        { "unitId": "qin-main", "areaId": "dan-river-valley" },
+        { "unitId": "qin-detachment", "areaId": "zhao-relief-route" }
+      ],
+      "requiredBeliefs": [
+        { "side": "qin", "targetUnitId": "zhao-relief", "areaId": "zhao-main-camp" }
+      ]
+    },
+    "timeout": {
+      "id": "qin-fails-to-isolate",
+      "result": "strategic-stalemate",
+      "side": null
+    }
+  }
+}

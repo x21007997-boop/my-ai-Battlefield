@@ -1,0 +1,5 @@
+{
+  "actions": [
+    { "id": "false-camp", "name": "设置假营", "effect": "alter_enemy_belief", "cost": { "time": 20 } }
+  ]
+}

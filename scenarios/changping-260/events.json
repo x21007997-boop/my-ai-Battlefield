@@ -1,0 +1,27 @@
+{
+  "events": [
+    {
+      "id": "zhao-replaces-lian-po",
+      "type": "command-change",
+      "title": "赵国更换长平统帅",
+      "status": "historical-node",
+      "sourceIds": ["shiji-baiqi", "shiji-zhao-shijia"],
+      "condition": "political-pressure-and-belief-shift"
+    },
+    {
+      "id": "qin-rumor-enters-zhao-court",
+      "type": "deception",
+      "title": "秦方反间话术进入赵国决策链",
+      "status": "historical-node-candidate",
+      "sourceIds": ["shiji-baiqi"]
+    },
+    {
+      "id": "zhao-army-isolated",
+      "type": "logistics-and-encirclement",
+      "title": "赵军主力与粮道发生隔离",
+      "status": "historical-node",
+      "sourceIds": ["shiji-baiqi"],
+      "condition": "qin-successfully-cuts-supply-and-relief"
+    }
+  ]
+}

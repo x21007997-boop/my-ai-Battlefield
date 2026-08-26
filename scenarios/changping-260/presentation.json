@@ -1,0 +1,27 @@
+{
+  "eraLabel": "前262—前260年 · 长平数据草案",
+  "renderMode": "vector-terrain",
+  "map": {
+    "coordinateSystem": "normalized-2d",
+    "bounds": { "x": [0, 100], "y": [0, 100] }
+  },
+  "opening": [
+    "本数据包处于 draft 阶段",
+    "地图、兵力和路线尚未完成史料审校",
+    "任何可玩参数都必须标注为事实、估计、假设或模拟变量"
+  ],
+  "mapMarkers": [
+    { "id": "qin-west-camp-marker", "areaId": "qin-west-camp", "type": "camp", "label": "营垒", "visibility": "always", "status": "scenario_assumption" },
+    { "id": "western-gate-marker", "areaId": "western-gate", "type": "pass", "label": "关口", "visibility": "always", "status": "scenario_assumption" },
+    { "id": "dan-river-valley-marker", "areaId": "dan-river-valley", "type": "valley", "label": "河谷", "visibility": "always", "status": "scenario_assumption" },
+    { "id": "zhao-main-camp-marker", "areaId": "zhao-main-camp", "type": "fortress", "label": "壁垒", "visibility": "always", "status": "scenario_assumption" },
+    { "id": "zhao-relief-route-marker", "areaId": "zhao-relief-route", "type": "route", "label": "援军通道", "visibility": "always", "status": "scenario_assumption" },
+    { "id": "east-highland-marker", "areaId": "east-highland", "type": "highland", "label": "高地", "visibility": "always", "status": "scenario_assumption" },
+    { "id": "changping-city-marker", "areaId": "western-gate", "type": "city", "label": "长平城", "position": { "x": 45, "y": 36 }, "visibility": "always", "status": "scenario_assumption", "sourceIds": ["shiji-baiqi", "shiji-zhao-shijia", "modern-geography-review-required"] },
+    { "id": "qin-granary-marker", "areaId": "qin-west-camp", "type": "granary", "label": "秦军粮仓", "position": { "x": 28, "y": 55 }, "visibility": "always", "status": "scenario_assumption", "sourceIds": ["shiji-baiqi", "modern-geography-review-required"] },
+    { "id": "qin-forward-fort-marker", "areaId": "qin-west-camp", "type": "fortress", "label": "前出堡", "position": { "x": 16, "y": 41 }, "visibility": "always", "status": "scenario_assumption", "sourceIds": ["shiji-baiqi", "modern-geography-review-required"] },
+    { "id": "zhao-granary-marker", "areaId": "zhao-main-camp", "type": "granary", "label": "赵军粮仓", "position": { "x": 66, "y": 44 }, "visibility": "always", "status": "scenario_assumption", "sourceIds": ["shiji-zhao-shijia", "modern-geography-review-required"] },
+    { "id": "eastern-fort-marker", "areaId": "zhao-relief-route", "type": "fortress", "label": "东侧堡", "position": { "x": 84, "y": 34 }, "visibility": "always", "status": "scenario_assumption", "sourceIds": ["shiji-zhao-shijia", "modern-geography-review-required"] },
+    { "id": "dan-ford-marker", "areaId": "dan-river-valley", "type": "ford", "label": "丹水渡口", "position": { "x": 49, "y": 66 }, "visibility": "always", "status": "scenario_assumption", "sourceIds": ["gaoping-protection-plan-2024", "modern-geography-review-required"] }
+  ]
+}

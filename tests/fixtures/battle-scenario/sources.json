@@ -1,0 +1,5 @@
+{
+  "sources": [
+    { "id": "fixture-source", "title": "测试来源", "type": "test", "evidenceGrade": "X" }
+  ]
+}

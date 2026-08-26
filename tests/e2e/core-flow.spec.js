@@ -9,10 +9,17 @@ test.beforeEach(async ({ page }) => {
   });
 });
 
+test('lists Changping as a formal playable battle level', async ({ page }) => {
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
+  const battleCard = page.locator('.battle-game-card');
+  await expect(battleCard).toContainText('正式战役关卡');
+  await expect(battleCard.getByRole('link', { name: '进入战役' })).toHaveAttribute('href', '/?battle=changping');
+});
+
 test('enters a scenario and interprets an editable edict', async ({ page }) => {
   await page.goto('/', { waitUntil: 'domcontentloaded' });
   await expect(page.getByRole('heading', { name: '择一局，重写未定之史' })).toBeVisible();
-  await page.locator('.scenario-card').first().getByRole('button', { name: '进入此局' }).click();
+  await page.locator('.scenario-card:not(.battle-game-card)').first().getByRole('button', { name: '进入此局' }).click();
   await expect(page.getByRole('heading', { name: '北都既覆，江山只余半壁' })).toBeVisible();
   await page.getByRole('button', { name: '跳过序章' }).click();
 
@@ -25,7 +32,7 @@ test('enters a scenario and interprets an editable edict', async ({ page }) => {
 
 test('opens experience settings and persists preferences', async ({ page }) => {
   await page.goto('/', { waitUntil: 'domcontentloaded' });
-  await page.locator('.scenario-card').first().getByRole('button', { name: '进入此局' }).click();
+  await page.locator('.scenario-card:not(.battle-game-card)').first().getByRole('button', { name: '进入此局' }).click();
   await page.getByRole('button', { name: '跳过序章' }).click();
   await page.getByRole('button', { name: '体验设置' }).click();
   await expect(page.getByRole('heading', { name: '依你的习惯入局' })).toBeVisible();
@@ -39,7 +46,7 @@ test('opens experience settings and persists preferences', async ({ page }) => {
 
 test('opens help with keyboard shortcuts without hijacking edict input', async ({ page }) => {
   await page.goto('/', { waitUntil: 'domcontentloaded' });
-  await page.locator('.scenario-card').first().getByRole('button', { name: '进入此局' }).click();
+  await page.locator('.scenario-card:not(.battle-game-card)').first().getByRole('button', { name: '进入此局' }).click();
   await page.getByRole('button', { name: '跳过序章' }).click();
   await page.keyboard.press('h');
   await expect(page.getByRole('heading', { name: '这一月该如何裁决' })).toBeVisible();
@@ -53,7 +60,7 @@ test('opens help with keyboard shortcuts without hijacking edict input', async (
 
 test('completes a full monthly turn and records its consequences', async ({ page }) => {
   await page.goto('/', { waitUntil: 'domcontentloaded' });
-  await page.locator('.scenario-card').first().getByRole('button', { name: '进入此局' }).click();
+  await page.locator('.scenario-card:not(.battle-game-card)').first().getByRole('button', { name: '进入此局' }).click();
   await page.getByRole('button', { name: '跳过序章' }).click();
   const initialTurnLabel = await page.locator('.turn-label').innerText();
   const initialDisplayTurn = Number(initialTurnLabel.match(/第(\d+)回合/)[1]);
@@ -82,7 +89,7 @@ test('completes a full monthly turn and records its consequences', async ({ page
 
 test('loads the adviser council from the selected scenario package', async ({ page }) => {
   await page.goto('/', { waitUntil: 'domcontentloaded' });
-  await page.locator('.scenario-card').nth(1).getByRole('button', { name: '进入此局' }).click();
+  await page.locator('.scenario-card:not(.battle-game-card)').nth(1).getByRole('button', { name: '进入此局' }).click();
   await expect(page.getByRole('heading', { name: '大兵压境，扬州已成江北孤城' })).toBeVisible();
   await page.getByRole('button', { name: '跳过序章' }).click();
   const council = page.locator('.council');
@@ -97,4 +104,50 @@ test('loads the adviser council from the selected scenario package', async ({ pa
   await expect(page.locator('.map-panel > img')).toHaveAttribute('src', '/assets/yangzhou-siege-map.png');
   await page.getByRole('button', { name: '召集会议' }).click();
   await expect(page.getByRole('heading', { name: '扬州守御会商' })).toBeVisible();
+});
+
+test('connects the real-time battlefield core to the validation level', async ({ page }) => {
+  await page.goto('/?battle=fixture', { waitUntil: 'domcontentloaded' });
+  await expect(page.getByRole('heading', { name: '战场内核验证关' })).toBeVisible();
+  await expect(page.getByText('内部验证内容')).toBeVisible();
+  await expect(page.locator('.area-marker-symbol')).toHaveCount(3);
+  await expect(page.locator('.legend-landmark')).toBeVisible();
+
+  await page.getByRole('button', { name: /谷地通道/ }).last().click();
+  await expect(page.locator('.order-row')).toContainText('传递中');
+  await page.getByRole('button', { name: '手动推进 1 秒' }).click();
+  await page.getByRole('button', { name: '手动推进 1 秒' }).click();
+  await page.getByRole('button', { name: '手动推进 1 秒' }).click();
+  await expect(page.locator('.order-row')).toContainText('执行中');
+
+  await page.getByRole('button', { name: /派出侦查/ }).click();
+  await expect(page.locator('.battle-notice')).toContainText('5 秒');
+  for (let i = 0; i < 5; i += 1) await page.getByRole('button', { name: '手动推进 1 秒' }).click();
+  await expect(page.locator('.report-list')).toContainText('谷地通道');
+  await expect(page.locator('.battle-event-list')).toContainText('情报抵达');
+  await expect(page.locator('.presence-sighting')).toHaveCount(1);
+  await expect(page.locator('.battle-event-list')).not.toContainText('交战：');
+});
+
+test('opens the formal Changping battle level', async ({ page }) => {
+  await page.goto('/?battle=changping', { waitUntil: 'domcontentloaded' });
+  await expect(page.getByRole('heading', { name: '长平决战前 · 指挥沙盘' })).toBeVisible();
+  await expect(page.getByText('关卡参数与史实分离')).toBeVisible();
+  await expect(page.getByRole('heading', { name: '西营—长平西口—丹水河谷—赵军壁垒' })).toBeVisible();
+  await expect(page.getByText('战力指数', { exact: true }).first()).toBeVisible();
+  await expect(page.locator('.area-marker-symbol')).toHaveCount(6);
+  await expect(page.locator('.legend-landmark')).toBeVisible();
+  await page.getByRole('button', { name: /丹水河谷/ }).last().click();
+  await expect(page.locator('.order-row')).toContainText('传递中');
+  await expect(page.locator('.battle-notice')).toContainText('命令已接收');
+  await expect(page.locator('.map-faction-legend')).toContainText('秦军·已知');
+  await expect(page.locator('.map-faction-legend')).toContainText('赵军·疑似');
+
+  const deceptionButton = page.getByRole('button', { name: /散布秦军惧怕赵括的假情报/ });
+  await expect(deceptionButton).toBeVisible();
+  await deceptionButton.click();
+  await expect(page.locator('.battle-notice')).toContainText('计策已接收');
+  await expect(page.locator('.deception-history')).toContainText('传递中');
+  for (let i = 0; i < 4; i += 1) await page.getByRole('button', { name: '手动推进 1 秒' }).click();
+  await expect(page.locator('.deception-history')).toContainText('已送达敌方认知');
 });

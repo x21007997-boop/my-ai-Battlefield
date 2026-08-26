@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "id": "battle-test-fixture",
+  "title": "战场内核测试夹具",
+  "eraLabel": "测试场景",
+  "ruleVersion": "battlefield-core-0.1.0",
+  "status": "draft",
+  "sides": ["player", "enemy"]
+}

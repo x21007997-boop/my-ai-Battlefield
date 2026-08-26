@@ -1,0 +1,28 @@
+{
+  "commanders": [
+    {
+      "id": "bai-qi",
+      "name": "白起",
+      "side": "qin",
+      "role": "秦军统帅",
+      "riskProfile": "calculated",
+      "sourceIds": ["shiji-baiqi"]
+    },
+    {
+      "id": "lian-po",
+      "name": "廉颇",
+      "side": "zhao",
+      "role": "赵军前期统帅",
+      "riskProfile": "defensive",
+      "sourceIds": ["shiji-baiqi", "shiji-zhao-shijia"]
+    },
+    {
+      "id": "zhao-kuo",
+      "name": "赵括",
+      "side": "zhao",
+      "role": "赵军后期统帅",
+      "riskProfile": "assertive",
+      "sourceIds": ["shiji-baiqi", "shiji-zhao-shijia"]
+    }
+  ]
+}

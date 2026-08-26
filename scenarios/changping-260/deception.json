@@ -1,0 +1,38 @@
+{
+  "actions": [
+    {
+      "id": "qin-rumor-zhao-kuo",
+      "name": "散布秦军惧怕赵括的假情报",
+      "effect": "alter_enemy_belief_and_command_choice",
+      "mode": "false-report",
+      "targetSide": "enemy",
+      "targetUnitId": "qin-main",
+      "reportedAreaId": "western-gate",
+      "delaySeconds": 4,
+      "freshnessSeconds": 30,
+      "confidence": "medium",
+      "sourceType": "间谍与谣言",
+      "cooldownSeconds": 45,
+      "status": "historical-event-candidate",
+      "evidenceGrade": "A",
+      "sourceIds": ["shiji-baiqi"]
+    },
+    {
+      "id": "qin-false-retreat",
+      "name": "制造局部退却假象",
+      "effect": "alter_enemy_belief",
+      "mode": "false-report",
+      "targetSide": "enemy",
+      "targetUnitId": "qin-detachment",
+      "reportedAreaId": "western-gate",
+      "delaySeconds": 3,
+      "freshnessSeconds": 24,
+      "confidence": "high",
+      "sourceType": "佯动与烟尘",
+      "cooldownSeconds": 30,
+      "status": "simulation-action-candidate",
+      "evidenceGrade": "X",
+      "sourceIds": []
+    }
+  ]
+}
