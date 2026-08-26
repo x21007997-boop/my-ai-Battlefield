@@ -2,6 +2,10 @@ import { appendBattleEvent, cloneBattleWorld } from './world.js';
 import { BATTLEFIELD_CONFIG } from './config.js';
 import { BATTLE_ERROR_CODES, battleError } from './errors.js';
 
+function clone(value) {
+  return JSON.parse(JSON.stringify(value));
+}
+
 export const BATTLE_ORDER_TYPES = Object.freeze({
   MOVE: 'move',
   HOLD: 'hold',
@@ -118,13 +122,16 @@ function validateDraft(world, draft) {
 /**
  * @param {import('./contracts').BattleWorld} world
  * @param {{ type: string, unitId: string, targetAreaId?: string, priority?: string, constraints?: string[], rawText?: string }} draft
- * @param {{ delaySeconds?: number }} [options]
+ * @param {{ delaySeconds?: number, commandContext?: Record<string, unknown> | null }} [options]
  * @returns {import('./contracts').BattleResult<import('./contracts').BattleOrder>}
  */
-export function issueOrder(world, draft, { delaySeconds = 0 } = {}) {
+export function issueOrder(world, draft, { delaySeconds = 0, commandContext = null } = {}) {
   const next = cloneBattleWorld(world);
   const error = validateDraft(next, draft);
   if (error) return { world: next, order: null, ...error };
+
+  const chainContext = /** @type {Record<string, any> | null} */ (commandContext);
+  const commandPath = Array.isArray(chainContext?.commandPath) ? chainContext.commandPath.filter(Boolean).map(String) : [];
 
   const unit = next.units[draft.unitId];
   const routeTargetAreaId = draft.targetAreaId ?? unit.location;
@@ -143,6 +150,11 @@ export function issueOrder(world, draft, { delaySeconds = 0 } = {}) {
     originAreaId: unit.location,
     issuedAt: next.simTime,
     deliverAt: next.simTime + Math.max(0, delaySeconds),
+    issuedByCommanderId: typeof chainContext?.issuerCommanderId === 'string' ? chainContext.issuerCommanderId : null,
+    recipientCommanderId: typeof chainContext?.recipientCommanderId === 'string' ? chainContext.recipientCommanderId : null,
+    communicationMode: typeof chainContext?.communicationMode === 'string' ? chainContext.communicationMode : 'legacy',
+    commandPath,
+    messenger: chainContext?.messenger ? clone(chainContext.messenger) : null,
     status: 'transmitting',
     route: route.areaIds,
     routeSegments: route.segments ?? [],
@@ -169,6 +181,11 @@ export function issueOrder(world, draft, { delaySeconds = 0 } = {}) {
     terrainTransitions: order.terrainTransitions,
     totalTravelSeconds: order.totalTravelSeconds,
     remainingTravelSeconds: order.remainingTravelSeconds,
+    issuedByCommanderId: order.issuedByCommanderId,
+    recipientCommanderId: order.recipientCommanderId,
+    communicationMode: order.communicationMode,
+    commandPath: order.commandPath,
+    messenger: order.messenger,
   });
   return { world: next, order, error: null, errorCode: null, errorDetails: {} };
 }

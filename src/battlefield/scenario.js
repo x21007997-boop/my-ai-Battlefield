@@ -19,6 +19,7 @@ export function createBattleWorldFromScenario(scenarioPackage) {
     terrainFeatures,
     factions,
     commanders,
+    commandChain,
     units,
     initialWorld,
     intelligenceSources,
@@ -61,5 +62,7 @@ export function createBattleWorldFromScenario(scenarioPackage) {
     endings: endings?.endings ?? [],
     resolution,
     resources,
+    commanders: commanders?.commanders ?? [],
+    commandChain: commandChain ?? commanders?.commandChain ?? {},
   });
 }

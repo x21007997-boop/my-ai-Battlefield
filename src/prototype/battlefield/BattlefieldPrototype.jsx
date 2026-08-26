@@ -19,7 +19,7 @@ import {
   ShieldChevron,
   WaveSine,
 } from '@phosphor-icons/react';
-import { buildCommanderMapModel, cancelOrder, createBattleWorld, dispatchReconnaissance, issueDeception, issueOrder, stepBattle, viewBelief } from '../../battlefield/index.js';
+import { applyCommanderCommand, buildCommandDeliveryPlan, buildCommanderMapModel, cancelOrder, commanderProjection, createBattleWorld, stepBattle, viewBelief } from '../../battlefield/index.js';
 import { BATTLEFIELD_CONFIG } from '../../battlefield/config.js';
 import { CHANGPING_PROFILE } from '../../battlefield/changpingScenario.js';
 
@@ -131,6 +131,7 @@ function candidateAreaLabel(report, areas) {
 
 function deceptionDeliveryLabel(deception, world) {
   if (deception.status === 'exposed') return '已暴露 · 未进入敌方认知';
+  if (deception.status === 'transmitting') return `传令中 · 余 ${Math.max(0, (deception.commandDeliveredAt ?? world.simTime) - world.simTime)} 秒`;
   if (deception.status === 'preparing') return `准备中 · 余 ${Math.max(0, (deception.readyAt ?? world.simTime) - world.simTime)} 秒`;
   const observation = world.observations.find((item) => item.id === deception.observationId);
   if (!observation || observation.status === 'in_transit') {
@@ -157,6 +158,31 @@ function orderStatus(order) {
   return order.status;
 }
 
+function movementLabel(unit) {
+  if (unit.movement?.status === 'transmitting') return '传递中';
+  if (unit.movement?.currentTerrain?.terrainType === 'river') return '渡河中';
+  if (unit.movement?.currentTerrain?.terrainType === 'mountain') return '翻山中';
+  return '行军中';
+}
+
+function communicationLabel(mode) {
+  if (mode === 'direct') return '当面传令';
+  if (mode === 'messenger') return '传令兵在途';
+  return '常规链路';
+}
+
+function commanderLocationText(commander, world) {
+  if (!commander?.locationAreaId) return '位置未知';
+  const areaName = world.areas[commander.locationAreaId]?.name ?? commander.locationAreaId;
+  return commander.locationSource === 'attached_unit' ? `随${world.units[commander.attachedUnitId]?.name ?? '部队'} · ${areaName}` : `指挥所 · ${areaName}`;
+}
+
+function commanderPresenceLabel(commander, commanders, playerId) {
+  if (commander?.id === playerId) return '本人';
+  const player = commanders.find((item) => item.id === playerId);
+  return commander?.locationAreaId && player?.locationAreaId && commander.locationAreaId === player.locationAreaId ? '在场' : '远程';
+}
+
 function resourceLabel(key) {
   return BATTLEFIELD_CONFIG.resourceLabels?.[key] ?? ({ intelligencePoints: '情报点', scoutTeams: '侦察队', deceptionAssets: '计策资源' }[key] ?? key);
 }
@@ -172,18 +198,23 @@ function resourceCostText(cost = {}) {
 function eventText(event, world) {
   const unit = world.units[event.unitId];
   const area = world.areas[event.areaId ?? event.targetAreaId ?? event.reportedAreaId];
+  const recipient = world.commandChain?.commanders?.[event.recipientCommanderId];
   if (event.type === 'order_issued') return `已发令：${unit?.name ?? event.unitId} → ${area?.name ?? event.targetAreaId}`;
   if (event.type === 'order_delivered') return `命令抵达：${unit?.name ?? event.unitId} 已收到指令`;
+  if (event.type === 'command_delivered') return `传令抵达：${recipient?.name ?? event.recipientCommanderId ?? '前线军官'} 已收到军令`;
+  if (event.type === 'command_interpreted') return `AI军令识别：${event.interpretation?.intentLabel ?? '已解析'} · ${event.interpretation?.confidence ?? '待定'}可信`;
   if (event.type === 'unit_arrived') return `部队到达：${unit?.name ?? event.unitId} 进入${area?.name ?? event.areaId}`;
   if (event.type === 'order_completed') return `命令完成：${unit?.name ?? event.unitId} 暂守原地`;
   if (event.type === 'observation_created') return event.sourceType === 'frontline-report' ? '前线来报：疑似接敌报告正在返回指挥部' : '侦查派出：报告正在返回指挥部';
   if (event.type === 'reconnaissance_issued') return `侦查已接收：斥候准备中，${Math.max(0, (event.readyAt ?? world.simTime) - world.simTime)} 秒后出发`;
+  if (event.type === 'reconnaissance_command_delivered') return '侦查军令抵达：副将开始整备斥候';
   if (event.type === 'reconnaissance_prepared') return '侦查准备完成：斥候已出发，等待回报';
   if (event.type === 'reconnaissance_exposed') return '侦查受阻：斥候行迹暴露，回报可信度下降';
   if (event.type === 'reconnaissance_dispatched') return '侦查已出发：报告正在返回指挥部';
   if (event.type === 'report_arrived') return `情报抵达：${area?.name ?? event.areaId}出现${event.sourceType === 'frontline-report' ? '疑似敌情' : '侦报标记'} · ${confidenceLabel(event.confidence)} · ${uncertaintyLabel(event)}`;
   if (event.type === 'report_expired') return `情报失效：${area?.name ?? event.areaId}的敌情标记已超过有效时限`;
   if (event.type === 'deception_issued') return event.status === 'preparing' ? '计策已接收：正在准备，尚未送入敌方认知' : `计策发出：敌方将收到关于${area?.name ?? event.reportedAreaId}的疑似情报`;
+  if (event.type === 'deception_command_delivered') return '计策军令抵达：前线开始准备投放';
   if (event.type === 'deception_prepared') return '计策准备完成：正在向敌方认知投放';
   if (event.type === 'deception_exposed') return '计策暴露：敌方可能识破了这次误导';
   if (event.type === 'strategy_reliability_reduced') return `计策可信度下降：当前约 ${Math.round((event.reliability ?? 0) * 100)}%`;
@@ -213,6 +244,8 @@ export function BattlefieldPrototype({ mode = 'fixture', onBack = () => { window
   const [running, setRunning] = useState(false);
   const [speed, setSpeed] = useState(1);
   const [selectedUnitId, setSelectedUnitId] = useState(profile.initialUnitId);
+  const [selectedCommanderId, setSelectedCommanderId] = useState(profile.playerCommanderId ?? '');
+  const [freeOrderText, setFreeOrderText] = useState('');
   const [notice, setNotice] = useState('请选择部队和目标区域，观察命令如何经过传递后才开始执行。');
   const [noticeTone, setNoticeTone] = useState('info');
 
@@ -233,6 +266,16 @@ export function BattlefieldPrototype({ mode = 'fixture', onBack = () => { window
   }), [world, profile]);
   const ownUnits = belief.ownUnits;
   const selectedUnit = world.units[selectedUnitId] ?? ownUnits[0];
+  const commanders = useMemo(() => commanderProjection(world, 'player'), [world]);
+  const playerCommanderId = world.commandChain?.playerCommanderIdsBySide?.player ?? profile.playerCommanderId ?? '';
+  const selectedCommander = commanders.find((commander) => commander.id === selectedCommanderId) ?? commanders[0] ?? null;
+  const deliveryPlan = useMemo(() => buildCommandDeliveryPlan(world, {
+    side: 'player',
+    issuerCommanderId: playerCommanderId,
+    recipientCommanderId: selectedCommander?.id,
+    unitId: selectedUnit?.id,
+    fallbackDelaySeconds: profile.commandDelaySeconds,
+  }), [world, playerCommanderId, selectedCommander?.id, selectedUnit?.id, profile.commandDelaySeconds]);
   const activeOrders = world.orders.filter((order) => ['transmitting', 'executing'].includes(order.status));
   const inTransitReports = world.observations.filter((observation) => observation.status === 'in_transit');
   const preparingStrategies = (world.strategy?.actions ?? []).filter((action) => action.side === 'player' && action.status === 'preparing');
@@ -241,6 +284,13 @@ export function BattlefieldPrototype({ mode = 'fixture', onBack = () => { window
   const deceptionHistory = (world.deception?.history ?? []).filter((item) => item.side === 'player');
   const recentEvents = world.eventLog.filter(isVisibleToCommander).slice(-9).reverse();
   const battleEnded = world.status === 'ended';
+
+  useEffect(() => {
+    if (!selectedCommanderId && playerCommanderId) setSelectedCommanderId(playerCommanderId);
+    if (selectedCommanderId && !commanders.some((commander) => commander.id === selectedCommanderId)) {
+      setSelectedCommanderId(playerCommanderId || commanders[0]?.id || '');
+    }
+  }, [commanders, playerCommanderId, selectedCommanderId]);
 
   useEffect(() => {
     if (!running) return undefined;
@@ -252,50 +302,91 @@ export function BattlefieldPrototype({ mode = 'fixture', onBack = () => { window
     if (battleEnded) setRunning(false);
   }, [battleEnded]);
 
+  function submitCommanderCommand(command, fallbackMessage = '军令已接收，正在传达。') {
+    const result = applyCommanderCommand(world, command, {
+      side: 'player',
+      commandDelaySeconds: profile.commandDelaySeconds,
+      scout: profile.scout,
+    });
+    if (result.error) {
+      notify(result.error, 'error');
+      return null;
+    }
+    setWorld(result.world);
+    const outcome = result.result && typeof result.result === 'object' ? result.result : {};
+    const recipientId = outcome.recipientCommanderId ?? command.recipientCommanderId;
+    const recipient = commanders.find((commander) => commander.id === recipientId);
+    const transport = outcome.communicationMode ? ` · ${communicationLabel(outcome.communicationMode)}` : '';
+    const scoutWait = command.type === 'scout'
+      ? outcome.arrivesAt != null
+        ? Math.max(0, outcome.arrivesAt - world.simTime)
+        : outcome.readyAt != null
+          ? Math.max(0, outcome.readyAt - world.simTime)
+          : null
+      : null;
+    const timing = scoutWait != null ? ` 预计 ${scoutWait} 秒后进入下一阶段。` : '';
+    notify(`${fallbackMessage}${recipient ? ` 接收人：${recipient.name}` : ''}${transport}${timing}`, 'success');
+    return result;
+  }
+
   function issueMove(targetAreaId) {
     if (!selectedUnit) return;
-    const result = issueOrder(world, {
+    submitCommanderCommand({
       type: 'move',
       unitId: selectedUnit.id,
       targetAreaId,
       rawText: `向${world.areas[targetAreaId].name}移动`,
-    }, { delaySeconds: profile.commandDelaySeconds });
-    if (result.error) {
-      notify(result.error, 'error');
-      return;
-    }
-    setWorld(result.world);
-    notify(`命令已接收：${selectedUnit.name} → ${world.areas[targetAreaId].name}，正在传递。`);
+      recipientCommanderId: selectedCommander?.id,
+    }, `命令已接收：${selectedUnit.name} → ${world.areas[targetAreaId].name}。`);
   }
 
   function dispatchScout() {
-    const result = dispatchReconnaissance(world, {
-      observerSide: 'player',
-      ...profile.scout,
+    submitCommanderCommand({
+      type: 'scout',
+      commandUnitId: selectedCommander?.attachedUnitId ?? profile.scout?.commandUnitId ?? selectedUnit?.id,
+      recipientCommanderId: selectedCommander?.id ?? profile.scout?.recipientCommanderId,
+    }, '侦查军令已接收。');
+  }
+
+  function issueDeceptionAction(actionId) {
+    const action = deceptionActions.find((item) => item.id === actionId);
+    if (!action) return;
+    submitCommanderCommand({
+      type: 'deception',
+      actionId,
+      targetUnitId: action.targetUnitId,
+      recipientCommanderId: selectedCommander?.id ?? action.recipientCommanderId,
+      reportedAreaId: action.reportedAreaId,
+    }, `计策已接收：${action.name}。`);
+  }
+
+  function submitFreeOrder(event) {
+    event?.preventDefault?.();
+    const rawText = freeOrderText.trim();
+    if (!rawText) {
+      notify('自由军令未提交：请先写下你的意图。', 'error');
+      return;
+    }
+    const result = applyCommanderCommand(world, {
+      type: 'free_order',
+      text: rawText,
+      unitId: selectedUnit?.id,
+      recipientCommanderId: selectedCommander?.id,
+    }, {
+      side: 'player',
+      commandDelaySeconds: profile.commandDelaySeconds,
+      scout: profile.scout,
     });
     if (result.error) {
       notify(result.error, 'error');
       return;
     }
     setWorld(result.world);
-    const preparationSeconds = result.action?.preparationSeconds ?? 0;
-    notify(preparationSeconds > 0
-      ? `侦查已接收：斥候准备 ${preparationSeconds} 秒后出发，资源已扣除。`
-      : `侦查已接收：报告预计 ${profile.scout.delaySeconds} 秒后抵达，当前处于返回途中。`);
-  }
-
-  function issueDeceptionAction(actionId) {
-    const action = deceptionActions.find((item) => item.id === actionId);
-    if (!action) return;
-    const result = issueDeception(world, { side: 'player', actionId });
-    if (result.error) {
-      notify(result.error, 'error');
-      return;
-    }
-    setWorld(result.world);
-    const preparation = action.preparationSeconds ?? 0;
-    const delay = action.delaySeconds ?? 0;
-    notify(`计策已接收：${action.name}。${preparation > 0 ? `准备 ${preparation} 秒后投放` : '正在投放'}，资源已扣除。`);
+    const interpretation = result.interpretation ?? {};
+    const recipientName = interpretation.recipientCommanderName ?? selectedCommander?.name ?? '前线军官';
+    const transport = result.result?.communicationMode ? ` · ${communicationLabel(result.result.communicationMode)}` : '';
+    notify(`AI识别为：${interpretation.intentLabel ?? '军令'}，已交${recipientName}执行${transport}。`, 'success');
+    setFreeOrderText('');
   }
 
   function cancelActiveOrder(orderId) {
@@ -324,12 +415,19 @@ export function BattlefieldPrototype({ mode = 'fixture', onBack = () => { window
     setRunning(false);
     setWorld(profile.createWorld());
     setSelectedUnitId(profile.initialUnitId);
+    setSelectedCommanderId(profile.playerCommanderId ?? '');
+    setFreeOrderText('');
     notify(`${profile.title}已重置：命令、侦报和认知记录均已清空。`, 'info');
   }
 
   const sightingEntries = mapModel.reportedEnemySignals;
   const strengthUnit = ownUnits[0]?.strengthUnit ?? '人';
   const strengthLabel = strengthUnit === '人' ? '可用兵力' : '可用战力';
+  const deliveryHint = deliveryPlan.error
+    ? deliveryPlan.error
+    : selectedCommander
+      ? `${communicationLabel(deliveryPlan.mode)} · 预计 ${deliveryPlan.delaySeconds ?? 0} 秒抵达`
+      : '未选择接收军官';
 
   return (
     <main className="battle-lab-shell">
@@ -368,8 +466,21 @@ export function BattlefieldPrototype({ mode = 'fixture', onBack = () => { window
             <div className="panel-kicker"><Crosshair size={16} /> 部队状态</div>
             <div className="unit-list">
               {ownUnits.map((unit) => (
-                <button key={unit.id} className={selectedUnit?.id === unit.id ? 'unit-row selected' : 'unit-row'} onClick={() => { setSelectedUnitId(unit.id); notify(`已选中：${unit.name}。`, 'info'); }}>
+                <button key={unit.id} className={selectedUnit?.id === unit.id ? 'unit-row selected' : 'unit-row'} onClick={() => { setSelectedUnitId(unit.id); if (unit.commanderId) setSelectedCommanderId(unit.commanderId); notify(`已选中：${unit.name}。`, 'info'); }}>
                   <span className="unit-row-dot" /><span><strong>{unit.name}</strong><small>{world.areas[unit.location]?.name} · {formatUnitStrength(unit)} · 粮 {unit.supplyDays}天</small></span><CaretRight size={14} />
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="battle-panel">
+            <div className="panel-kicker"><FlagPennant size={16} /> 我方指挥链</div>
+            <div className="commander-list">
+              {commanders.length === 0 ? <p className="empty-panel">当前场景未配置军官链路。</p> : commanders.map((commander) => (
+                <button key={commander.id} className={selectedCommander?.id === commander.id ? 'commander-row selected' : 'commander-row'} onClick={() => { setSelectedCommanderId(commander.id); if (commander.attachedUnitId && world.units[commander.attachedUnitId]) setSelectedUnitId(commander.attachedUnitId); notify(`已选定接收军官：${commander.name}。`, 'info'); }}>
+                  <span className="commander-row-mark">{commander.isPlayer ? '帅' : '将'}</span>
+                  <span><strong>{commander.name}</strong><small>{commander.role} · {commanderLocationText(commander, world)}</small></span>
+                  <em>{commanderPresenceLabel(commander, commanders, playerCommanderId)}</em>
                 </button>
               ))}
             </div>
@@ -393,7 +504,7 @@ export function BattlefieldPrototype({ mode = 'fixture', onBack = () => { window
               const position = area.position ? { left: `${area.position.x}%`, top: `${area.position.y}%` } : {};
               const mapMarker = mapModel.landmarks.find((marker) => marker.areaId === area.id);
               const MarkerIcon = mapMarkerIcon(mapMarker?.type);
-              const ownHere = mapModel.friendlyUnits.filter((unit) => unit.areaId === area.id);
+              const ownHere = mapModel.friendlyUnits.filter((unit) => unit.areaId === area.id && !unit.movement);
               const sightingsHere = mapModel.reportedEnemySignals.filter((sighting) => sighting.areaId === area.id);
               return (
                 <div key={area.id} className="battle-area-marker" style={position}>
@@ -411,6 +522,17 @@ export function BattlefieldPrototype({ mode = 'fixture', onBack = () => { window
                 </div>
               );
             })}
+            <div className="map-movement-layer" aria-label="我方命令反馈">
+              {mapModel.friendlyUnits.filter((unit) => unit.movement).map((unit) => {
+                const position = unit.position ? { left: `${unit.position.x}%`, top: `${unit.position.y}%` } : {};
+                return (
+                  <div key={`movement-${unit.id}`} className={`map-moving-unit movement-${unit.movement.status}`} style={position}>
+                    <span className="map-moving-flag"><FlagBanner size={17} weight="duotone" /></span>
+                    <span className="map-moving-copy"><strong>{unit.name}</strong><small>{movementLabel(unit)} · {Math.round((unit.movement.progress ?? 0) * 100)}%</small></span>
+                  </div>
+                );
+              })}
+            </div>
             <div className="map-badge map-badge-top"><Eye size={15} /> 我方认知视图</div>
             <div className="map-faction-legend" aria-label="战场双方图例">
               <span className="faction-friendly"><FlagBanner size={14} weight="duotone" /> {profile.playerSideLabel ?? '我方'}·已知</span>
@@ -424,14 +546,23 @@ export function BattlefieldPrototype({ mode = 'fixture', onBack = () => { window
         <aside className="battle-command-column">
           <div className="battle-panel command-panel">
             <div className="panel-kicker"><Crosshair size={16} /> 下达命令</div>
-            <h2>让部队移动</h2>
+            <h2>把意图交给前线</h2>
+            <label className="battle-field-label" htmlFor="battle-commander-select">接收军官</label>
+            <select id="battle-commander-select" value={selectedCommander?.id ?? ''} onChange={(event) => { const commander = commanders.find((item) => item.id === event.target.value); setSelectedCommanderId(event.target.value); if (commander?.attachedUnitId && world.units[commander.attachedUnitId]) setSelectedUnitId(commander.attachedUnitId); notify(`已选定接收军官：${commander?.name ?? event.target.value}。`, 'info'); }}>
+              {commanders.length === 0 ? <option value="">当前场景未配置指挥链</option> : commanders.map((commander) => <option key={commander.id} value={commander.id}>{commander.name} · {commander.role} · {commanderLocationText(commander, world)}</option>)}
+            </select>
+            <p className="command-hint command-delivery-hint">{deliveryHint}</p>
             <label className="battle-field-label" htmlFor="battle-unit-select">当前部队</label>
-            <select id="battle-unit-select" value={selectedUnit?.id ?? ''} onChange={(event) => { setSelectedUnitId(event.target.value); notify(`已切换指挥部队：${world.units[event.target.value]?.name ?? event.target.value}。`, 'info'); }}>
+            <select id="battle-unit-select" value={selectedUnit?.id ?? ''} onChange={(event) => { setSelectedUnitId(event.target.value); const commanderId = world.units[event.target.value]?.commanderId; if (commanderId) setSelectedCommanderId(commanderId); notify(`已切换指挥部队：${world.units[event.target.value]?.name ?? event.target.value}。`, 'info'); }}>
               {ownUnits.map((unit) => <option key={unit.id} value={unit.id}>{unit.name} · {world.areas[unit.location]?.name}</option>)}
             </select>
-            <p className="command-hint">命令传递延迟：{profile.commandDelaySeconds} 秒 · 行军时间取决于路线</p>
+            <p className="command-hint">命令先交给接收军官，再由其调动部队；行军时间取决于路线</p>
+            <form className="free-order-form" onSubmit={submitFreeOrder}>
+              <input aria-label="自由军令" value={freeOrderText} onChange={(event) => setFreeOrderText(event.target.value)} placeholder="例如：让王龁率机动部队向丹水河谷推进" />
+              <button type="submit" disabled={battleEnded}><Broadcast size={14} /> 传达</button>
+            </form>
             <div className="target-grid">
-              {profile.areas.map((area) => <button key={area.id} disabled={battleEnded || selectedUnit?.location === area.id} onClick={() => issueMove(area.id)}><span>{area.name}</span><small>{selectedUnit?.location === area.id ? '当前所在' : `前往 · ${area.terrain}`}</small></button>)}
+              {profile.areas.map((area) => <button key={area.id} disabled={battleEnded || Boolean(deliveryPlan.error) || selectedUnit?.location === area.id} onClick={() => issueMove(area.id)}><span>{area.name}</span><small>{selectedUnit?.location === area.id ? '当前所在' : `前往 · ${area.terrain}`}</small></button>)}
             </div>
           </div>
 

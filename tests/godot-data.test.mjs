@@ -40,6 +40,11 @@ test('Godot client data contains only commander-known unit layers', () => {
   assert.equal(data.commanderSession.deceptionActions.length, 2);
   assert.deepEqual(data.resources, { intelligencePoints: 3, scoutTeams: 2, deceptionAssets: 2 });
   assert.equal(data.scout.preparationSeconds, 3);
+  assert.equal(data.playerCommanderId, 'bai-qi');
+  assert.equal(data.commanders.find((commander) => commander.id === 'wang-he').attachedUnitId, 'qin-detachment');
+  assert.equal(data.commanders.find((commander) => commander.id === 'wang-he').locationAreaId, 'western-gate');
+  assert.equal(data.commandChain.messengerPolicy.baseDelaySeconds, 1);
+  assert.equal(data.commandChain.messengerPolicy.routeTravelFactor, 0.25);
   assert.deepEqual(data.deceptionActions[0].cost, { intelligencePoints: 1, deceptionAssets: 1 });
   assert.equal(JSON.stringify(data.commanderSession.deceptionActions).includes('actualAreaId'), false);
   assert.equal(data.commanderSession.eventLog.every((event) => event.payload !== undefined), true);

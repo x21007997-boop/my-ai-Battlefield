@@ -2,6 +2,7 @@ import { buildCommanderMapModel } from './projection.js';
 import { serializeCommanderEvents } from './eventProtocol.js';
 import { buildCommanderObjectiveSnapshot, buildCommanderReview } from './review.js';
 import { BATTLEFIELD_CONFIG } from './config.js';
+import { commanderProjection, playerCommanderId } from './commandChain.js';
 
 export const COMMANDER_SESSION_SCHEMA_VERSION = BATTLEFIELD_CONFIG.schemaVersions.commanderSession;
 
@@ -56,6 +57,11 @@ export function buildCommanderSessionSnapshot(world, {
       currentTerrain: order.currentTerrain ?? null,
       lastTerrainTransition: order.lastTerrainTransition ?? null,
       rawText: order.rawText ?? '',
+      issuedByCommanderId: order.issuedByCommanderId ?? null,
+      recipientCommanderId: order.recipientCommanderId ?? null,
+      communicationMode: order.communicationMode ?? 'legacy',
+      commandPath: [...(order.commandPath ?? [])],
+      messenger: order.messenger ? JSON.parse(JSON.stringify(order.messenger)) : null,
       taskStatus: order.taskStatus ?? null,
       blockedAt: order.blockedAt ?? null,
       blockReason: order.blockReason ?? null,
@@ -84,6 +90,7 @@ export function buildCommanderSessionSnapshot(world, {
     mode: action.mode ?? 'false-report',
     targetSide: action.targetSide ?? null,
     targetUnitId: action.targetUnitId ?? null,
+    recipientCommanderId: action.recipientCommanderId ?? null,
     reportedAreaId: action.reportedAreaId ?? null,
     delaySeconds: action.delaySeconds ?? 0,
     freshnessSeconds: action.freshnessSeconds ?? null,
@@ -116,29 +123,43 @@ export function buildCommanderSessionSnapshot(world, {
       failureReason: item.failureReason ?? null,
       cost: item.cost ?? {},
       exposureProbability: item.exposureProbability ?? 0,
+      issuedByCommanderId: item.issuedByCommanderId ?? null,
+      recipientCommanderId: item.recipientCommanderId ?? null,
+      communicationMode: item.communicationMode ?? 'legacy',
+      commandPath: Array.isArray(item.commandPath) ? item.commandPath.filter(Boolean).map(String) : [],
+      commandDeliveredAt: item.commandDeliveredAt ?? null,
     }));
   const strategyActions = (world.strategy?.actions ?? [])
     .filter((action) => action.side === side)
-    .map((action) => ({
-      id: action.id,
-      kind: action.kind,
-      actionId: action.actionId ?? null,
-      side: action.side,
-      targetSide: action.targetSide ?? null,
-      targetUnitId: action.targetUnitId,
-      reportedAreaId: action.reportedAreaId ?? null,
-      status: action.status,
-      issuedAt: action.issuedAt,
-      readyAt: action.readyAt,
-      preparedAt: action.preparedAt ?? null,
-      dispatchedAt: action.dispatchedAt ?? null,
-      deliveredAt: action.deliveredAt ?? null,
-      observationId: action.observationId ?? null,
-      exposureStatus: action.exposureStatus ?? null,
-      failedAt: action.failedAt ?? null,
-      failureReason: action.failureReason ?? null,
-      cost: action.cost ?? {},
-    }));
+    .map((rawAction) => {
+      const action = /** @type {import('./contracts').StrategyAction} */ (rawAction);
+      return ({
+        id: action.id,
+        kind: action.kind,
+        actionId: action.actionId ?? null,
+        side: action.side,
+        targetSide: action.targetSide ?? null,
+        targetUnitId: action.targetUnitId,
+        reportedAreaId: action.reportedAreaId ?? null,
+        status: action.status,
+        issuedAt: action.issuedAt,
+        readyAt: action.readyAt,
+        preparedAt: action.preparedAt ?? null,
+        dispatchedAt: action.dispatchedAt ?? null,
+        deliveredAt: action.deliveredAt ?? null,
+        observationId: action.observationId ?? null,
+        exposureStatus: action.exposureStatus ?? null,
+        failedAt: action.failedAt ?? null,
+        failureReason: action.failureReason ?? null,
+        cost: action.cost ?? {},
+        issuedByCommanderId: action.issuedByCommanderId ?? null,
+        recipientCommanderId: action.recipientCommanderId ?? null,
+        communicationMode: action.communicationMode ?? 'legacy',
+        commandPath: Array.isArray(action.commandPath) ? action.commandPath.filter(Boolean).map(String) : [],
+        messenger: action.messenger ? JSON.parse(JSON.stringify(action.messenger)) : null,
+        commandDeliveredAt: action.commandDeliveredAt ?? null,
+      });
+    });
   const eventLog = serializeCommanderEvents(
     world.eventLog.filter((event) => eventVisibleToCommander(event, side)),
   );
@@ -158,6 +179,13 @@ export function buildCommanderSessionSnapshot(world, {
     deceptionHistory,
     resources: JSON.parse(JSON.stringify(world.resources?.[side] ?? {})),
     strategyActions,
+    commanders: commanderProjection(world, side),
+    playerCommanderId: playerCommanderId(world, side),
+    commandChain: world.commandChain ? {
+      schemaVersion: world.commandChain.schemaVersion,
+      playerCommanderIdsBySide: { [side]: playerCommanderId(world, side) },
+      messengerPolicy: JSON.parse(JSON.stringify(world.commandChain.messengerPolicy ?? {})),
+    } : null,
     strategyReliability: world.strategy?.reliabilityBySide?.[side] ?? 1,
     eventLog,
     disclosure: {

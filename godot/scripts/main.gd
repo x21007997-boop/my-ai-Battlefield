@@ -13,6 +13,9 @@ var sim_time := 0
 var running := false
 var tick_accumulator := 0.0
 var friendly_units: Array = []
+var commanders: Array = []
+var player_commander_id := ""
+var selected_commander_id := ""
 var reported_signals: Array = []
 var order: Dictionary = {}
 var pending_scout: Dictionary = {}
@@ -54,6 +57,7 @@ var load_replay_button: Button
 var exit_replay_button: Button
 var replay_slider: HSlider
 var command_state_label: Label
+var commander_option: OptionButton
 var outcome_label: Label
 var free_order_input: LineEdit
 var free_order_button: Button
@@ -78,11 +82,17 @@ func _ready() -> void:
 	event_log.configure(str(scenario.get("sourceScenarioId", "changping-260")))
 	event_log.append(0, "scenario_loaded", {"commanderSide": "qin", "rawEnemyTruthIncluded": false})
 	friendly_units = scenario.get("friendlyUnits", []).duplicate(true)
+	var raw_commanders = scenario.get("commanders", [])
+	commanders = raw_commanders.duplicate(true) if raw_commanders is Array else []
+	player_commander_id = str(scenario.get("playerCommanderId", ""))
 	deception_actions = scenario.get("deceptionActions", []).duplicate(true)
 	resource_state = scenario.get("resources", {}).duplicate(true)
 	objectives = scenario.get("objectives", []).duplicate(true)
 	if friendly_units.size() > 0:
 		selected_unit_id = str(friendly_units[0].get("id", ""))
+	selected_commander_id = _commander_id_for_unit(selected_unit_id)
+	if selected_commander_id == "":
+		selected_commander_id = player_commander_id
 	replay_player = ReplayPlayer.new()
 	replay_player.configure(friendly_units, selected_unit_id)
 	sand_table.configure(scenario)
@@ -110,6 +120,12 @@ func _apply_commander_session() -> void:
 	for key in ["areas", "routes", "landmarks", "friendlyUnits"]:
 		if map.has(key):
 			scenario[key] = map[key]
+	var session_commanders = session.get("commanders", [])
+	if session_commanders is Array:
+		scenario["commanders"] = session_commanders
+	var session_player_commander_id := str(session.get("playerCommanderId", ""))
+	if session_player_commander_id != "":
+		scenario["playerCommanderId"] = session_player_commander_id
 
 func _process(delta: float) -> void:
 	if engine_connected and not replay_mode:
@@ -168,10 +184,14 @@ func _on_engine_response(operation: String, response: Dictionary) -> void:
 		if event_type != "":
 			match event_type:
 				"order_issued": _set_feedback("命令已接收：部队进入传递状态。", "success")
+				"command_interpreted": _set_feedback("AI已理解军令，正在交给接收军官。", "success")
+				"command_delivered": _set_feedback("传令抵达：接收军官已收到军令。", "success")
 				"observation_created": _set_feedback("侦察已接收：报告正在返回指挥部。", "success")
 				"reconnaissance_issued": _set_feedback("侦察已接收：斥候正在准备，资源已扣除。", "success")
+				"reconnaissance_command_delivered": _set_feedback("侦察军令抵达：前线副将开始整备斥候。", "success")
 				"reconnaissance_exposed": _set_feedback("侦察受阻：斥候行迹暴露，回报可信度下降。", "error")
 				"deception_issued": _set_feedback("计策已接收：正在准备投放，资源已扣除。" if str(result.get("status", "")) == "preparing" else "计策已接收：敌方将依据自己的认知行动。", "success")
+				"deception_command_delivered": _set_feedback("计策军令抵达：前线开始准备投放。", "success")
 				"deception_exposed": _set_feedback("计策暴露：敌方可能已经识破，后续误导可信度下降。", "error")
 				"strategy_reliability_reduced": _set_feedback("情报链可信度下降：后续同类行动更容易被识破。", "error")
 				_: _set_feedback("操作已接收，战场状态正在刷新。", "success")
@@ -185,6 +205,12 @@ func _on_engine_request_failed(_operation: String, message: String) -> void:
 
 func _apply_engine_session(session: Dictionary) -> void:
 	sim_time = int(session.get("simTime", sim_time))
+	var session_commanders = session.get("commanders", null)
+	if session_commanders is Array:
+		commanders = session_commanders.duplicate(true)
+	var session_player_commander_id := str(session.get("playerCommanderId", player_commander_id))
+	if session_player_commander_id != "":
+		player_commander_id = session_player_commander_id
 	var map: Dictionary = session.get("map", {})
 	if not map.is_empty():
 		friendly_units = map.get("friendlyUnits", []).duplicate(true)
@@ -192,6 +218,10 @@ func _apply_engine_session(session: Dictionary) -> void:
 		for key in ["areas", "routes", "landmarks"]:
 			if map.has(key):
 				scenario[key] = map[key]
+	if selected_commander_id == "" or _commander_by_id(selected_commander_id).is_empty():
+		selected_commander_id = _commander_id_for_unit(selected_unit_id)
+		if selected_commander_id == "":
+			selected_commander_id = player_commander_id
 	var own_orders: Array = session.get("ownOrders", [])
 	order = {}
 	for own_order in own_orders:
@@ -467,14 +497,27 @@ func _build_interface() -> void:
 	command_card.add_theme_stylebox_override("panel", _panel_style(Color(0.10, 0.07, 0.05, 0.91), Color(0.66, 0.47, 0.27, 0.92), 14, 2))
 	hud.add_child(command_card)
 	_add_label(command_card, "当前军令", Rect2(20, 12, 120, 24), 16, Color("#f0d8a6"))
-	selection_label = _add_label(command_card, "", Rect2(20, 42, 255, 42), 13, Color("#e4c58e"))
-	command_state_label = _add_label(command_card, "", Rect2(294, 28, 302, 58), 12, Color("#d7c5ac"))
+	selection_label = _add_label(command_card, "", Rect2(20, 42, 255, 55), 12, Color("#e4c58e"))
+	_add_label(command_card, "接收军官", Rect2(294, 9, 72, 18), 10, Color("#c1a58a"))
+	commander_option = OptionButton.new()
+	commander_option.position = Vector2(370, 7)
+	commander_option.size = Vector2(238, 29)
+	commander_option.tooltip_text = "选择由哪一位己方军官接收这道军令；不在身边时会派传令兵。"
+	_style_button(commander_option)
+	for commander in commanders:
+		var commander_name := str(commander.get("name", "军官"))
+		var commander_role := str(commander.get("role", ""))
+		commander_option.add_item("%s · %s" % [commander_name, commander_role] if commander_role != "" else commander_name)
+		commander_option.set_item_metadata(commander_option.item_count - 1, str(commander.get("id", "")))
+	commander_option.item_selected.connect(_on_commander_selected)
+	command_card.add_child(commander_option)
+	command_state_label = _add_label(command_card, "", Rect2(294, 40, 302, 53), 11, Color("#d7c5ac"))
 	feedback_label = _add_label(command_card, "", Rect2(620, 26, 420, 56), 12, Color("#e4c58e"))
 	var command_hint := _add_label(command_card, "自由军令", Rect2(20, 88, 74, 18), 11, Color("#c1a58a"))
 	command_hint.tooltip_text = "输入自然语言即可；下方为快捷命令。"
 
 	free_order_input = LineEdit.new()
-	free_order_input.placeholder_text = "例如：让秦军主力向丹水河谷机动"
+	free_order_input.placeholder_text = "例如：让王龁率机动部队向丹水河谷推进"
 	free_order_input.position = Vector2(98, 103)
 	free_order_input.size = Vector2(430, 36)
 	free_order_input.tooltip_text = "可输入机动、坚守、侦察或施行计策"
@@ -545,11 +588,12 @@ func _issue_move() -> void:
 		if selected_unit_id == "" or selected_target_area_id == "":
 			_set_feedback("命令未提交：请先选择部队和目标区域。", "error")
 			return
-		engine_gateway.send_command({
-			"type": "move",
-			"unitId": selected_unit_id,
-			"targetAreaId": selected_target_area_id,
-		})
+			engine_gateway.send_command({
+				"type": "move",
+				"unitId": selected_unit_id,
+				"targetAreaId": selected_target_area_id,
+				"recipientCommanderId": selected_commander_id,
+			})
 		_set_feedback("正在提交机动命令……", "info")
 		return
 	if not order.is_empty() and order.get("status", "") in ["transmitting", "executing"]:
@@ -565,26 +609,32 @@ func _issue_move() -> void:
 		return
 	var target: String = selected_target_area_id
 	var travel_seconds: int = _travel_seconds(str(unit.get("areaId", "")), target)
+	var command_delay := _command_delivery_delay()
 	order = {
 		"status": "transmitting",
 		"type": "move",
 		"unitId": unit.get("id", ""),
 		"originAreaId": unit.get("areaId", ""),
 		"targetAreaId": target,
-		"deliverAt": sim_time + int(scenario.get("commandDelaySeconds", 3)),
-		"completeAt": sim_time + int(scenario.get("commandDelaySeconds", 3)) + travel_seconds,
+		"deliverAt": sim_time + command_delay,
+		"completeAt": sim_time + command_delay + travel_seconds,
+		"issuedByCommanderId": player_commander_id,
+		"recipientCommanderId": selected_commander_id,
+		"communicationMode": _command_delivery_mode(),
 		"route": [unit.get("areaId", ""), target],
 		"totalTravelSeconds": travel_seconds,
 		"remainingTravelSeconds": travel_seconds,
 	}
-	event_log.append(sim_time, "order_issued", {
+		event_log.append(sim_time, "order_issued", {
 		"unitId": unit.get("id", ""),
 		"originAreaId": unit.get("areaId", ""),
 		"targetAreaId": target,
 		"deliverAt": order["deliverAt"],
 		"completeAt": order["completeAt"],
-		"travelSeconds": travel_seconds,
-	})
+			"travelSeconds": travel_seconds,
+			"recipientCommanderId": selected_commander_id,
+			"communicationMode": _command_delivery_mode(),
+		})
 	_add_log("已发令：%s向%s机动。" % [unit.get("name", "部队"), _area_name(target)])
 	_set_feedback("命令已接收：%s向%s机动，正在传递。" % [unit.get("name", "部队"), _area_name(target)], "success")
 	_refresh()
@@ -600,6 +650,7 @@ func _issue_hold() -> void:
 		engine_gateway.send_command({
 			"type": "hold",
 			"unitId": selected_unit_id,
+			"recipientCommanderId": selected_commander_id,
 		})
 		_set_feedback("正在提交坚守命令……", "info")
 		return
@@ -611,7 +662,8 @@ func _issue_hold() -> void:
 	if unit.is_empty():
 		_set_feedback("坚守命令未提交：没有选中的己方部队。", "error")
 		return
-	var deliver_at := sim_time + int(scenario.get("commandDelaySeconds", 3))
+	var command_delay := _command_delivery_delay()
+	var deliver_at := sim_time + command_delay
 	order = {
 		"status": "transmitting",
 		"type": "hold",
@@ -620,15 +672,20 @@ func _issue_hold() -> void:
 		"targetAreaId": unit.get("areaId", ""),
 		"deliverAt": deliver_at,
 		"completeAt": deliver_at + 1,
+		"issuedByCommanderId": player_commander_id,
+		"recipientCommanderId": selected_commander_id,
+		"communicationMode": _command_delivery_mode(),
 	}
-	event_log.append(sim_time, "order_issued", {
+		event_log.append(sim_time, "order_issued", {
 		"type": "hold",
 		"unitId": unit.get("id", ""),
 		"originAreaId": unit.get("areaId", ""),
 		"targetAreaId": unit.get("areaId", ""),
 		"deliverAt": deliver_at,
-		"completeAt": deliver_at + 1,
-	})
+			"completeAt": deliver_at + 1,
+			"recipientCommanderId": selected_commander_id,
+			"communicationMode": _command_delivery_mode(),
+		})
 	_add_log("已发令：%s坚守当前阵地。" % unit.get("name", "部队"))
 	_set_feedback("坚守命令已接收：%s将在命令抵达后保持阵地。" % unit.get("name", "部队"), "success")
 	_refresh()
@@ -671,6 +728,7 @@ func _issue_task(task_type: String) -> void:
 			"type": task_type,
 			"unitId": selected_unit_id,
 			"targetAreaId": target_area,
+			"recipientCommanderId": selected_commander_id,
 		})
 		_set_feedback("正在提交%s任务：目标%s……" % [_task_label(task_type), _area_name(target_area)], "info")
 		return
@@ -678,7 +736,8 @@ func _issue_task(task_type: String) -> void:
 		_set_feedback("任务未提交：当前部队已有命令正在传递或执行。", "error")
 		return
 	var travel_seconds: int = 0 if target_area == str(selected_unit.get("areaId", "")) else _travel_seconds(str(selected_unit.get("areaId", "")), target_area)
-	var deliver_at := sim_time + int(scenario.get("commandDelaySeconds", 3))
+	var command_delay := _command_delivery_delay()
+	var deliver_at := sim_time + command_delay
 	order = {
 		"status": "transmitting",
 		"type": task_type,
@@ -689,11 +748,14 @@ func _issue_task(task_type: String) -> void:
 		"targetAreaId": target_area,
 		"deliverAt": deliver_at,
 		"completeAt": deliver_at + max(1, travel_seconds),
+		"issuedByCommanderId": player_commander_id,
+		"recipientCommanderId": selected_commander_id,
+		"communicationMode": _command_delivery_mode(),
 		"route": [selected_unit.get("areaId", ""), target_area],
 		"totalTravelSeconds": travel_seconds,
 		"remainingTravelSeconds": travel_seconds,
 	}
-	event_log.append(sim_time, "order_issued", {
+		event_log.append(sim_time, "order_issued", {
 		"type": task_type,
 		"taskType": task_type,
 		"taskLabel": _task_label(task_type),
@@ -702,8 +764,10 @@ func _issue_task(task_type: String) -> void:
 		"targetAreaId": target_area,
 		"deliverAt": deliver_at,
 		"completeAt": order["completeAt"],
-		"travelSeconds": travel_seconds,
-	})
+			"travelSeconds": travel_seconds,
+			"recipientCommanderId": selected_commander_id,
+			"communicationMode": _command_delivery_mode(),
+		})
 	_add_log("已发令：%s执行%s任务，目标%s。" % [selected_unit.get("name", "部队"), _task_label(task_type), _area_name(target_area)])
 	_set_feedback("%s任务已接收：目标%s，命令正在传递。" % [_task_label(task_type), _area_name(target_area)], "success")
 	_refresh()
@@ -715,31 +779,38 @@ func _submit_free_order(_submitted_text: String = "") -> void:
 	if raw_text == "":
 		_set_feedback("自由命令未提交：请先写下你的意图。", "error")
 		return
+	if engine_connected:
+		engine_gateway.send_command({
+			"type": "free_order",
+			"text": raw_text,
+			"unitId": selected_unit_id,
+			"recipientCommanderId": selected_commander_id,
+		})
+		free_order_input.clear()
+		_set_feedback("命令已接收：AI正在理解军令，并将其传给%s。" % _commander_name(selected_commander_id), "success")
+		return
 	var parsed: Dictionary = _parse_free_order(raw_text)
 	if str(parsed.get("error", "")) != "":
 		_set_feedback("自由命令未提交：%s" % str(parsed.get("error", "无法理解这道命令。")), "error")
 		return
 	var command: Dictionary = parsed.get("command", {}).duplicate(true)
 	command["rawText"] = raw_text
-	if engine_connected:
-		engine_gateway.send_command(command)
-		_set_feedback("命令已接收：正在将“%s”传过前线。" % raw_text, "success")
-	else:
-		# The local fallback keeps the same commander affordance for offline UI checks.
-		match str(command.get("type", "")):
-			"move":
-				selected_target_area_id = str(command.get("targetAreaId", ""))
-				_issue_move()
-			"hold":
-				_issue_hold()
-			"scout":
-				_dispatch_scout()
-			"deception":
-				_issue_deception()
-			_:
-				if str(command.get("type", "")) in _task_types():
-					selected_target_area_id = str(command.get("targetAreaId", selected_target_area_id))
-					_issue_task(str(command.get("type", "")))
+	command["recipientCommanderId"] = selected_commander_id
+	# The local fallback keeps the same commander affordance for offline UI checks.
+	match str(command.get("type", "")):
+		"move":
+			selected_target_area_id = str(command.get("targetAreaId", ""))
+			_issue_move()
+		"hold":
+			_issue_hold()
+		"scout":
+			_dispatch_scout()
+		"deception":
+			_issue_deception()
+		_:
+			if str(command.get("type", "")) in _task_types():
+				selected_target_area_id = str(command.get("targetAreaId", selected_target_area_id))
+				_issue_task(str(command.get("type", "")))
 	free_order_input.clear()
 	_refresh()
 
@@ -832,7 +903,11 @@ func _dispatch_scout() -> void:
 		_set_feedback("回放模式不能派出新的侦察。", "error")
 		return
 	if engine_connected:
-		engine_gateway.send_command({"type": "scout"})
+		engine_gateway.send_command({
+			"type": "scout",
+			"commandUnitId": _command_unit_for_selected_commander(),
+			"recipientCommanderId": selected_commander_id,
+		})
 		_set_feedback("正在派出前出斥候……", "info")
 		return
 	if _pending_observation_count() > 0:
@@ -872,6 +947,7 @@ func _issue_deception() -> void:
 		"actionId": action.get("id", ""),
 		"targetUnitId": action.get("targetUnitId", selected_unit_id),
 		"reportedAreaId": action.get("reportedAreaId", ""),
+		"recipientCommanderId": selected_commander_id,
 	})
 	_set_feedback("正在提交计策：敌方将收到一份可能失真的报告……", "info")
 
@@ -970,10 +1046,101 @@ func _unit_index(unit_id: String) -> int:
 			return index
 	return -1
 
+func _commander_by_id(commander_id: String) -> Dictionary:
+	for commander_value in commanders:
+		if commander_value is Dictionary and str(commander_value.get("id", "")) == commander_id:
+			return commander_value
+	return {}
+
+func _commander_id_for_unit(unit_id: String) -> String:
+	for unit_value in friendly_units:
+		if unit_value is Dictionary and str(unit_value.get("id", "")) == unit_id:
+			var commander_id := str(unit_value.get("commanderId", ""))
+			if commander_id != "":
+				return commander_id
+	return player_commander_id
+
+func _commander_name(commander_id: String) -> String:
+	var commander := _commander_by_id(commander_id)
+	return str(commander.get("name", "前线军官")) if not commander.is_empty() else "前线军官"
+
+func _commander_area(commander_id: String) -> String:
+	var commander := _commander_by_id(commander_id)
+	if commander.is_empty():
+		return ""
+	var attached_unit_id := str(commander.get("attachedUnitId", ""))
+	if attached_unit_id != "":
+		var attached_index := _unit_index(attached_unit_id)
+		if attached_index >= 0:
+			return str(friendly_units[attached_index].get("areaId", ""))
+	return str(commander.get("locationAreaId", ""))
+
+func _commander_location_text(commander_id: String) -> String:
+	var commander := _commander_by_id(commander_id)
+	if commander.is_empty():
+		return "位置未知"
+	var area_id := _commander_area(commander_id)
+	var area_name := _area_name(area_id) if area_id != "" else "位置未知"
+	var attached_unit_id := str(commander.get("attachedUnitId", ""))
+	if attached_unit_id != "":
+		var attached_index := _unit_index(attached_unit_id)
+		if attached_index >= 0:
+			return "随%s · %s" % [str(friendly_units[attached_index].get("name", "部队")), area_name]
+	return "指挥所 · %s" % area_name
+
+func _command_delivery_mode() -> String:
+	if commanders.is_empty():
+		return "legacy"
+	var issuer_area := _commander_area(player_commander_id)
+	var recipient_area := _commander_area(selected_commander_id)
+	if issuer_area != "" and issuer_area == recipient_area:
+		return "direct"
+	return "messenger"
+
+func _command_delivery_delay() -> int:
+	if commanders.is_empty():
+		return int(scenario.get("commandDelaySeconds", 3))
+	if _command_delivery_mode() == "direct":
+		return 0
+	var chain_value = scenario.get("commandChain", {})
+	var chain: Dictionary = chain_value if chain_value is Dictionary else {}
+	var policy_value = chain.get("messengerPolicy", {})
+	var policy: Dictionary = policy_value if policy_value is Dictionary else {}
+	var base_delay := int(policy.get("baseDelaySeconds", 1))
+	var route_factor := float(policy.get("routeTravelFactor", 0.25))
+	var fallback_delay := int(policy.get("fallbackDelaySeconds", scenario.get("commandDelaySeconds", 3)))
+	var issuer_area := _commander_area(player_commander_id)
+	var recipient_area := _commander_area(selected_commander_id)
+	if issuer_area == "" or recipient_area == "":
+		return fallback_delay
+	var travel_seconds := _travel_seconds(issuer_area, recipient_area)
+	return base_delay + max(1, int(ceil(float(travel_seconds) * route_factor)))
+
+func _command_unit_for_selected_commander() -> String:
+	var commander := _commander_by_id(selected_commander_id)
+	var attached_unit_id := str(commander.get("attachedUnitId", ""))
+	return attached_unit_id if attached_unit_id != "" else selected_unit_id
+
+func _on_commander_selected(index: int) -> void:
+	if commander_option == null:
+		return
+	selected_commander_id = str(commander_option.get_item_metadata(index))
+	var commander := _commander_by_id(selected_commander_id)
+	var attached_unit_id := str(commander.get("attachedUnitId", ""))
+	if attached_unit_id != "" and _unit_index(attached_unit_id) >= 0:
+		selected_unit_id = attached_unit_id
+	event_log.append(sim_time, "commander_recipient_selected", {"commanderId": selected_commander_id})
+	_add_log("接收军官已选：%s（%s）。" % [_commander_name(selected_commander_id), _commander_location_text(selected_commander_id)])
+	_set_feedback("接收军官已选：%s。%s" % [_commander_name(selected_commander_id), "将派传令兵" if _command_delivery_mode() == "messenger" else "可当面传令"], "info")
+	_refresh()
+
 func _on_unit_selected(unit_id: String) -> void:
 	if replay_mode:
 		return
 	selected_unit_id = unit_id
+	var unit_commander_id := _commander_id_for_unit(unit_id)
+	if unit_commander_id != "":
+		selected_commander_id = unit_commander_id
 	event_log.append(sim_time, "commander_unit_selected", {"unitId": unit_id})
 	var unit_index: int = _unit_index(unit_id)
 	if unit_index >= 0:
@@ -1066,6 +1233,9 @@ func _exit_replay() -> void:
 	sim_time = 0
 	friendly_units = scenario.get("friendlyUnits", []).duplicate(true)
 	selected_unit_id = str(friendly_units[0].get("id", "")) if not friendly_units.is_empty() else ""
+	selected_commander_id = _commander_id_for_unit(selected_unit_id)
+	if selected_commander_id == "":
+		selected_commander_id = player_commander_id
 	selected_target_area_id = ""
 	reported_signals = []
 	order = {}
@@ -1112,6 +1282,9 @@ func _apply_replay_state(replay_state: Dictionary) -> void:
 	var replay_outcome = replay_state.get("outcome", {})
 	outcome = replay_outcome.duplicate(true) if replay_outcome is Dictionary else {}
 	selected_unit_id = str(replay_state.get("selectedUnitId", selected_unit_id))
+	var replay_commander_id := _commander_id_for_unit(selected_unit_id)
+	if replay_commander_id != "":
+		selected_commander_id = replay_commander_id
 	selected_target_area_id = str(replay_state.get("selectedTargetAreaId", selected_target_area_id))
 	log_lines = []
 	for event in replay_state.get("timeline", []):
@@ -1126,6 +1299,10 @@ func _replay_event_text(event: Dictionary) -> String:
 			return "回放：已发令，部队向%s机动。" % _area_name(str(payload.get("targetAreaId", "")))
 		"order_delivered":
 			return "回放：命令抵达，部队开始执行。"
+		"command_delivered":
+			return "回放：传令抵达，接收军官收到军令。"
+		"command_interpreted":
+			return "回放：AI完成军令识别，已交给接收军官。"
 		"unit_arrived":
 			return "回放：部队抵达%s。" % _area_name(str(payload.get("areaId", payload.get("targetAreaId", ""))))
 		"unit_entered_terrain":
@@ -1139,6 +1316,7 @@ func _replay_event_text(event: Dictionary) -> String:
 				return "回放：前线来报正在返回，疑似敌军调动。"
 			return "回放：侦察报告正在返回指挥部。"
 		"reconnaissance_issued": return "回放：侦察已接收，斥候正在准备。"
+		"reconnaissance_command_delivered": return "回放：侦察军令抵达，前线副将开始整备。"
 		"reconnaissance_prepared": return "回放：斥候准备完成，已出发。"
 		"reconnaissance_exposed": return "回放：斥候行迹暴露，回报可信度下降。"
 		"reconnaissance_dispatched": return "回放：侦察报告正在返回指挥部。"
@@ -1151,6 +1329,7 @@ func _replay_event_text(event: Dictionary) -> String:
 				return "回放：计策已接收，正在准备投放。"
 			return "回放：已施行计策，敌方将依据自己的认知行动。"
 		"deception_prepared": return "回放：计策准备完成，正在投放。"
+		"deception_command_delivered": return "回放：计策军令抵达，前线开始准备。"
 		"deception_exposed": return "回放：计策暴露，后续误导可信度下降。"
 		"strategy_reliability_reduced": return "回放：情报链可信度下降。"
 		"commander_unit_selected":
@@ -1222,13 +1401,18 @@ func _refresh() -> void:
 	if hud_metrics_label != null:
 		hud_metrics_label.text = "秦军 %d 部  ·  情报 %s  ·  斥候 %s\n计策 %s  ·  情报链 %d%%" % [friendly_units.size(), _resource_text("intelligencePoints"), _resource_text("scoutTeams"), _resource_text("deceptionAssets"), int(strategy_reliability * 100.0)]
 	command_state_label.text = _command_state_text()
+	if commander_option != null and not commanders.is_empty():
+		for index in range(commander_option.item_count):
+			if str(commander_option.get_item_metadata(index)) == selected_commander_id:
+				commander_option.select(index)
+				break
 	outcome_label.visible = outcome.size() > 0
 	if outcome.size() > 0:
 		outcome_label.text = _outcome_text()
 	var selected_unit_index: int = _unit_index(selected_unit_id)
 	var selected_unit_name: String = friendly_units[selected_unit_index].get("name", "未选择") if selected_unit_index >= 0 else "未选择"
 	var selected_target_name: String = _area_name(selected_target_area_id) if selected_target_area_id != "" else "未选择"
-	selection_label.text = "当前部队：%s\n目标区域：%s" % [selected_unit_name, selected_target_name]
+	selection_label.text = "当前部队：%s\n目标区域：%s\n接收军官：%s · %s" % [selected_unit_name, selected_target_name, _commander_name(selected_commander_id), _commander_location_text(selected_commander_id)]
 	run_button.text = "暂停实时推演" if running else "开始实时推演"
 	if replay_mode:
 		run_button.text = "暂停回放" if running else "播放回放"
@@ -1317,12 +1501,17 @@ func _order_status_text(status: String) -> String:
 
 func _command_state_text() -> String:
 	if order.is_empty():
-		return "军令状态\n尚未下达军令\n先选部队，再在沙盘选择目标。"
+		var pending_recipient := _commander_name(selected_commander_id)
+		var pending_mode := "传令兵待命" if _command_delivery_mode() == "messenger" else "可当面传令"
+		return "军令状态\n尚未下达军令\n交给%s · %s" % [pending_recipient, pending_mode]
 	var order_type := str(order.get("taskLabel", "")) if order.get("taskType", "") != "" else ("坚守" if order.get("type", "move") == "hold" else "机动")
 	var status := _order_status_text(str(order.get("status", "")))
+	var recipient_name := _commander_name(str(order.get("recipientCommanderId", selected_commander_id)))
+	var communication_mode := str(order.get("communicationMode", _command_delivery_mode()))
+	var chain_summary := "交给%s · %s" % [recipient_name, "传令兵在途" if communication_mode == "messenger" and status == "传令中" else ("当面传令" if communication_mode == "direct" else "常规链路")]
 	var target := _area_name(str(order.get("targetAreaId", "")))
 	if order.get("type", "move") == "hold":
-		return "军令状态\n%s · %s\n%s" % [order_type, status, "当前阵地：" + _area_name(str(order.get("originAreaId", "")))]
+		return "军令状态\n%s · %s\n%s" % [order_type, status, chain_summary]
 	var remaining := int(order.get("remainingTravelSeconds", 0))
 	var progress := "目标：%s" % target if target != "未知区域" else "目标尚未确认"
 	var current_terrain_value = order.get("currentTerrain", {})
@@ -1336,7 +1525,7 @@ func _command_state_text() -> String:
 			progress += " · 已%s" % _terrain_action_word(str(last_terrain.get("terrainType", "")))
 	if status == "执行中" and remaining > 0:
 		progress += " · 约%d秒" % remaining
-	return "军令状态\n%s · %s\n%s" % [order_type, status, progress]
+	return "军令状态\n%s · %s\n%s · %s" % [order_type, status, chain_summary, progress]
 
 func _terrain_action_word(terrain_type: String) -> String:
 	match terrain_type:

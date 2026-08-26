@@ -1,11 +1,39 @@
 {
+  "schemaVersion": 1,
+  "commandChain": {
+    "schemaVersion": 1,
+    "playerCommanderIdsBySide": { "qin": "bai-qi" },
+    "messengerPolicy": {
+      "baseDelaySeconds": 1,
+      "routeTravelFactor": 0.25,
+      "fallbackDelaySeconds": 4,
+      "directDelaySeconds": 0
+    }
+  },
   "commanders": [
     {
       "id": "bai-qi",
       "name": "白起",
       "side": "qin",
       "role": "秦军统帅",
+      "isPlayer": true,
+      "locationAreaId": "qin-west-camp",
+      "locationStatus": "command_post",
+      "authority": "army-command",
+      "historicalStatus": "historical_fact",
       "riskProfile": "calculated",
+      "sourceIds": ["shiji-baiqi"]
+    },
+    {
+      "id": "wang-he",
+      "name": "王龁",
+      "side": "qin",
+      "role": "前线副将",
+      "superiorCommanderId": "bai-qi",
+      "attachedUnitId": "qin-detachment",
+      "locationStatus": "with_unit",
+      "authority": "field-command",
+      "historicalStatus": "historical_estimate",
       "sourceIds": ["shiji-baiqi"]
     },
     {

@@ -151,3 +151,23 @@ test('opens the formal Changping battle level', async ({ page }) => {
   for (let i = 0; i < 9; i += 1) await page.getByRole('button', { name: '手动推进 1 秒' }).click();
   await expect(page.locator('.deception-history')).toContainText('已送达敌方认知');
 });
+
+test('routes a free-form order through a named remote deputy', async ({ page }) => {
+  await page.goto('/?battle=changping', { waitUntil: 'domcontentloaded' });
+  await expect(page.getByRole('heading', { name: '长平决战前 · 指挥沙盘' })).toBeVisible();
+
+  await page.getByRole('combobox', { name: '接收军官' }).selectOption('wang-he');
+  await expect(page.locator('.commander-row').filter({ hasText: '王龁' })).toContainText('远程');
+  await expect(page.locator('.command-delivery-hint')).toContainText('传令兵在途');
+  await expect(page.getByRole('combobox', { name: '当前部队' })).toHaveValue('qin-detachment');
+
+  await page.getByRole('textbox', { name: '自由军令' }).fill('让王龁率秦军机动部队向丹水河谷推进');
+  await page.getByRole('button', { name: '传达' }).click();
+  await expect(page.locator('.battle-notice')).toContainText('AI识别为：机动');
+  await expect(page.locator('.order-row')).toContainText('传递中');
+  await expect(page.locator('.battle-map-surface')).toContainText('传递中');
+
+  for (let i = 0; i < 4; i += 1) await page.getByRole('button', { name: '手动推进 1 秒' }).click();
+  await expect(page.locator('.order-row')).toContainText('执行中');
+  await expect(page.locator('.battle-event-list')).toContainText('传令抵达：王龁');
+});

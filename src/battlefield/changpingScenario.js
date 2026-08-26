@@ -32,6 +32,17 @@ function mapResources(resources = {}) {
   return Object.fromEntries(Object.entries(resources).map(([side, ledger]) => [sideMap[side] ?? side, ledger]));
 }
 
+function mapCommandChain(commandChain = {}) {
+  const playerCommanderIdsBySide = Object.fromEntries(
+    Object.entries(commandChain.playerCommanderIdsBySide ?? commandChain.playerCommanderIds ?? {})
+      .map(([side, commanderId]) => [sideMap[side] ?? side, commanderId]),
+  );
+  return {
+    ...commandChain,
+    playerCommanderIdsBySide,
+  };
+}
+
 function mapResolution(resolution) {
   if (!resolution) return resolution;
   return {
@@ -103,7 +114,10 @@ function buildChangpingGamePackage() {
     geography: mappedGeography,
     terrainFeatures: terrain.features,
     units: { units: units.units.map(mapSide) },
-    commanders: { commanders: commanders.commanders.map(mapSide) },
+    commanders: {
+      commanders: commanders.commanders.map(mapSide),
+      commandChain: mapCommandChain(commanders.commandChain),
+    },
     factions: { factions: factions.factions.map(mapSide) },
     intelligenceSources,
     deception,
@@ -136,6 +150,7 @@ export const CHANGPING_PROFILE = {
   playerName: '秦军态势',
   playerSideLabel: '秦军',
   enemySideLabel: '赵军',
+  playerCommanderId: 'bai-qi',
   areas: geography.areas.map((area) => ({
     ...area,
     terrain: terrainLabels[terrain.areas.find((item) => item.areaId === area.id)?.type] ?? '待审地形',
@@ -143,6 +158,8 @@ export const CHANGPING_PROFILE = {
   mapMarkers: presentation.mapMarkers,
   commandDelaySeconds: simulationParameters.commandDelaySeconds,
   resources: mapResources(simulationParameters.resources),
+  commanders: commanders.commanders.map(mapSide),
+  commandChain: mapCommandChain(commanders.commandChain),
   scout: simulationParameters.scout,
   deceptionActions: deception.actions,
   createWorld: () => createBattleWorldFromScenario(changpingGamePackage),

@@ -140,7 +140,7 @@ function dispatchPreparedScout(next, action) {
  * the operation before its report enters the delayed observation queue.
  *
  * @param {import('./contracts').BattleWorld} world
- * @param {import('./contracts').QueueObservationOptions & { cost?: Record<string, number>, preparationSeconds?: number, cooldownSeconds?: number, exposureProbability?: number, exposureDelaySeconds?: number, failureReliabilityPenalty?: number }} [options]
+ * @param {import('./contracts').QueueObservationOptions & { cost?: Record<string, number>, preparationSeconds?: number, cooldownSeconds?: number, exposureProbability?: number, exposureDelaySeconds?: number, failureReliabilityPenalty?: number, commandContext?: Record<string, unknown> | null }} [options]
  */
 export function dispatchReconnaissance(world, options = /** @type {any} */ ({})) {
   const next = cloneBattleWorld(world);
@@ -159,6 +159,10 @@ export function dispatchReconnaissance(world, options = /** @type {any} */ ({}))
   if (costError) return { world: next, observation: null, action: null, ...costError };
 
   const preparationSeconds = normalizeSeconds(options.preparationSeconds, BATTLEFIELD_CONFIG.defaults.observationDelaySeconds);
+  const commandContext = /** @type {Record<string, any> | null} */ (options.commandContext ?? null);
+  const commandPath = Array.isArray(commandContext?.commandPath) ? commandContext.commandPath.filter(Boolean).map(String) : [];
+  const commandDelaySeconds = normalizeSeconds(commandContext?.delaySeconds, 0);
+  const commandDeliveredAt = next.simTime + commandDelaySeconds;
   const action = {
     id: nextStrategyActionId(next),
     kind: 'scout',
@@ -180,15 +184,21 @@ export function dispatchReconnaissance(world, options = /** @type {any} */ ({}))
     failureReliabilityPenalty: options.failureReliabilityPenalty ?? BATTLEFIELD_CONFIG.defaults.strategyFailureReliabilityPenalty,
     cost: options.cost ?? {},
     issuedAt: next.simTime,
-    readyAt: next.simTime + preparationSeconds,
-    status: 'preparing',
+    issuedByCommanderId: commandContext?.issuerCommanderId ?? null,
+    recipientCommanderId: commandContext?.recipientCommanderId ?? null,
+    communicationMode: commandContext?.communicationMode ?? 'legacy',
+    commandPath,
+    messenger: commandContext?.messenger ? JSON.parse(JSON.stringify(commandContext.messenger)) : null,
+    commandDeliveredAt,
+    readyAt: commandDeliveredAt + preparationSeconds,
+    status: commandDelaySeconds > 0 ? 'transmitting' : 'preparing',
     observationId: null,
   };
   spendResources(next, side, action.cost);
   registerStrategyIssue(next, side, 'scout');
   next.strategy.actions.push(action);
 
-  if (action.preparationSeconds > 0) {
+  if (action.preparationSeconds > 0 || commandDelaySeconds > 0) {
     appendBattleEvent(next, {
       type: 'reconnaissance_issued',
       side,
@@ -196,6 +206,8 @@ export function dispatchReconnaissance(world, options = /** @type {any} */ ({}))
       targetUnitId: action.targetUnitId,
       status: action.status,
       readyAt: action.readyAt,
+      commandDeliveredAt: action.commandDeliveredAt,
+      communicationMode: action.communicationMode,
       cost: action.cost,
     });
     return { world: next, observation: null, action, error: null, errorCode: null, errorDetails: {} };
@@ -207,6 +219,30 @@ export function dispatchReconnaissance(world, options = /** @type {any} */ ({}))
 /** Resolve prepared scout actions in the realtime clock. */
 export function resolveReconnaissanceActions(world) {
   let next = cloneBattleWorld(world);
+  const transmittingIds = (next.strategy?.actions ?? [])
+    .filter((action) => action.kind === 'scout' && action.status === 'transmitting' && action.commandDeliveredAt <= next.simTime)
+    .map((action) => action.id);
+  transmittingIds.forEach((actionId) => {
+    const action = next.strategy.actions.find((candidate) => candidate.id === actionId);
+    if (!action) return;
+    action.commandDeliveredAt = next.simTime;
+    if (action.messenger) {
+      action.messenger.status = 'delivered';
+      action.messenger.deliveredAt = next.simTime;
+    }
+    action.status = action.preparationSeconds > 0 ? 'preparing' : 'ready';
+    appendBattleEvent(next, {
+      type: 'reconnaissance_command_delivered',
+      side: action.side,
+      actionId,
+      recipientCommanderId: action.recipientCommanderId,
+      communicationMode: action.communicationMode,
+    });
+    if (action.preparationSeconds === 0) {
+      const result = dispatchPreparedScout(next, action);
+      next = result.world;
+    }
+  });
   const actionIds = (next.strategy?.actions ?? [])
     .filter((action) => action.kind === 'scout' && action.status === 'preparing' && action.readyAt <= next.simTime)
     .map((action) => action.id);

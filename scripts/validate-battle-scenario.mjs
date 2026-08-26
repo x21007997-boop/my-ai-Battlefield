@@ -110,6 +110,7 @@ if (!errors.length) {
   const events = arrayAt('events.json', 'events');
   const endings = arrayAt('endings.json', 'endings');
   const simulationParameters = data['simulation-parameters.json'];
+  const commandChain = data['commanders.json'].commandChain ?? {};
 
   for (const key of ['schemaVersion', 'id', 'title', 'ruleVersion', 'eraLabel', 'status']) {
     if (manifest[key] === undefined || manifest[key] === '') add(`manifest.json: 缺少 ${key}`);
@@ -199,6 +200,8 @@ if (!errors.length) {
     const scout = simulationParameters.scout;
     if (scout) {
       if (!unitIds.has(scout.targetUnitId)) add('simulation-parameters.json: scout.targetUnitId 引用了不存在的部队');
+      if (scout.commandUnitId && !unitIds.has(scout.commandUnitId)) add('simulation-parameters.json: scout.commandUnitId 引用了不存在的部队');
+      if (scout.recipientCommanderId && !commanderIds.has(scout.recipientCommanderId)) add('simulation-parameters.json: scout.recipientCommanderId 引用了不存在的将领');
       if (!areaIds.has(scout.reportedAreaId) || !areaIds.has(scout.actualAreaId)) add('simulation-parameters.json: scout 的区域引用无效');
       if (scout.sourceId && !intelSourceIds.has(scout.sourceId)) add('simulation-parameters.json: scout.sourceId 引用了不存在的情报来源');
       if (!positiveNumber(scout.delaySeconds) || !positiveNumber(scout.freshnessSeconds)) add('simulation-parameters.json: scout.delaySeconds 和 freshnessSeconds 必须是正数');
@@ -283,6 +286,25 @@ if (!errors.length) {
   commanders.forEach((commander) => {
     if (!commander.name || !sideIds.has(commander.side)) add(`commanders.json:${commander.id}: name 或 side 无效`);
     if (commander.sourceIds?.some((sourceId) => !sourceIds.has(sourceId))) add(`commanders.json:${commander.id}: sourceIds 引用了不存在的来源`);
+    if (commander.superiorCommanderId && !commanderIds.has(commander.superiorCommanderId)) add(`commanders.json:${commander.id}: superiorCommanderId 引用了不存在的将领`);
+    const attachedUnitIds = commander.attachedUnitIds ?? (commander.attachedUnitId ? [commander.attachedUnitId] : []);
+    if (attachedUnitIds.some((unitId) => !unitIds.has(unitId))) add(`commanders.json:${commander.id}: attachedUnitId 引用了不存在的部队`);
+    if (commander.locationAreaId && !areaIds.has(commander.locationAreaId)) add(`commanders.json:${commander.id}: locationAreaId 引用了不存在的区域`);
+  });
+  if (Object.keys(commandChain).length > 0) {
+    if (commandChain.schemaVersion !== 1) add('commanders.json: commandChain.schemaVersion 必须是 1');
+    const messengerPolicy = commandChain.messengerPolicy ?? {};
+    if (!messengerPolicy || typeof messengerPolicy !== 'object' || Array.isArray(messengerPolicy)) add('commanders.json: commandChain.messengerPolicy 必须是对象');
+    else {
+      ['baseDelaySeconds', 'fallbackDelaySeconds', 'directDelaySeconds'].forEach((key) => {
+        if (!nonNegativeInteger(messengerPolicy[key])) add(`commanders.json: commandChain.messengerPolicy.${key} 必须是非负整数`);
+      });
+      if (typeof messengerPolicy.routeTravelFactor !== 'number' || !Number.isFinite(messengerPolicy.routeTravelFactor) || messengerPolicy.routeTravelFactor < 0) add('commanders.json: commandChain.messengerPolicy.routeTravelFactor 必须是非负数');
+    }
+  }
+  Object.entries(commandChain.playerCommanderIdsBySide ?? {}).forEach(([side, commanderId]) => {
+    const commander = commanders.find((item) => item.id === commanderId);
+    if (!sideIds.has(side) || !commanderIds.has(commanderId) || commander?.side !== side) add(`commanders.json: playerCommanderIdsBySide ${side} 引用无效`);
   });
   units.forEach((unit) => {
     if (!sideIds.has(unit.side)) add(`units.json:${unit.id}: side 无效`);
@@ -329,6 +351,7 @@ if (!errors.length) {
     if (action.exposureProbability !== undefined && !probability(action.exposureProbability)) add(`deception.json:${action.id}: exposureProbability 必须在 0-1 范围内`);
     if (action.exposureDelaySeconds !== undefined && !nonNegativeInteger(action.exposureDelaySeconds)) add(`deception.json:${action.id}: exposureDelaySeconds 必须是非负整数`);
     if (action.failureReliabilityPenalty !== undefined && !probability(action.failureReliabilityPenalty)) add(`deception.json:${action.id}: failureReliabilityPenalty 必须在 0-1 范围内`);
+    if (action.recipientCommanderId && !commanderIds.has(action.recipientCommanderId)) add(`deception.json:${action.id}: recipientCommanderId 引用了不存在的将领`);
   });
   events.forEach((event) => {
     if (!event.type || !event.title) add(`events.json:${event.id}: 缺少 type 或 title`);

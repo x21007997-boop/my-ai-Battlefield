@@ -12,7 +12,7 @@ async function json(name) {
   return JSON.parse(await readFile(resolve(scenarioDir, name), 'utf8'));
 }
 
-const [manifest, geography, terrain, routes, units, initialWorld, simulationParameters, presentation, intelligenceSources, deception, objectives, endings] = await Promise.all([
+const [manifest, geography, terrain, routes, units, initialWorld, simulationParameters, presentation, intelligenceSources, deception, objectives, endings, commanders] = await Promise.all([
   json('manifest.json'),
   json('geography.json'),
   json('terrain.json'),
@@ -25,6 +25,7 @@ const [manifest, geography, terrain, routes, units, initialWorld, simulationPara
   json('deception.json'),
   json('objectives.json'),
   json('endings.json'),
+  json('commanders.json'),
 ]);
 
 const terrainLabels = {
@@ -88,6 +89,16 @@ const simulationUnits = initialWorld.units.map((state) => ({
   side: state.side === 'qin' ? 'player' : 'enemy',
   location: state.location,
 }));
+const simulationCommanders = (commanders.commanders ?? []).map((commander) => ({
+  ...commander,
+  side: commander.side === 'qin' ? 'player' : commander.side === 'zhao' ? 'enemy' : commander.side,
+}));
+const simulationCommandChain = {
+  ...(commanders.commandChain ?? {}),
+  playerCommanderIdsBySide: Object.fromEntries(
+    Object.entries(commanders.commandChain?.playerCommanderIdsBySide ?? {}).map(([side, commanderId]) => [side === 'qin' ? 'player' : side === 'zhao' ? 'enemy' : side, commanderId]),
+  ),
+};
 const simulationObjectives = objectives.objectives.map((objective) => ({
   ...objective,
   side: objective.side === 'qin' ? 'player' : objective.side === 'zhao' ? 'enemy' : objective.side,
@@ -109,6 +120,8 @@ const simulationWorld = createBattleWorld({
   areas,
   terrainFeatures: terrain.features,
   units: simulationUnits,
+  commanders: simulationCommanders,
+  commandChain: simulationCommandChain,
   sides: [{ id: 'player', name: '秦军' }, { id: 'enemy', name: '赵军' }],
   intelligenceSources: intelligenceSources.sources,
   deceptionActions: deception.actions,
@@ -161,6 +174,9 @@ const clientScenario = {
   resources: commanderSession.resources,
   scout: commanderScout,
   deceptionActions: commanderSession.deceptionActions,
+  commanders: commanderSession.commanders,
+  playerCommanderId: commanderSession.playerCommanderId,
+  commandChain: commanderSession.commandChain,
   objectives: simulationObjectives,
   endings: endings.endings,
   resolution: simulationResolution,

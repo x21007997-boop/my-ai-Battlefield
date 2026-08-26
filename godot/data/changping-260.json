@@ -779,6 +779,8 @@
     "deceptionAssets": 2
   },
   "scout": {
+    "commandUnitId": "qin-detachment",
+    "recipientCommanderId": "wang-he",
     "targetUnitId": "zhao-relief",
     "reportedAreaId": "zhao-main-camp",
     "delaySeconds": 5,
@@ -805,6 +807,7 @@
       "mode": "false-report",
       "targetSide": "enemy",
       "targetUnitId": "qin-main",
+      "recipientCommanderId": "bai-qi",
       "reportedAreaId": "western-gate",
       "delaySeconds": 4,
       "freshnessSeconds": 30,
@@ -827,6 +830,7 @@
       "mode": "false-report",
       "targetSide": "enemy",
       "targetUnitId": "qin-detachment",
+      "recipientCommanderId": "wang-he",
       "reportedAreaId": "western-gate",
       "delaySeconds": 3,
       "freshnessSeconds": 24,
@@ -842,6 +846,58 @@
       "evidenceGrade": "X"
     }
   ],
+  "commanders": [
+    {
+      "id": "bai-qi",
+      "side": "player",
+      "name": "白起",
+      "role": "秦军统帅",
+      "rank": null,
+      "superiorCommanderId": null,
+      "attachedUnitId": null,
+      "locationAreaId": "qin-west-camp",
+      "locationSource": "command_post",
+      "locationStatus": "command_post",
+      "isPlayer": true,
+      "authority": "army-command",
+      "historicalStatus": "historical_fact",
+      "commandedUnitIds": [
+        "qin-main",
+        "qin-detachment"
+      ]
+    },
+    {
+      "id": "wang-he",
+      "side": "player",
+      "name": "王龁",
+      "role": "前线副将",
+      "rank": null,
+      "superiorCommanderId": "bai-qi",
+      "attachedUnitId": "qin-detachment",
+      "locationAreaId": "western-gate",
+      "locationSource": "attached_unit",
+      "locationStatus": "with_unit",
+      "isPlayer": false,
+      "authority": "field-command",
+      "historicalStatus": "historical_estimate",
+      "commandedUnitIds": [
+        "qin-detachment"
+      ]
+    }
+  ],
+  "playerCommanderId": "bai-qi",
+  "commandChain": {
+    "schemaVersion": 1,
+    "playerCommanderIdsBySide": {
+      "player": "bai-qi"
+    },
+    "messengerPolicy": {
+      "baseDelaySeconds": 1,
+      "routeTravelFactor": 0.25,
+      "fallbackDelaySeconds": 4,
+      "directDelaySeconds": 0
+    }
+  },
   "objectives": [
     {
       "id": "qin-cut-supply",
@@ -1766,6 +1822,7 @@
         "mode": "false-report",
         "targetSide": "enemy",
         "targetUnitId": "qin-main",
+        "recipientCommanderId": "bai-qi",
         "reportedAreaId": "western-gate",
         "delaySeconds": 4,
         "freshnessSeconds": 30,
@@ -1788,6 +1845,7 @@
         "mode": "false-report",
         "targetSide": "enemy",
         "targetUnitId": "qin-detachment",
+        "recipientCommanderId": "wang-he",
         "reportedAreaId": "western-gate",
         "delaySeconds": 3,
         "freshnessSeconds": 24,
@@ -1810,6 +1868,58 @@
       "deceptionAssets": 2
     },
     "strategyActions": [],
+    "commanders": [
+      {
+        "id": "bai-qi",
+        "side": "player",
+        "name": "白起",
+        "role": "秦军统帅",
+        "rank": null,
+        "superiorCommanderId": null,
+        "attachedUnitId": null,
+        "locationAreaId": "qin-west-camp",
+        "locationSource": "command_post",
+        "locationStatus": "command_post",
+        "isPlayer": true,
+        "authority": "army-command",
+        "historicalStatus": "historical_fact",
+        "commandedUnitIds": [
+          "qin-main",
+          "qin-detachment"
+        ]
+      },
+      {
+        "id": "wang-he",
+        "side": "player",
+        "name": "王龁",
+        "role": "前线副将",
+        "rank": null,
+        "superiorCommanderId": "bai-qi",
+        "attachedUnitId": "qin-detachment",
+        "locationAreaId": "western-gate",
+        "locationSource": "attached_unit",
+        "locationStatus": "with_unit",
+        "isPlayer": false,
+        "authority": "field-command",
+        "historicalStatus": "historical_estimate",
+        "commandedUnitIds": [
+          "qin-detachment"
+        ]
+      }
+    ],
+    "playerCommanderId": "bai-qi",
+    "commandChain": {
+      "schemaVersion": 1,
+      "playerCommanderIdsBySide": {
+        "player": "bai-qi"
+      },
+      "messengerPolicy": {
+        "baseDelaySeconds": 1,
+        "routeTravelFactor": 0.25,
+        "fallbackDelaySeconds": 4,
+        "directDelaySeconds": 0
+      }
+    },
     "strategyReliability": 1,
     "eventLog": [],
     "disclosure": {

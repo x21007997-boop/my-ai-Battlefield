@@ -72,6 +72,23 @@ export interface BattleUnit {
   currentOrderId: string | null;
 }
 
+export interface BattleCommander {
+  id: string;
+  side: SideId;
+  name: string;
+  role: string;
+  rank?: string | null;
+  superiorCommanderId?: string | null;
+  attachedUnitId?: string | null;
+  attachedUnitIds?: string[];
+  locationAreaId?: string | null;
+  locationStatus?: string;
+  isPlayer?: boolean;
+  authority?: string;
+  historicalStatus?: string;
+  commandedUnitIds?: string[];
+}
+
 export interface BattleOrder {
   id: string;
   type: string;
@@ -94,6 +111,11 @@ export interface BattleOrder {
   lastTerrainTransition?: Record<string, unknown> | null;
   totalTravelSeconds?: number;
   rawText?: string;
+  issuedByCommanderId?: string | null;
+  recipientCommanderId?: string | null;
+  communicationMode?: string;
+  commandPath?: string[];
+  messenger?: Record<string, unknown> | null;
   taskStatus?: string | null;
   blockedAt?: number | null;
   blockReason?: string | null;
@@ -129,6 +151,8 @@ export interface BattleObservation {
 export interface QueueObservationOptions {
   observerSide: SideId;
   targetUnitId: string;
+  commandUnitId?: string;
+  recipientCommanderId?: string;
   reportedAreaId: string;
   delaySeconds?: number;
   confidence?: string;
@@ -162,6 +186,12 @@ export interface StrategyAction {
   exposureStatus?: string | null;
   exposureProbability?: number;
   failureReliabilityPenalty?: number;
+  issuedByCommanderId?: string | null;
+  recipientCommanderId?: string | null;
+  communicationMode?: string;
+  commandPath?: string[];
+  messenger?: Record<string, unknown> | null;
+  commandDeliveredAt?: number | null;
   failedAt?: number | null;
   exposedAt?: number | null;
   failureReason?: string | null;
@@ -213,6 +243,12 @@ export interface BattleWorld {
     history: Array<Record<string, unknown>>;
     lastIssuedAtBySide: Record<string, number>;
   };
+  commandChain?: {
+    schemaVersion: number;
+    commanders: Record<string, BattleCommander>;
+    playerCommanderIdsBySide: Record<SideId, string>;
+    messengerPolicy: Record<string, unknown>;
+  };
   resources?: Record<SideId, Record<string, number>>;
   strategy?: {
     schemaVersion: number;
@@ -259,6 +295,8 @@ export interface CreateBattleWorldOptions {
   endings?: Array<Record<string, unknown>>;
   resolution?: Record<string, unknown> | null;
   resources?: Record<SideId, Record<string, number>>;
+  commanders?: Array<Record<string, unknown>>;
+  commandChain?: Record<string, unknown>;
 }
 
 export interface BattleCommand {
@@ -289,7 +327,7 @@ export interface BattleScenarioPackage {
   terrain?: { features?: TerrainFeature[]; areas?: Array<Record<string, unknown>>; [key: string]: unknown };
   terrainFeatures?: TerrainFeature[];
   factions?: { factions?: Array<Record<string, unknown>>; [key: string]: unknown };
-  commanders?: { commanders?: Array<Record<string, unknown>>; [key: string]: unknown };
+  commanders?: { commanders?: Array<Record<string, unknown>>; commandChain?: Record<string, unknown>; [key: string]: unknown };
   units?: { units?: Array<Record<string, unknown>>; [key: string]: unknown };
   initialWorld?: { units?: Array<Record<string, unknown>>; seed?: number; [key: string]: unknown };
   intelligenceSources?: { sources?: Array<Record<string, unknown>>; [key: string]: unknown };
@@ -298,6 +336,7 @@ export interface BattleScenarioPackage {
   endings?: { endings?: Array<Record<string, unknown>>; [key: string]: unknown };
   resolution?: Record<string, unknown> | null;
   resources?: Record<SideId, Record<string, number>>;
+  commandChain?: Record<string, unknown>;
 }
 
 export interface CommanderMapOptions {

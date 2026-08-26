@@ -183,9 +183,24 @@ function advanceOneSecond(world) {
     if (order.status !== 'transmitting' || order.deliverAt > next.simTime) continue;
     order.status = 'executing';
     order.deliveredAt = next.simTime;
+    if (order.messenger) {
+      order.messenger.status = 'delivered';
+      order.messenger.deliveredAt = next.simTime;
+    }
     const unit = next.units[order.unitId];
     if (unit) unit.currentOrderId = order.id;
     appendBattleEvent(next, { type: 'order_delivered', orderId: order.id, unitId: order.unitId, side: unit?.side });
+    if (order.recipientCommanderId) {
+      appendBattleEvent(next, {
+        type: 'command_delivered',
+        orderId: order.id,
+        side: unit?.side,
+        issuerCommanderId: order.issuedByCommanderId,
+        recipientCommanderId: order.recipientCommanderId,
+        communicationMode: order.communicationMode,
+        messenger: order.messenger,
+      });
+    }
   }
 
   for (const order of next.orders) {

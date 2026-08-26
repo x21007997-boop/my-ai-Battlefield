@@ -1,6 +1,7 @@
 import { BATTLEFIELD_CONFIG } from './config.js';
 import { normalizeResourceLedger } from './resources.js';
 import { createStrategyState } from './strategy.js';
+import { createCommandChainState } from './commandChain.js';
 
 export const BATTLEFIELD_SCHEMA_VERSION = BATTLEFIELD_CONFIG.schemaVersions.world;
 export const BATTLEFIELD_SIMULATOR_VERSION = BATTLEFIELD_CONFIG.simulatorVersion;
@@ -125,6 +126,8 @@ export function createBattleWorld({
   endings = [],
   resolution = null,
   resources = {},
+  commanders = [],
+  commandChain = {},
 } = {}) {
   const normalizedUnits = units.map(normalizeUnit);
   const sideMap = Object.fromEntries(sides.map((side) => [side.id, { ...side }]));
@@ -145,6 +148,7 @@ export function createBattleWorld({
     sides: sideMap,
     resources: normalizeResourceLedger(resources, Object.keys(sideMap)),
     strategy: createStrategyState(Object.keys(sideMap)),
+    commandChain: createCommandChainState(commanders, commandChain),
     intelligenceSources: Object.fromEntries(intelligenceSources.map((source) => [source.id, { ...source }])),
     objectives: clone(objectives),
     endings: clone(endings),

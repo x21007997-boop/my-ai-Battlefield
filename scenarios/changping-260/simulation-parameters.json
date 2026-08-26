@@ -32,6 +32,8 @@
     { "id": "zhao-relief", "strength": 38, "strengthUnit": "战力指数", "strengthStatus": "scenario_assumption", "morale": 61, "fatigue": 20, "supplyDays": 6, "readiness": 0.7 }
   ],
   "scout": {
+    "commandUnitId": "qin-detachment",
+    "recipientCommanderId": "wang-he",
     "targetUnitId": "zhao-relief",
     "reportedAreaId": "zhao-main-camp",
     "actualAreaId": "zhao-relief-route",

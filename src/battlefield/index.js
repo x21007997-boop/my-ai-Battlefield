@@ -2,6 +2,18 @@ export { BATTLEFIELD_SCHEMA_VERSION, BATTLEFIELD_SIMULATOR_VERSION, appendBattle
 export { BATTLEFIELD_CONFIG } from './config.js';
 export { RESOURCE_LABELS, normalizeResourceLedger, resourceCostError, resourceCostSummary, spendResources } from './resources.js';
 export { STRATEGY_SCHEMA_VERSION, createStrategyState, strategyCooldownRemaining, strategyReliabilityMultiplier } from './strategy.js';
+export {
+  COMMAND_CHAIN_SCHEMA_VERSION,
+  authorizeCommandRecipient,
+  buildCommandDeliveryPlan,
+  commanderFor,
+  commanderLocation,
+  commanderProjection,
+  createCommandChainState,
+  playerCommanderId,
+  resolveCommandRecipient,
+} from './commandChain.js';
+export { INSTRUCTION_INTERPRETER_SCHEMA_VERSION, interpretCommanderInstruction } from './instructionInterpreter.js';
 export { BATTLE_ERROR_CODES, BattleValidationError, battleError } from './errors.js';
 export { COMMANDER_EVENT_SCHEMA_VERSION, serializeCommanderEvent, serializeCommanderEvents } from './eventProtocol.js';
 export { COMMANDER_SESSION_SCHEMA_VERSION, buildCommanderSessionSnapshot } from './commanderSession.js';

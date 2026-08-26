@@ -141,6 +141,7 @@ export function issueDeception(world, {
   confidence,
   sourceType,
   observation,
+  commandContext = null,
 } = {}) {
   const next = cloneBattleWorld(world);
   const action = actionFor(next, actionId);
@@ -169,6 +170,10 @@ export function issueDeception(world, {
   if (costError) return { world: next, deception: null, ...costError };
   ensureStrategyState(next);
   const preparationSeconds = normalizeSeconds(action.preparationSeconds, BATTLEFIELD_CONFIG.defaults.observationDelaySeconds);
+  const chainContext = /** @type {Record<string, any> | null} */ (commandContext);
+  const commandDelaySeconds = normalizeSeconds(chainContext?.delaySeconds, 0);
+  const commandPath = Array.isArray(chainContext?.commandPath) ? chainContext.commandPath.filter(Boolean).map(String) : [];
+  const commandDeliveredAt = next.simTime + commandDelaySeconds;
   const strategyAction = {
     id: nextStrategyActionId(next),
     kind: 'deception',
@@ -192,8 +197,14 @@ export function issueDeception(world, {
     failureReliabilityPenalty: action.failureReliabilityPenalty ?? BATTLEFIELD_CONFIG.defaults.strategyFailureReliabilityPenalty,
     cost: action.cost ?? {},
     issuedAt: next.simTime,
-    readyAt: next.simTime + preparationSeconds,
-    status: 'preparing',
+    issuedByCommanderId: typeof chainContext?.issuerCommanderId === 'string' ? chainContext.issuerCommanderId : null,
+    recipientCommanderId: typeof chainContext?.recipientCommanderId === 'string' ? chainContext.recipientCommanderId : null,
+    communicationMode: typeof chainContext?.communicationMode === 'string' ? chainContext.communicationMode : 'legacy',
+    commandPath,
+    messenger: chainContext?.messenger ? JSON.parse(JSON.stringify(chainContext.messenger)) : null,
+    commandDeliveredAt,
+    readyAt: commandDeliveredAt + preparationSeconds,
+    status: commandDelaySeconds > 0 ? 'transmitting' : 'preparing',
     observationId: null,
   };
   const deception = {
@@ -206,7 +217,7 @@ export function issueDeception(world, {
     reportedAreaId: falseAreaId,
     observationId: null,
     issuedAt: next.simTime,
-    status: preparationSeconds > 0 ? 'preparing' : 'queued',
+    status: commandDelaySeconds > 0 ? 'transmitting' : preparationSeconds > 0 ? 'preparing' : 'queued',
     preparationSeconds,
     readyAt: strategyAction.readyAt,
     reportDelaySeconds: strategyAction.reportDelaySeconds,
@@ -216,6 +227,12 @@ export function issueDeception(world, {
     failureReliabilityPenalty: strategyAction.failureReliabilityPenalty,
     cost: strategyAction.cost,
     exposureProbability: strategyAction.exposureProbability,
+    issuedByCommanderId: strategyAction.issuedByCommanderId,
+    recipientCommanderId: strategyAction.recipientCommanderId,
+    communicationMode: strategyAction.communicationMode,
+    commandPath: strategyAction.commandPath,
+    messenger: strategyAction.messenger,
+    commandDeliveredAt,
   };
   strategyAction.deceptionId = deception.id;
   spendResources(next, side, strategyAction.cost);
@@ -223,7 +240,7 @@ export function issueDeception(world, {
   next.deception.lastIssuedAtBySide[`${side}:${actionId}`] = next.simTime;
   next.strategy.actions.push(strategyAction);
 
-  if (preparationSeconds > 0) {
+  if (preparationSeconds > 0 || commandDelaySeconds > 0) {
     next.deception.history.push(deception);
     appendBattleEvent(next, {
       type: 'deception_issued',
@@ -235,6 +252,8 @@ export function issueDeception(world, {
       reportedAreaId: falseAreaId,
       status: deception.status,
       readyAt: deception.readyAt,
+      commandDeliveredAt: deception.commandDeliveredAt,
+      communicationMode: deception.communicationMode,
       cost: deception.cost,
     });
     return { world: next, deception, error: null, errorCode: null, errorDetails: {} };
@@ -269,6 +288,34 @@ export function issueDeception(world, {
 /** Resolve deception actions whose preparation window has elapsed. */
 export function resolvePendingDeceptions(world) {
   let next = cloneBattleWorld(world);
+  const transmittingIds = (next.strategy?.actions ?? [])
+    .filter((action) => action.kind === 'deception' && action.status === 'transmitting' && action.commandDeliveredAt <= next.simTime)
+    .map((action) => action.id);
+  transmittingIds.forEach((actionId) => {
+    const strategyAction = next.strategy.actions.find((candidate) => candidate.id === actionId);
+    if (!strategyAction) return;
+    const deception = next.deception.history.find((candidate) => candidate.id === strategyAction.deceptionId);
+    if (!deception) return;
+    strategyAction.commandDeliveredAt = next.simTime;
+    if (strategyAction.messenger) {
+      strategyAction.messenger.status = 'delivered';
+      strategyAction.messenger.deliveredAt = next.simTime;
+    }
+    strategyAction.status = strategyAction.preparationSeconds > 0 ? 'preparing' : 'ready';
+    deception.status = strategyAction.preparationSeconds > 0 ? 'preparing' : 'queued';
+    appendBattleEvent(next, {
+      type: 'deception_command_delivered',
+      side: deception.side,
+      deceptionId: deception.id,
+      actionId: deception.actionId,
+      recipientCommanderId: strategyAction.recipientCommanderId,
+      communicationMode: strategyAction.communicationMode,
+    });
+    if (strategyAction.preparationSeconds === 0) {
+      const action = actionFor(next, strategyAction.actionId);
+      if (action) next = dispatchPreparedDeception(next, strategyAction, deception, action).world;
+    }
+  });
   const actionIds = (next.strategy?.actions ?? [])
     .filter((action) => action.kind === 'deception' && action.status === 'preparing' && action.readyAt <= next.simTime)
     .map((action) => action.id);
