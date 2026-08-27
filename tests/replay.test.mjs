@@ -61,3 +61,22 @@ test('replay event reducer keeps a bounded commander timeline', () => {
   assert.equal(state.eventCount, 20);
   assert.equal(state.timeline[0].simTime, 8);
 });
+
+test('replay preserves a deputy route adjustment without exposing battlefield truth', () => {
+  const snapshotWithRouteChange = {
+    schemaVersion: 1,
+    scenarioId: 'route-replay-test',
+    disclosure: { rawEnemyTruthIncluded: false, combatExchangeIncluded: false },
+    events: [
+      { schemaVersion: 1, simTime: 0, type: 'order_issued', payload: { orderId: 'order-0001', unitId: 'wing', targetAreaId: 'pass', route: ['camp', 'pass'], totalTravelSeconds: 4 } },
+      { schemaVersion: 1, simTime: 1, type: 'order_delivered', payload: { orderId: 'order-0001', unitId: 'wing' } },
+      { schemaVersion: 1, simTime: 1, type: 'officer_decision', payload: { orderId: 'order-0001', subjectType: 'order', decision: 'modified', rationale: '改走谷道', executionDelaySeconds: 1, executionRate: 0.75, routeAdjustment: { decision: 'reroute' } } },
+      { schemaVersion: 1, simTime: 1, type: 'officer_route_changed', payload: { orderId: 'order-0001', selectedRoute: ['camp', 'valley', 'pass'], selectedTravelSeconds: 2 } },
+    ],
+  };
+  const state = replayCommanderEvents(snapshotWithRouteChange, { friendlyUnits: [{ id: 'wing', areaId: 'camp' }], untilTime: 1 });
+  assert.deepEqual(state.order.route, ['camp', 'valley', 'pass']);
+  assert.equal(state.order.totalTravelSeconds, 2);
+  assert.equal(state.order.executionRate, 0.75);
+  assert.equal(state.order.officerDecision.routeAdjustment.decision, 'reroute');
+});

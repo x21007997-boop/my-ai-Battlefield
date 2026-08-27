@@ -187,6 +187,7 @@ func _on_engine_response(operation: String, response: Dictionary) -> void:
 				"command_interpreted": _set_feedback("AI已理解军令，正在交给接收军官。", "success")
 				"command_delivered": _set_feedback("传令抵达：接收军官已收到军令。", "success")
 				"officer_decision": _set_feedback(_officer_decision_feedback(response_events.back()), "success" if str(response_events.back().get("decision", "")) != "refused" else "error")
+				"officer_route_changed": _set_feedback(_officer_route_feedback(response_events.back()), "success")
 				"observation_created": _set_feedback("侦察已接收：报告正在返回指挥部。", "success")
 				"reconnaissance_issued": _set_feedback("侦察已接收：斥候正在准备，资源已扣除。", "success")
 				"reconnaissance_command_delivered": _set_feedback("侦察军令抵达：前线副将开始整备斥候。", "success")
@@ -1304,6 +1305,8 @@ func _replay_event_text(event: Dictionary) -> String:
 			return "回放：传令抵达，接收军官收到军令。"
 		"officer_decision":
 			return "回放：%s。" % _officer_decision_feedback(event)
+		"officer_route_changed":
+			return "回放：%s。" % _officer_route_feedback(event)
 		"officer_delay_completed":
 			return "回放：副将整备完成，部队恢复执行。"
 		"command_interpreted":
@@ -1535,6 +1538,9 @@ func _command_state_text() -> String:
 	var feedback := str(order.get("officerFeedback", ""))
 	if feedback != "":
 		progress += "\n" + feedback
+	var execution_rate := float(order.get("executionRate", 1.0))
+	if status == "执行中" and abs(execution_rate - 1.0) > 0.01:
+		progress += " · 速度 %.2fx" % execution_rate
 	return "军令状态\n%s · %s\n%s · %s" % [order_type, status, chain_summary, progress]
 
 func _officer_decision_feedback(event: Dictionary) -> String:
@@ -1548,6 +1554,16 @@ func _officer_decision_feedback(event: Dictionary) -> String:
 		"delayed": decision_label = "延后执行"
 		"refused": decision_label = "拒绝执行"
 	return "%s%s：%s" % [officer_name, decision_label, str(payload.get("rationale", "已形成执行意见"))]
+
+func _officer_route_feedback(event: Dictionary) -> String:
+	var payload_value = event.get("payload", {})
+	var payload: Dictionary = payload_value if payload_value is Dictionary else event
+	var route_names := []
+	for area_id in payload.get("selectedRoute", []):
+		route_names.append(_area_name(str(area_id)))
+	if route_names.is_empty():
+		return "副将已调整行军路线"
+	return "副将改道执行：%s" % " → ".join(route_names)
 
 func _terrain_action_word(terrain_type: String) -> String:
 	match terrain_type:

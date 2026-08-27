@@ -176,6 +176,8 @@ export function buildCommanderMapModel(world, {
           officerDecision: activeOrder.officerDecision ?? null,
           officerFeedback: activeOrder.officerFeedback ?? null,
           executionResumeAt: activeOrder.executionResumeAt ?? null,
+          executionRate: activeOrder.executionRate ?? 1,
+          tacticalPosture: activeOrder.tacticalPosture ?? null,
           officerWaiting: activeOrder.executionResumeAt != null && activeOrder.executionResumeAt > world.simTime,
         };
       })(),

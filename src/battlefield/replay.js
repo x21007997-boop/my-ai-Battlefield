@@ -107,6 +107,34 @@ export function applyCommanderReplayEvent(state, event) {
     case 'order_delivered':
       if (!next.order.unitId || next.order.unitId === payload.unitId) next.order = { ...next.order, ...payload, status: 'executing' };
       break;
+    case 'officer_decision':
+      if (payload.subjectType === 'order' && (!next.order.id || next.order.id === payload.orderId || next.order.id === payload.subjectId)) {
+        next.order = {
+          ...next.order,
+          officerDecision: payload,
+          officerFeedback: payload.rationale ?? null,
+          executionDelaySeconds: payload.executionDelaySeconds ?? 0,
+          executionPace: payload.executionPace ?? null,
+          executionRate: payload.executionRate ?? 1,
+          tacticalPosture: payload.tacticalPosture ?? null,
+          executionResumeAt: payload.executionDelaySeconds > 0 ? event.simTime + payload.executionDelaySeconds : null,
+        };
+      }
+      break;
+    case 'officer_route_changed':
+      if (!next.order.id || next.order.id === payload.orderId) {
+        next.order = {
+          ...next.order,
+          route: payload.selectedRoute ?? next.order.route,
+          totalTravelSeconds: payload.selectedTravelSeconds ?? next.order.totalTravelSeconds,
+          remainingTravelSeconds: payload.selectedTravelSeconds ?? next.order.remainingTravelSeconds,
+          movementProgress: 0,
+        };
+      }
+      break;
+    case 'officer_delay_completed':
+      if (!next.order.id || next.order.id === payload.orderId) next.order = { ...next.order, executionResumeAt: null };
+      break;
     case 'unit_arrived':
       updateUnitArea(next, payload.unitId, payload.areaId ?? payload.targetAreaId ?? '');
       if (!next.order.unitId || next.order.unitId === payload.unitId) next.order = { ...next.order, ...payload, status: 'completed' };

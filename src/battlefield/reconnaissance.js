@@ -247,6 +247,8 @@ export function resolveReconnaissanceActions(world) {
       action.officerFeedback = officerDecision.rationale;
       action.executionDelaySeconds = officerDecision.executionDelaySeconds;
       action.executionPace = officerDecision.executionPace;
+      action.executionRate = officerDecision.executionRate;
+      action.tacticalPosture = officerDecision.tacticalPosture;
       if (officerDecision.decision === 'refused') {
         action.status = 'refused';
         action.refusedAt = next.simTime;

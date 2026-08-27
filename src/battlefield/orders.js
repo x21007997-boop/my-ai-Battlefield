@@ -100,6 +100,74 @@ export function findRoute(areas, fromAreaId, toAreaId) {
   return null;
 }
 
+/**
+ * Enumerate a bounded set of playable routes. The scenario graph is small by
+ * design, but the bound keeps a malformed or future large graph from turning
+ * an officer decision into an unbounded search.
+ *
+ * @param {Record<string, import('./contracts').BattleArea>} areas
+ * @param {string} fromAreaId
+ * @param {string} toAreaId
+ * @param {{ maxCandidates?: number, maxDepth?: number }} [options]
+ * @returns {Array<{ areaIds: string[], travelSeconds: number, segments: Array<Record<string, unknown>> }>}
+ */
+export function findRouteCandidates(areas, fromAreaId, toAreaId, {
+  maxCandidates = 12,
+  maxDepth = Math.max(2, Object.keys(areas ?? {}).length),
+} = {}) {
+  if (!areas?.[fromAreaId] || !areas?.[toAreaId]) return [];
+  if (fromAreaId === toAreaId) return [{ areaIds: [fromAreaId], travelSeconds: 0, segments: [] }];
+
+  const candidates = [];
+  const visited = new Set([fromAreaId]);
+  const search = (areaId, areaIds, travelSeconds, segments) => {
+    if (candidates.length >= Math.max(maxCandidates * 4, maxCandidates)) return;
+    if (areaIds.length > maxDepth) return;
+    for (const edge of neighborsOf(areas[areaId])) {
+      const nextId = edge.id;
+      if (!nextId || visited.has(nextId) || !areas[nextId]) continue;
+      const edgeTravelSeconds = edge.travelSeconds ?? BATTLEFIELD_CONFIG.defaults.areaTravelSeconds;
+      const nextSegments = [...segments, {
+        fromAreaId: areaId,
+        toAreaId: nextId,
+        routeId: edge.routeId ?? null,
+        travelSeconds: edgeTravelSeconds,
+        terrainTransitions: edge.terrainTransitions ?? [],
+      }];
+      const nextAreaIds = [...areaIds, nextId];
+      if (nextId === toAreaId) {
+        candidates.push({
+          areaIds: nextAreaIds,
+          travelSeconds: travelSeconds + edgeTravelSeconds,
+          segments: nextSegments,
+        });
+        continue;
+      }
+      visited.add(nextId);
+      search(nextId, nextAreaIds, travelSeconds + edgeTravelSeconds, nextSegments);
+      visited.delete(nextId);
+    }
+  };
+  search(fromAreaId, [fromAreaId], 0, []);
+  return candidates
+    .sort((left, right) => left.travelSeconds - right.travelSeconds || left.areaIds.join('>').localeCompare(right.areaIds.join('>')))
+    .slice(0, maxCandidates);
+}
+
+/** Rebuild a not-yet-progressed order after an officer changes its route. */
+export function applyOrderRoute(order, route) {
+  if (!order || !route) return order;
+  order.route = [...route.areaIds];
+  order.routeSegments = (route.segments ?? []).map((segment) => ({ ...segment }));
+  order.terrainTransitions = transitionSchedule(route.segments ?? []);
+  order.movementProgress = 0;
+  order.currentTerrain = null;
+  order.lastTerrainTransition = null;
+  order.totalTravelSeconds = route.travelSeconds;
+  order.remainingTravelSeconds = route.travelSeconds;
+  return order;
+}
+
 function validateDraft(world, draft) {
   if (!draft?.unitId || !world.units[draft.unitId]) return battleError(BATTLE_ERROR_CODES.UNIT_NOT_FOUND, '命令引用了不存在的部队。', { unitId: draft?.unitId ?? null });
   if (!Object.values(BATTLE_ORDER_TYPES).includes(draft.type)) return battleError(BATTLE_ERROR_CODES.ORDER_TYPE_UNSUPPORTED, '当前只支持机动、坚守和六类任务命令。', { type: draft?.type ?? null });
@@ -156,6 +224,8 @@ export function issueOrder(world, draft, { delaySeconds = 0, commandContext = nu
     commandPath,
     messenger: chainContext?.messenger ? clone(chainContext.messenger) : null,
     status: 'transmitting',
+    executionRate: 1,
+    tacticalPosture: null,
     route: route.areaIds,
     routeSegments: route.segments ?? [],
     terrainTransitions: transitionSchedule(route.segments ?? []),

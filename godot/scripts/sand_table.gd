@@ -276,7 +276,9 @@ func _draw_order_feedback() -> void:
 		var terrain_label := _movement_terrain_label(active_order)
 		var officer_decision_value = active_order.get("officerDecision", {})
 		var officer_decision: Dictionary = officer_decision_value if officer_decision_value is Dictionary else {}
-		var officer_adjustment := "调整后行军" if str(officer_decision.get("decision", "")) == "modified" else ""
+		var route_adjustment_value = officer_decision.get("routeAdjustment", {})
+		var route_adjustment: Dictionary = route_adjustment_value if route_adjustment_value is Dictionary else {}
+		var officer_adjustment := "副将改道" if str(route_adjustment.get("decision", "")) == "reroute" else ("调整后行军" if str(officer_decision.get("decision", "")) == "modified" else "")
 		var movement_label := terrain_label if terrain_label != "" else (officer_adjustment if officer_adjustment != "" else ("%s执行中" % task_label if task_label != "" else "行军中"))
 		_draw_marching_marker(marker_point, accent, movement_label)
 	if status == "completed":

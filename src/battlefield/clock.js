@@ -8,6 +8,7 @@ import { appendBattleEvent, cloneBattleWorld } from './world.js';
 import { evaluateBattleOutcome } from './resolution.js';
 import { BATTLEFIELD_CONFIG } from './config.js';
 import { decideOfficerOrder, recordOfficerDecision } from './officerAi.js';
+import { applyOrderRoute } from './orders.js';
 
 const TERRAIN_LABELS = BATTLEFIELD_CONFIG.terrainLabels;
 
@@ -204,13 +205,39 @@ function advanceOneSecond(world) {
       const officerDecision = decideOfficerOrder(next, order);
       if (officerDecision) {
         recordOfficerDecision(next, order, officerDecision);
+        order.executionRate = Math.max(0.1, Number(officerDecision.executionRate ?? 1));
+        order.tacticalPosture = officerDecision.tacticalPosture ?? null;
+        if (unit && order.tacticalPosture && order.type === 'move') unit.posture = order.tacticalPosture;
         if (officerDecision.decision === 'refused') {
           order.status = 'refused';
           order.refusedAt = next.simTime;
           order.refusalReason = officerDecision.reasonCode;
           if (unit) unit.currentOrderId = null;
-        } else if (officerDecision.executionDelaySeconds > 0) {
-          order.executionResumeAt = next.simTime + officerDecision.executionDelaySeconds;
+        } else {
+          if (officerDecision.routeAdjustment?.decision === 'reroute') {
+            const routeAdjustment = officerDecision.routeAdjustment;
+            applyOrderRoute(order, {
+              areaIds: routeAdjustment.selectedRoute,
+              travelSeconds: routeAdjustment.selectedTravelSeconds,
+              segments: routeAdjustment.selectedRouteSegments,
+            });
+            appendBattleEvent(next, {
+              type: 'officer_route_changed',
+              side: unit?.side,
+              orderId: order.id,
+              unitId: order.unitId,
+              officerId: order.recipientCommanderId,
+              originalRoute: routeAdjustment.originalRoute,
+              selectedRoute: order.route,
+              originalTravelSeconds: routeAdjustment.originalTravelSeconds,
+              selectedTravelSeconds: order.totalTravelSeconds,
+              selectedTerrainTypes: routeAdjustment.selectedTerrainTypes,
+              rationale: officerDecision.rationale,
+            });
+          }
+          if (officerDecision.executionDelaySeconds > 0) {
+            order.executionResumeAt = next.simTime + officerDecision.executionDelaySeconds;
+          }
         }
       }
     }
@@ -227,6 +254,7 @@ function advanceOneSecond(world) {
         orderId: order.id,
         unitId: order.unitId,
         officerId: order.recipientCommanderId,
+        officerName: next.commandChain?.commanders?.[order.recipientCommanderId]?.name ?? null,
       });
     }
     if (order.type === 'hold') {
@@ -257,7 +285,7 @@ function advanceOneSecond(world) {
       continue;
     }
     const previousElapsed = Math.max(0, order.totalTravelSeconds - order.remainingTravelSeconds);
-    order.remainingTravelSeconds = Math.max(0, order.remainingTravelSeconds - 1);
+    order.remainingTravelSeconds = Math.max(0, order.remainingTravelSeconds - Math.max(0.1, Number(order.executionRate ?? 1)));
     const currentElapsed = Math.max(0, order.totalTravelSeconds - order.remainingTravelSeconds);
     advanceTerrainTransitions(next, order, next.units[order.unitId], currentElapsed);
     applyTerrainEffects(next, order, next.units[order.unitId], previousElapsed, currentElapsed);

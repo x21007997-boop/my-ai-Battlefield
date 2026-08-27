@@ -134,6 +134,8 @@ export interface BattleOrder {
   executionDelaySeconds?: number;
   executionResumeAt?: number | null;
   executionPace?: string | null;
+  executionRate?: number;
+  tacticalPosture?: string | null;
 }
 
 export interface BattleObservation {
@@ -212,6 +214,8 @@ export interface StrategyAction {
   officerFeedback?: string | null;
   executionDelaySeconds?: number;
   executionPace?: string | null;
+  executionRate?: number;
+  tacticalPosture?: string | null;
   failedAt?: number | null;
   exposedAt?: number | null;
   failureReason?: string | null;

@@ -94,6 +94,30 @@ func _apply_event(event: Dictionary) -> void:
 				order.merge(payload, true)
 				order["status"] = "executing"
 				state["order"] = order
+		"officer_decision":
+			if str(payload.get("subjectType", "")) == "order":
+				var officer_order: Dictionary = state.get("order", {})
+				if officer_order.is_empty() or str(officer_order.get("id", "")) == str(payload.get("orderId", payload.get("subjectId", ""))):
+					officer_order["officerDecision"] = payload.duplicate(true)
+					officer_order["officerFeedback"] = payload.get("rationale", null)
+					officer_order["executionDelaySeconds"] = payload.get("executionDelaySeconds", 0)
+					officer_order["executionRate"] = payload.get("executionRate", 1.0)
+					officer_order["tacticalPosture"] = payload.get("tacticalPosture", null)
+					officer_order["executionResumeAt"] = int(event.get("simTime", 0)) + int(payload.get("executionDelaySeconds", 0)) if int(payload.get("executionDelaySeconds", 0)) > 0 else null
+					state["order"] = officer_order
+		"officer_route_changed":
+			var rerouted_order: Dictionary = state.get("order", {})
+			if rerouted_order.is_empty() or str(rerouted_order.get("id", "")) == str(payload.get("orderId", "")):
+				rerouted_order["route"] = payload.get("selectedRoute", rerouted_order.get("route", []))
+				rerouted_order["totalTravelSeconds"] = payload.get("selectedTravelSeconds", rerouted_order.get("totalTravelSeconds", 0))
+				rerouted_order["remainingTravelSeconds"] = payload.get("selectedTravelSeconds", rerouted_order.get("remainingTravelSeconds", 0))
+				rerouted_order["movementProgress"] = 0.0
+				state["order"] = rerouted_order
+		"officer_delay_completed":
+			var resumed_order: Dictionary = state.get("order", {})
+			if resumed_order.is_empty() or str(resumed_order.get("id", "")) == str(payload.get("orderId", "")):
+				resumed_order["executionResumeAt"] = null
+				state["order"] = resumed_order
 		"unit_arrived":
 			_update_unit_area(str(payload.get("unitId", "")), str(payload.get("areaId", payload.get("targetAreaId", ""))))
 			var arrived_order: Dictionary = state.get("order", {})

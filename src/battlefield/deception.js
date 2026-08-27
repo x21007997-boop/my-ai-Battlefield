@@ -320,10 +320,14 @@ export function resolvePendingDeceptions(world) {
       strategyAction.officerFeedback = officerDecision.rationale;
       strategyAction.executionDelaySeconds = officerDecision.executionDelaySeconds;
       strategyAction.executionPace = officerDecision.executionPace;
+      strategyAction.executionRate = officerDecision.executionRate;
+      strategyAction.tacticalPosture = officerDecision.tacticalPosture;
       deception.officerDecision = officerDecision;
       deception.officerFeedback = officerDecision.rationale;
       deception.executionDelaySeconds = officerDecision.executionDelaySeconds;
       deception.executionPace = officerDecision.executionPace;
+      deception.executionRate = officerDecision.executionRate;
+      deception.tacticalPosture = officerDecision.tacticalPosture;
       if (officerDecision.decision === 'refused') {
         strategyAction.status = 'refused';
         strategyAction.refusedAt = next.simTime;

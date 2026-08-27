@@ -70,6 +70,8 @@ export function buildCommanderSessionSnapshot(world, {
       executionDelaySeconds: order.executionDelaySeconds ?? 0,
       executionResumeAt: order.executionResumeAt ?? null,
       executionPace: order.executionPace ?? null,
+      executionRate: order.executionRate ?? 1,
+      tacticalPosture: order.tacticalPosture ?? null,
     }));
   const ownObservations = world.observations
     .filter((observation) => observation.observerSide === side)
@@ -138,6 +140,8 @@ export function buildCommanderSessionSnapshot(world, {
       officerFeedback: item.officerFeedback ?? null,
       executionDelaySeconds: item.executionDelaySeconds ?? 0,
       executionPace: item.executionPace ?? null,
+      executionRate: item.executionRate ?? 1,
+      tacticalPosture: item.tacticalPosture ?? null,
     }));
   const strategyActions = (world.strategy?.actions ?? [])
     .filter((action) => action.side === side)
@@ -173,6 +177,8 @@ export function buildCommanderSessionSnapshot(world, {
         officerFeedback: action.officerFeedback ?? null,
         executionDelaySeconds: action.executionDelaySeconds ?? 0,
         executionPace: action.executionPace ?? null,
+        executionRate: action.executionRate ?? 1,
+        tacticalPosture: action.tacticalPosture ?? null,
       });
     });
   const eventLog = serializeCommanderEvents(

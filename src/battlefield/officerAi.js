@@ -1,5 +1,6 @@
 import { BATTLEFIELD_CONFIG } from './config.js';
 import { appendBattleEvent } from './world.js';
+import { findRouteCandidates } from './orders.js';
 
 export const OFFICER_AI_SCHEMA_VERSION = 1;
 export const OFFICER_AI_ENGINE = 'rule-based-officer-v1';
@@ -11,6 +12,8 @@ const DEFAULT_PROFILE = Object.freeze({
   riskTolerance: 'calculated',
   terrainFamiliarity: [],
 });
+
+const TERRAIN_RISK = Object.freeze({ river: 2, mountain: 3, unknown: 1 });
 
 function clamp(value, minimum = 0, maximum = 1) {
   return Math.min(maximum, Math.max(minimum, Number(value ?? minimum)));
@@ -54,6 +57,69 @@ function terrainLabel(terrainTypes) {
     .join('、');
 }
 
+function routeTerrainTypes(route) {
+  return [...new Set((route?.segments ?? [])
+    .flatMap((segment) => segment.terrainTransitions ?? [])
+    .map((transition) => transition.terrainType ?? transition.type)
+    .filter(Boolean))];
+}
+
+function routeKey(route) {
+  return (route?.areaIds ?? []).join('>');
+}
+
+function routeHasOpposingPresence(world, route, side) {
+  return (route?.areaIds ?? []).slice(1, -1).some((areaId) => Object.values(world.units ?? {}).some((unit) => (
+    unit.side !== side
+    && unit.location === areaId
+    && unit.status !== 'destroyed'
+    && unit.status !== 'routed'
+  )));
+}
+
+function routeRisk(world, route, profile, side) {
+  const terrainRisk = routeTerrainTypes(route).reduce((total, terrainType) => {
+    const baseRisk = TERRAIN_RISK[terrainType] ?? TERRAIN_RISK.unknown;
+    return total + (profile.terrainFamiliarity.includes(terrainType) ? baseRisk * 0.55 : baseRisk);
+  }, 0);
+  const hostilePassageRisk = routeHasOpposingPresence(world, route, side) ? 8 : 0;
+  return terrainRisk * 10 + hostilePassageRisk + (route?.travelSeconds ?? 0) / 1000;
+}
+
+function saferRouteFor(world, commander, order, profile) {
+  if (!order?.targetAreaId || order.type === 'hold' || !Array.isArray(order.route) || order.route.length < 2) return null;
+  if (!['defensive', 'cautious'].includes(profile.riskTolerance)) return null;
+  const candidates = findRouteCandidates(world.areas, order.route[0], order.targetAreaId, { maxCandidates: 10 });
+  if (candidates.length < 2) return null;
+  const currentRoute = candidates.find((candidate) => routeKey(candidate) === routeKey({ areaIds: order.route })) ?? {
+    areaIds: [...order.route],
+    travelSeconds: order.totalTravelSeconds ?? order.remainingTravelSeconds ?? 0,
+    segments: order.routeSegments ?? [],
+  };
+  const currentRisk = routeRisk(world, currentRoute, profile, commander.side);
+  const acceptableDetour = Math.max(1, currentRoute.travelSeconds) * 2.5;
+  const alternative = candidates
+    .filter((candidate) => routeKey(candidate) !== routeKey(currentRoute))
+    .filter((candidate) => candidate.travelSeconds <= acceptableDetour)
+    .filter((candidate) => !routeHasOpposingPresence(world, candidate, commander.side))
+    .map((candidate) => ({ candidate, risk: routeRisk(world, candidate, profile, commander.side) }))
+    .sort((left, right) => left.risk - right.risk || left.candidate.travelSeconds - right.candidate.travelSeconds)[0];
+  if (!alternative || alternative.risk >= currentRisk - 4) return null;
+  const selectedTerrainTypes = routeTerrainTypes(alternative.candidate);
+  return {
+    decision: 'reroute',
+    reasonCode: 'safer_route_selected',
+    originalRoute: [...currentRoute.areaIds],
+    selectedRoute: [...alternative.candidate.areaIds],
+    originalTravelSeconds: currentRoute.travelSeconds,
+    selectedTravelSeconds: alternative.candidate.travelSeconds,
+    originalTerrainTypes: routeTerrainTypes(currentRoute),
+    selectedTerrainTypes,
+    selectedRouteSegments: alternative.candidate.segments,
+    label: selectedTerrainTypes.length > 0 ? `改走${terrainLabel(selectedTerrainTypes)}风险较低的路线` : '改走避开险要地形的路线',
+  };
+}
+
 /**
  * @param {import('./contracts').BattleWorld} world
  * @param {import('./contracts').BattleCommander} commander
@@ -81,6 +147,8 @@ function baseDecision(world, commander, subject, {
     rationale: `${commander.name}判断当前${label}在自身权限和部队状态可承受范围内。`,
     executionDelaySeconds: 0,
     executionPace: 'standard',
+    executionRate: 1,
+    tacticalPosture: null,
     terrainTypes,
     terrainLabel: terrainLabel(terrainTypes),
     profile: {
@@ -120,6 +188,24 @@ function baseDecision(world, commander, subject, {
       rationale: `${commander.name}要求先整队休整：当前部队状态不足以立即执行。`,
       executionDelaySeconds: 3,
       executionPace: 'reorganize',
+      executionRate: 0.55,
+      tacticalPosture: 'hold',
+    };
+  }
+
+  const routeAdjustment = subjectType === 'order' ? saferRouteFor(world, commander, subject, profile) : null;
+  if (routeAdjustment) {
+    return {
+      ...shared,
+      decision: 'modified',
+      confidence: 'high',
+      reasonCode: routeAdjustment.reasonCode,
+      rationale: `${commander.name}${routeAdjustment.label}，先确保部队能持续推进。`,
+      executionDelaySeconds: 1,
+      executionPace: 'cautious',
+      executionRate: 0.75,
+      tacticalPosture: 'cover',
+      routeAdjustment,
     };
   }
 
@@ -134,6 +220,8 @@ function baseDecision(world, commander, subject, {
       rationale: `${commander.name}调整为谨慎行军：${terrainLabel(terrainTypes)}存在额外风险，先降低推进速度。`,
       executionDelaySeconds: 2,
       executionPace: 'cautious',
+      executionRate: 0.75,
+      tacticalPosture: 'cover',
     };
   }
 
@@ -144,6 +232,8 @@ function baseDecision(world, commander, subject, {
       reasonCode: 'initiative_supported',
       rationale: `${commander.name}判断可以抓住窗口推进，命令按原计划执行。`,
       executionPace: 'rapid',
+      executionRate: 1.25,
+      tacticalPosture: 'standard',
     };
   }
   return shared;
@@ -193,6 +283,8 @@ export function recordOfficerDecision(world, subject, decision) {
   subject.officerFeedback = decision.rationale;
   subject.executionDelaySeconds = decision.executionDelaySeconds;
   subject.executionPace = decision.executionPace;
+  subject.executionRate = decision.executionRate;
+  subject.tacticalPosture = decision.tacticalPosture;
   const payload = {
     type: 'officer_decision',
     side: subject.side ?? world.units?.[subject.unitId]?.side ?? 'player',
@@ -209,6 +301,9 @@ export function recordOfficerDecision(world, subject, decision) {
     confidence: decision.confidence,
     executionDelaySeconds: decision.executionDelaySeconds,
     executionPace: decision.executionPace,
+    executionRate: decision.executionRate,
+    tacticalPosture: decision.tacticalPosture,
+    routeAdjustment: decision.routeAdjustment ?? null,
     terrainTypes: decision.terrainTypes,
     communicationMode: subject.communicationMode ?? null,
   };

@@ -156,6 +156,9 @@ function orderStatus(order, simTime = 0) {
   if (order.status === 'transmitting') return '传递中';
   if (order.status === 'refused') return '副将拒绝';
   if (order.executionResumeAt != null && order.executionResumeAt > simTime) return `副将整备 · 余 ${order.executionResumeAt - simTime} 秒`;
+  if (order.status === 'executing' && order.officerDecision?.routeAdjustment?.decision === 'reroute') return '副将改道 · 执行中';
+  if (order.status === 'executing' && (order.executionRate ?? 1) > 1.05) return '快速执行中';
+  if (order.status === 'executing' && (order.executionRate ?? 1) < 0.9) return '谨慎执行中';
   if (order.status === 'executing' && order.officerDecision?.decision === 'modified') return '副将调整后执行';
   if (order.status === 'executing') return '执行中';
   if (order.status === 'completed') return '已完成';
@@ -170,6 +173,8 @@ function movementLabel(unit) {
   if (unit.movement?.officerDecision?.decision === 'modified' && (unit.movement?.progress ?? 0) === 0) return '副将调整中';
   if (unit.movement?.currentTerrain?.terrainType === 'river') return '渡河中';
   if (unit.movement?.currentTerrain?.terrainType === 'mountain') return '翻山中';
+  if ((unit.movement?.executionRate ?? 1) > 1.05) return '快速行军中';
+  if ((unit.movement?.executionRate ?? 1) < 0.9) return '谨慎行军中';
   return '行军中';
 }
 
@@ -214,6 +219,7 @@ function eventText(event, world) {
   const unit = world.units[event.unitId];
   const area = world.areas[event.areaId ?? event.targetAreaId ?? event.reportedAreaId];
   const recipient = world.commandChain?.commanders?.[event.recipientCommanderId];
+  const officer = world.commandChain?.commanders?.[event.officerId];
   if (event.type === 'order_issued') return `已发令：${unit?.name ?? event.unitId} → ${area?.name ?? event.targetAreaId}`;
   if (event.type === 'order_delivered') return `命令抵达：${unit?.name ?? event.unitId} 已收到指令`;
   if (event.type === 'command_delivered') return `传令抵达：${recipient?.name ?? event.recipientCommanderId ?? '前线军官'} 已收到军令`;
@@ -221,6 +227,11 @@ function eventText(event, world) {
     const decisionLabel = { accepted: '接受执行', modified: '调整执行', delayed: '延后执行', refused: '拒绝执行' }[event.decision] ?? '作出判断';
     return `${event.officerName ?? '前线军官'}${decisionLabel}：${event.rationale ?? '已形成执行意见'}`;
   }
+  if (event.type === 'officer_route_changed') {
+    const route = (event.selectedRoute ?? []).map((areaId) => world.areas[areaId]?.name ?? areaId).join(' → ');
+    return `${recipient?.name ?? officer?.name ?? event.officerName ?? '前线军官'}改排行军路线：${route || '路线已调整'}`;
+  }
+  if (event.type === 'officer_delay_completed') return `${recipient?.name ?? officer?.name ?? event.officerName ?? '前线军官'}整备完成，部队恢复执行。`;
   if (event.type === 'command_interpreted') return `AI军令识别：${event.interpretation?.intentLabel ?? '已解析'} · ${event.interpretation?.confidence ?? '待定'}可信`;
   if (event.type === 'unit_arrived') return `部队到达：${unit?.name ?? event.unitId} 进入${area?.name ?? event.areaId}`;
   if (event.type === 'order_completed') return `命令完成：${unit?.name ?? event.unitId} 暂守原地`;

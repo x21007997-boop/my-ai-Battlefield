@@ -164,3 +164,60 @@ test('officer delays a low-readiness order before movement begins', () => {
   assert.equal(resumed.units.wing.location, 'camp');
   assert.ok(resumed.eventLog.some((event) => event.type === 'officer_delay_completed'));
 });
+
+test('cautious deputy can reroute around a dangerous terrain crossing', () => {
+  const world = createBattleWorld({
+    scenarioId: 'officer-route-test',
+    areas: [
+      {
+        id: 'camp',
+        name: '营地',
+        position: { x: 15, y: 50 },
+        neighbors: [
+          {
+            id: 'pass',
+            travelSeconds: 4,
+            terrainTransitions: [{ featureId: 'ridge', terrainType: 'mountain', transitionType: 'mountain-crossing', label: '险峻山脊', startProgress: 0.25, endProgress: 0.75 }],
+          },
+          { id: 'valley', travelSeconds: 1 },
+        ],
+      },
+      { id: 'valley', name: '谷道', position: { x: 45, y: 70 }, neighbors: [{ id: 'camp', travelSeconds: 1 }, { id: 'pass', travelSeconds: 1 }] },
+      { id: 'pass', name: '关口', position: { x: 85, y: 50 }, neighbors: [{ id: 'camp', travelSeconds: 4 }, { id: 'valley', travelSeconds: 1 }] },
+    ],
+    units: [{ id: 'wing', side: 'player', name: '前锋', commanderId: 'deputy', location: 'camp', strength: 60, morale: 70, fatigue: 10, supplyDays: 5, readiness: 0.9 }],
+    sides: [{ id: 'player', name: '秦军' }, { id: 'enemy', name: '赵军' }],
+    commanders: [
+      { id: 'general', side: 'player', name: '统帅', role: '统帅', isPlayer: true, locationAreaId: 'camp' },
+      {
+        id: 'deputy',
+        side: 'player',
+        name: '谨慎副将',
+        role: '前线副将',
+        superiorCommanderId: 'general',
+        attachedUnitId: 'wing',
+        locationStatus: 'with_unit',
+        decisionProfile: { competence: 0.7, initiative: 0.5, discipline: 0.8, riskTolerance: 'cautious', terrainFamiliarity: [] },
+      },
+    ],
+    commandChain: { playerCommanderIdsBySide: { player: 'general' }, messengerPolicy: { directDelaySeconds: 0 } },
+  });
+  const issued = applyCommanderCommand(world, { type: 'move', unitId: 'wing', targetAreaId: 'pass', recipientCommanderId: 'deputy' }, { side: 'player' });
+  const delivered = stepBattle(issued.world, 1);
+  const order = delivered.orders[0];
+  assert.equal(order.officerDecision.decision, 'modified');
+  assert.equal(order.officerDecision.routeAdjustment.decision, 'reroute');
+  assert.deepEqual(order.route, ['camp', 'valley', 'pass']);
+  assert.equal(order.totalTravelSeconds, 2);
+  assert.equal(order.executionRate, 0.75);
+  assert.equal(order.executionResumeAt, 2);
+  assert.equal(delivered.units.wing.location, 'camp');
+  assert.ok(delivered.eventLog.some((event) => event.type === 'officer_route_changed' && event.selectedRoute.join('>') === 'camp>valley>pass'));
+
+  const resumed = stepBattle(delivered, 1);
+  assert.equal(resumed.orders[0].executionResumeAt, null);
+  assert.equal(resumed.orders[0].status, 'executing');
+  const arrived = stepBattle(resumed, 3);
+  assert.equal(arrived.units.wing.location, 'pass');
+  assert.equal(arrived.orders[0].status, 'completed');
+});
