@@ -590,12 +590,12 @@ func _issue_move() -> void:
 		if selected_unit_id == "" or selected_target_area_id == "":
 			_set_feedback("命令未提交：请先选择部队和目标区域。", "error")
 			return
-			engine_gateway.send_command({
-				"type": "move",
-				"unitId": selected_unit_id,
-				"targetAreaId": selected_target_area_id,
-				"recipientCommanderId": selected_commander_id,
-			})
+		engine_gateway.send_command({
+			"type": "move",
+			"unitId": selected_unit_id,
+			"targetAreaId": selected_target_area_id,
+			"recipientCommanderId": selected_commander_id,
+		})
 		_set_feedback("正在提交机动命令……", "info")
 		return
 	if not order.is_empty() and order.get("status", "") in ["transmitting", "executing"]:
@@ -627,16 +627,16 @@ func _issue_move() -> void:
 		"totalTravelSeconds": travel_seconds,
 		"remainingTravelSeconds": travel_seconds,
 	}
-		event_log.append(sim_time, "order_issued", {
+	event_log.append(sim_time, "order_issued", {
 		"unitId": unit.get("id", ""),
 		"originAreaId": unit.get("areaId", ""),
 		"targetAreaId": target,
 		"deliverAt": order["deliverAt"],
 		"completeAt": order["completeAt"],
-			"travelSeconds": travel_seconds,
-			"recipientCommanderId": selected_commander_id,
-			"communicationMode": _command_delivery_mode(),
-		})
+		"travelSeconds": travel_seconds,
+		"recipientCommanderId": selected_commander_id,
+		"communicationMode": _command_delivery_mode(),
+	})
 	_add_log("已发令：%s向%s机动。" % [unit.get("name", "部队"), _area_name(target)])
 	_set_feedback("命令已接收：%s向%s机动，正在传递。" % [unit.get("name", "部队"), _area_name(target)], "success")
 	_refresh()
@@ -678,7 +678,7 @@ func _issue_hold() -> void:
 		"recipientCommanderId": selected_commander_id,
 		"communicationMode": _command_delivery_mode(),
 	}
-		event_log.append(sim_time, "order_issued", {
+	event_log.append(sim_time, "order_issued", {
 		"type": "hold",
 		"unitId": unit.get("id", ""),
 		"originAreaId": unit.get("areaId", ""),
@@ -757,7 +757,7 @@ func _issue_task(task_type: String) -> void:
 		"totalTravelSeconds": travel_seconds,
 		"remainingTravelSeconds": travel_seconds,
 	}
-		event_log.append(sim_time, "order_issued", {
+	event_log.append(sim_time, "order_issued", {
 		"type": task_type,
 		"taskType": task_type,
 		"taskLabel": _task_label(task_type),
@@ -766,10 +766,10 @@ func _issue_task(task_type: String) -> void:
 		"targetAreaId": target_area,
 		"deliverAt": deliver_at,
 		"completeAt": order["completeAt"],
-			"travelSeconds": travel_seconds,
-			"recipientCommanderId": selected_commander_id,
-			"communicationMode": _command_delivery_mode(),
-		})
+		"travelSeconds": travel_seconds,
+		"recipientCommanderId": selected_commander_id,
+		"communicationMode": _command_delivery_mode(),
+	})
 	_add_log("已发令：%s执行%s任务，目标%s。" % [selected_unit.get("name", "部队"), _task_label(task_type), _area_name(target_area)])
 	_set_feedback("%s任务已接收：目标%s，命令正在传递。" % [_task_label(task_type), _area_name(target_area)], "success")
 	_refresh()
