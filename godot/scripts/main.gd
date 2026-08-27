@@ -72,6 +72,9 @@ var deception_panel: Panel
 var deception_list: VBoxContainer
 var deception_hint_label: Label
 var selected_deception_action_id := ""
+var battle_button: Button
+var battle_panel: Panel
+var battle_label: RichTextLabel
 
 const TASK_COMMANDS := [
 	{"type": "guard", "label": "警戒"},
@@ -431,14 +434,22 @@ func _build_interface() -> void:
 
 	var utility_rail := Panel.new()
 	utility_rail.position = Vector2(1184, 140)
-	utility_rail.size = Vector2(78, 236)
+	utility_rail.size = Vector2(78, 276)
 	utility_rail.add_theme_stylebox_override("panel", _panel_style(Color(0.10, 0.07, 0.05, 0.78), Color(0.66, 0.47, 0.27, 0.8), 12, 1))
 	hud.add_child(utility_rail)
-	var utility_title := _add_label(utility_rail, "记录", Rect2(8, 10, 62, 22), 13, Color("#e4c58e"))
+	var utility_title := _add_label(utility_rail, "指挥", Rect2(8, 10, 62, 22), 13, Color("#e4c58e"))
 	utility_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	battle_button = Button.new()
+	battle_button.text = "战局"
+	battle_button.position = Vector2(8, 40)
+	battle_button.size = Vector2(62, 34)
+	battle_button.tooltip_text = "查看统帅层战役目标、时间压力和资源"
+	_style_button(battle_button)
+	battle_button.pressed.connect(_toggle_battle_panel)
+	utility_rail.add_child(battle_button)
 	intelligence_button = Button.new()
 	intelligence_button.text = "情报"
-	intelligence_button.position = Vector2(8, 40)
+	intelligence_button.position = Vector2(8, 80)
 	intelligence_button.size = Vector2(62, 34)
 	intelligence_button.tooltip_text = "查看已抵达和正在返回的前线情报"
 	_style_button(intelligence_button)
@@ -446,7 +457,7 @@ func _build_interface() -> void:
 	utility_rail.add_child(intelligence_button)
 	log_button = Button.new()
 	log_button.text = "战报"
-	log_button.position = Vector2(8, 80)
+	log_button.position = Vector2(8, 120)
 	log_button.size = Vector2(62, 34)
 	_style_button(log_button)
 	log_button.pressed.connect(_toggle_log_panel)
@@ -454,7 +465,7 @@ func _build_interface() -> void:
 
 	replay_button = Button.new()
 	replay_button.text = "导出"
-	replay_button.position = Vector2(8, 120)
+	replay_button.position = Vector2(8, 160)
 	replay_button.size = Vector2(62, 34)
 	_style_button(replay_button)
 	replay_button.pressed.connect(_export_replay)
@@ -462,7 +473,7 @@ func _build_interface() -> void:
 
 	load_replay_button = Button.new()
 	load_replay_button.text = "载入"
-	load_replay_button.position = Vector2(8, 160)
+	load_replay_button.position = Vector2(8, 200)
 	load_replay_button.size = Vector2(62, 34)
 	_style_button(load_replay_button)
 	load_replay_button.pressed.connect(_load_replay)
@@ -470,7 +481,7 @@ func _build_interface() -> void:
 
 	exit_replay_button = Button.new()
 	exit_replay_button.text = "退出"
-	exit_replay_button.position = Vector2(8, 200)
+	exit_replay_button.position = Vector2(8, 240)
 	exit_replay_button.size = Vector2(62, 26)
 	_style_button(exit_replay_button)
 	exit_replay_button.pressed.connect(_exit_replay)
@@ -538,6 +549,23 @@ func _build_interface() -> void:
 	deception_list.size = Vector2(292, 276)
 	deception_list.add_theme_constant_override("separation", 8)
 	deception_panel.add_child(deception_list)
+
+	battle_panel = Panel.new()
+	battle_panel.position = Vector2(850, 126)
+	battle_panel.size = Vector2(320, 360)
+	battle_panel.visible = false
+	battle_panel.add_theme_stylebox_override("panel", _panel_style(Color(0.10, 0.07, 0.05, 0.96), Color(0.66, 0.47, 0.27, 0.9), 10, 1))
+	hud.add_child(battle_panel)
+	_add_label(battle_panel, "战局态势", Rect2(14, 10, 180, 22), 14, Color("#e4c58e"))
+	battle_label = RichTextLabel.new()
+	battle_label.position = Vector2(14, 38)
+	battle_label.size = Vector2(292, 300)
+	battle_label.bbcode_enabled = false
+	battle_label.fit_content = false
+	battle_label.scroll_active = true
+	battle_label.add_theme_font_size_override("normal_font_size", 12)
+	battle_label.add_theme_color_override("default_color", Color("#d7c5ac"))
+	battle_panel.add_child(battle_label)
 
 	var command_card := Panel.new()
 	command_card.position = Vector2(108, 548)
@@ -616,6 +644,17 @@ func _toggle_log_panel() -> void:
 	if log_panel.visible:
 		intelligence_panel.visible = false
 		deception_panel.visible = false
+		battle_panel.visible = false
+
+func _toggle_battle_panel() -> void:
+	if battle_panel == null:
+		return
+	battle_panel.visible = not battle_panel.visible
+	if battle_panel.visible:
+		log_panel.visible = false
+		intelligence_panel.visible = false
+		deception_panel.visible = false
+		_refresh_battle_panel()
 
 func _toggle_intelligence_panel() -> void:
 	if intelligence_panel == null:
@@ -624,6 +663,7 @@ func _toggle_intelligence_panel() -> void:
 	if intelligence_panel.visible:
 		log_panel.visible = false
 		deception_panel.visible = false
+		battle_panel.visible = false
 		_refresh_intelligence_panel()
 
 func _toggle_deception_panel() -> void:
@@ -633,6 +673,7 @@ func _toggle_deception_panel() -> void:
 	if deception_panel.visible:
 		log_panel.visible = false
 		intelligence_panel.visible = false
+		battle_panel.visible = false
 		_refresh_deception_panel()
 
 func _toggle_running() -> void:
@@ -1041,6 +1082,44 @@ func _on_deception_action_selected(action_id: String) -> void:
 	})
 	_set_feedback("正在提交计策：%s。敌方将收到一份可能失真的报告……" % str(selected_action.get("name", "计策")), "info")
 
+func _refresh_battle_panel() -> void:
+	if battle_label == null:
+		return
+	var lines: Array[String] = []
+	var commander_name := _commander_name(player_commander_id)
+	lines.append("统帅：%s · 秦军" % commander_name)
+	lines.append("当前身份：战役指挥官")
+	lines.append("")
+	var resolution_value = scenario.get("resolution", {})
+	var resolution: Dictionary = resolution_value if resolution_value is Dictionary else {}
+	var time_limit := int(resolution.get("timeLimitSeconds", 0))
+	if time_limit > 0:
+		lines.append("时间压力：剩余 %s" % _format_duration(max(0, time_limit - sim_time)))
+	else:
+		lines.append("时间压力：未设置本局上限")
+	lines.append("战局状态：%s" % ("已结束" if outcome.size() > 0 else ("实时内核" if engine_connected else "本地推演")))
+	lines.append("")
+	lines.append("统帅层战役意图")
+	var visible_objective_count := 0
+	for objective_value in objectives:
+		if not objective_value is Dictionary:
+			continue
+		var objective: Dictionary = objective_value
+		var objective_side := str(objective.get("side", "player"))
+		if objective_side != "" and objective_side != "player":
+			continue
+		lines.append("· %s" % str(objective.get("name", "未命名意图")))
+		visible_objective_count += 1
+	if visible_objective_count == 0:
+		lines.append("· 当前战役意图由前线态势决定。")
+	lines.append("")
+	lines.append("可用资源")
+	lines.append("情报点 %s · 斥候队 %s · 计策资源 %s" % [_resource_text("intelligencePoints"), _resource_text("scoutTeams"), _resource_text("deceptionAssets")])
+	lines.append("情报链可信度：%d%%" % int(strategy_reliability * 100.0))
+	lines.append("")
+	lines.append("提示：地图只显示我方已知信息和延迟报告；敌军真值不会直接显示。")
+	battle_label.text = "\n".join(lines)
+
 func _refresh_intelligence_panel() -> void:
 	if intelligence_label == null:
 		return
@@ -1117,6 +1196,10 @@ func _resource_label(resource_key: String) -> String:
 		"scoutTeams": return "斥候队"
 		"deceptionAssets": return "计策资源"
 		_: return resource_key
+
+func _format_duration(total_seconds: int) -> String:
+	var seconds: int = max(0, total_seconds)
+	return "%02d:%02d" % [int(seconds / 60), seconds % 60]
 
 func _step_second() -> void:
 	sim_time += 1
@@ -1622,6 +1705,10 @@ func _refresh() -> void:
 		zoom_label.text = "%d%%" % int(map_camera.zoom.x * 100.0)
 	if intelligence_button != null:
 		intelligence_button.text = "情报 %d" % reported_signals.size()
+	if battle_button != null:
+		battle_button.text = "战局"
+	if battle_panel != null and battle_panel.visible:
+		_refresh_battle_panel()
 	if intelligence_panel != null and intelligence_panel.visible:
 		_refresh_intelligence_panel()
 	if deception_panel != null and deception_panel.visible:

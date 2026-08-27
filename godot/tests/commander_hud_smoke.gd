@@ -8,11 +8,18 @@ func _init() -> void:
 
 	assert(main.intelligence_panel != null)
 	assert(main.deception_panel != null)
+	assert(main.battle_panel != null)
 	assert(main.intelligence_button.text == "情报 0")
+
+	main._toggle_battle_panel()
+	assert(main.battle_panel.visible)
+	assert(main.battle_label.text.contains("统帅层战役意图"))
+	assert(main.battle_label.text.contains("剩余"))
 
 	main._toggle_intelligence_panel()
 	assert(main.intelligence_panel.visible)
 	assert(not main.deception_panel.visible)
+	assert(not main.battle_panel.visible)
 	assert(main.intelligence_label.text.contains("当前没有前线情报"))
 
 	main._toggle_deception_panel()
