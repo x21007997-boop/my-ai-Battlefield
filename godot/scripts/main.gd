@@ -65,6 +65,13 @@ var hud_metrics_label: Label
 var log_panel: Panel
 var log_button: Button
 var replay_panel: Panel
+var intelligence_button: Button
+var intelligence_panel: Panel
+var intelligence_label: RichTextLabel
+var deception_panel: Panel
+var deception_list: VBoxContainer
+var deception_hint_label: Label
+var selected_deception_action_id := ""
 
 const TASK_COMMANDS := [
 	{"type": "guard", "label": "警戒"},
@@ -424,14 +431,22 @@ func _build_interface() -> void:
 
 	var utility_rail := Panel.new()
 	utility_rail.position = Vector2(1184, 140)
-	utility_rail.size = Vector2(78, 196)
+	utility_rail.size = Vector2(78, 236)
 	utility_rail.add_theme_stylebox_override("panel", _panel_style(Color(0.10, 0.07, 0.05, 0.78), Color(0.66, 0.47, 0.27, 0.8), 12, 1))
 	hud.add_child(utility_rail)
 	var utility_title := _add_label(utility_rail, "记录", Rect2(8, 10, 62, 22), 13, Color("#e4c58e"))
 	utility_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	intelligence_button = Button.new()
+	intelligence_button.text = "情报"
+	intelligence_button.position = Vector2(8, 40)
+	intelligence_button.size = Vector2(62, 34)
+	intelligence_button.tooltip_text = "查看已抵达和正在返回的前线情报"
+	_style_button(intelligence_button)
+	intelligence_button.pressed.connect(_toggle_intelligence_panel)
+	utility_rail.add_child(intelligence_button)
 	log_button = Button.new()
 	log_button.text = "战报"
-	log_button.position = Vector2(8, 40)
+	log_button.position = Vector2(8, 80)
 	log_button.size = Vector2(62, 34)
 	_style_button(log_button)
 	log_button.pressed.connect(_toggle_log_panel)
@@ -439,7 +454,7 @@ func _build_interface() -> void:
 
 	replay_button = Button.new()
 	replay_button.text = "导出"
-	replay_button.position = Vector2(8, 80)
+	replay_button.position = Vector2(8, 120)
 	replay_button.size = Vector2(62, 34)
 	_style_button(replay_button)
 	replay_button.pressed.connect(_export_replay)
@@ -447,7 +462,7 @@ func _build_interface() -> void:
 
 	load_replay_button = Button.new()
 	load_replay_button.text = "载入"
-	load_replay_button.position = Vector2(8, 120)
+	load_replay_button.position = Vector2(8, 160)
 	load_replay_button.size = Vector2(62, 34)
 	_style_button(load_replay_button)
 	load_replay_button.pressed.connect(_load_replay)
@@ -455,7 +470,7 @@ func _build_interface() -> void:
 
 	exit_replay_button = Button.new()
 	exit_replay_button.text = "退出"
-	exit_replay_button.position = Vector2(8, 160)
+	exit_replay_button.position = Vector2(8, 200)
 	exit_replay_button.size = Vector2(62, 26)
 	_style_button(exit_replay_button)
 	exit_replay_button.pressed.connect(_exit_replay)
@@ -492,6 +507,37 @@ func _build_interface() -> void:
 	log_label.add_theme_font_size_override("normal_font_size", 12)
 	log_label.add_theme_color_override("default_color", Color("#d7c5ac"))
 	log_panel.add_child(log_label)
+
+	intelligence_panel = Panel.new()
+	intelligence_panel.position = Vector2(850, 126)
+	intelligence_panel.size = Vector2(320, 320)
+	intelligence_panel.visible = false
+	intelligence_panel.add_theme_stylebox_override("panel", _panel_style(Color(0.10, 0.07, 0.05, 0.95), Color(0.66, 0.47, 0.27, 0.9), 10, 1))
+	hud.add_child(intelligence_panel)
+	_add_label(intelligence_panel, "前线情报", Rect2(14, 10, 180, 22), 14, Color("#e4c58e"))
+	intelligence_label = RichTextLabel.new()
+	intelligence_label.position = Vector2(14, 38)
+	intelligence_label.size = Vector2(292, 264)
+	intelligence_label.bbcode_enabled = false
+	intelligence_label.fit_content = false
+	intelligence_label.scroll_active = true
+	intelligence_label.add_theme_font_size_override("normal_font_size", 12)
+	intelligence_label.add_theme_color_override("default_color", Color("#d7c5ac"))
+	intelligence_panel.add_child(intelligence_label)
+
+	deception_panel = Panel.new()
+	deception_panel.position = Vector2(850, 126)
+	deception_panel.size = Vector2(320, 360)
+	deception_panel.visible = false
+	deception_panel.add_theme_stylebox_override("panel", _panel_style(Color(0.10, 0.07, 0.05, 0.96), Color(0.66, 0.47, 0.27, 0.9), 10, 1))
+	hud.add_child(deception_panel)
+	_add_label(deception_panel, "计策选择", Rect2(14, 10, 180, 22), 14, Color("#e4c58e"))
+	deception_hint_label = _add_label(deception_panel, "", Rect2(14, 36, 292, 28), 10, Color("#c1a58a"))
+	deception_list = VBoxContainer.new()
+	deception_list.position = Vector2(14, 70)
+	deception_list.size = Vector2(292, 276)
+	deception_list.add_theme_constant_override("separation", 8)
+	deception_panel.add_child(deception_list)
 
 	var command_card := Panel.new()
 	command_card.position = Vector2(108, 548)
@@ -567,6 +613,27 @@ func _toggle_log_panel() -> void:
 	if log_panel == null:
 		return
 	log_panel.visible = not log_panel.visible
+	if log_panel.visible:
+		intelligence_panel.visible = false
+		deception_panel.visible = false
+
+func _toggle_intelligence_panel() -> void:
+	if intelligence_panel == null:
+		return
+	intelligence_panel.visible = not intelligence_panel.visible
+	if intelligence_panel.visible:
+		log_panel.visible = false
+		deception_panel.visible = false
+		_refresh_intelligence_panel()
+
+func _toggle_deception_panel() -> void:
+	if deception_panel == null:
+		return
+	deception_panel.visible = not deception_panel.visible
+	if deception_panel.visible:
+		log_panel.visible = false
+		intelligence_panel.visible = false
+		_refresh_deception_panel()
 
 func _toggle_running() -> void:
 	running = not running
@@ -943,15 +1010,113 @@ func _issue_deception() -> void:
 	if replay_mode or not engine_connected or deception_actions.is_empty():
 		_set_feedback("计策未执行：需要连接实时内核并拥有可用计策。", "error")
 		return
-	var action: Dictionary = deception_actions[0]
+	_toggle_deception_panel()
+
+func _on_deception_action_selected(action_id: String) -> void:
+	if replay_mode or not engine_connected:
+		_set_feedback("计策未执行：需要连接实时内核。", "error")
+		return
+	if engine_gateway != null and engine_gateway.busy():
+		_set_feedback("计策未执行：上一条命令仍在传递。", "error")
+		return
+	var selected_action: Dictionary = {}
+	for action_value in deception_actions:
+		if action_value is Dictionary and str(action_value.get("id", "")) == action_id:
+			selected_action = action_value
+			break
+	if selected_action.is_empty():
+		_set_feedback("计策未执行：这项计策已不在当前战局。", "error")
+		return
+	if not _can_afford(selected_action.get("cost", {})):
+		_set_feedback("计策未执行：资源不足。", "error")
+		return
+	selected_deception_action_id = action_id
+	deception_panel.visible = false
 	engine_gateway.send_command({
 		"type": "deception",
-		"actionId": action.get("id", ""),
-		"targetUnitId": action.get("targetUnitId", selected_unit_id),
-		"reportedAreaId": action.get("reportedAreaId", ""),
+		"actionId": selected_action.get("id", ""),
+		"targetUnitId": selected_action.get("targetUnitId", selected_unit_id),
+		"reportedAreaId": selected_action.get("reportedAreaId", ""),
 		"recipientCommanderId": selected_commander_id,
 	})
-	_set_feedback("正在提交计策：敌方将收到一份可能失真的报告……", "info")
+	_set_feedback("正在提交计策：%s。敌方将收到一份可能失真的报告……" % str(selected_action.get("name", "计策")), "info")
+
+func _refresh_intelligence_panel() -> void:
+	if intelligence_label == null:
+		return
+	var lines: Array[String] = ["只显示已经传回的认知，不代表敌军真实位置。", ""]
+	if pending_observations.is_empty() and reported_signals.is_empty():
+		lines.append("当前没有前线情报。")
+	else:
+		for pending_value in pending_observations:
+			if not pending_value is Dictionary:
+				continue
+			var pending: Dictionary = pending_value
+			var pending_area := _area_name(str(pending.get("reportedAreaId", "")))
+			var pending_seconds := int(pending.get("remainingSeconds", int(pending.get("arrivesAt", sim_time)) - sim_time))
+			lines.append("【回传中】%s" % pending_area)
+			lines.append("来源：%s · 预计还需 %d 秒" % [str(pending.get("sourceType", "前线报告")), max(0, pending_seconds)])
+			lines.append("")
+		for report_value in reported_signals:
+			if not report_value is Dictionary:
+				continue
+			var report: Dictionary = report_value
+			var area_id := str(report.get("areaId", report.get("reportedAreaId", "")))
+			var confidence := str(report.get("confidence", "unknown"))
+			var uncertainty_value = report.get("uncertainty", {})
+			var uncertainty: Dictionary = uncertainty_value if uncertainty_value is Dictionary else {}
+			var expires_at := int(report.get("expiresAt", sim_time))
+			lines.append("【%s】%s" % [_confidence_label(confidence), _area_name(area_id)])
+			lines.append("来源：%s · %s" % [str(report.get("sourceType", "前线报告")), _uncertainty_label({"uncertainty": uncertainty, "confidence": confidence})])
+			lines.append("有效剩余：%d 秒" % max(0, expires_at - sim_time))
+			lines.append(str(report.get("text", report.get("observation", "发现活动迹象"))))
+			lines.append("")
+	intelligence_label.text = "\n".join(lines)
+
+func _refresh_deception_panel() -> void:
+	if deception_list == null:
+		return
+	for child in deception_list.get_children():
+		deception_list.remove_child(child)
+		child.free()
+	if deception_hint_label != null:
+		deception_hint_label.text = "选择一项：有成本、有准备时间，也可能暴露。"
+	if deception_actions.is_empty():
+		_add_label(deception_list, "当前没有可用计策。", Rect2(0, 0, 292, 28), 11, Color("#d7c5ac"))
+		return
+	for action_value in deception_actions:
+		if not action_value is Dictionary:
+			continue
+		var action: Dictionary = action_value
+		var action_id := str(action.get("id", ""))
+		var action_name := str(action.get("name", "未命名计策"))
+		var preparation_seconds := int(action.get("preparationSeconds", 0))
+		var cost_text := _cost_text(action.get("cost", {}))
+		var target_name := _area_name(str(action.get("reportedAreaId", "")))
+		var action_button := Button.new()
+		action_button.text = "%s\n准备 %d 秒 · %s · 目标 %s" % [action_name, preparation_seconds, cost_text, target_name]
+		action_button.tooltip_text = "选择%s" % action_name
+		action_button.custom_minimum_size = Vector2(292, 58)
+		action_button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		_style_button(action_button, action_id == selected_deception_action_id)
+		action_button.disabled = replay_mode or outcome.size() > 0 or not _can_afford(action.get("cost", {})) or (engine_gateway != null and engine_gateway.busy())
+		action_button.pressed.connect(_on_deception_action_selected.bind(action_id))
+		deception_list.add_child(action_button)
+
+func _cost_text(cost: Variant) -> String:
+	if not cost is Dictionary or cost.is_empty():
+		return "无消耗"
+	var parts: Array[String] = []
+	for key in cost.keys():
+		parts.append("%s-%d" % [_resource_label(str(key)), int(cost[key])])
+	return "、".join(parts)
+
+func _resource_label(resource_key: String) -> String:
+	match resource_key:
+		"intelligencePoints": return "情报点"
+		"scoutTeams": return "斥候队"
+		"deceptionAssets": return "计策资源"
+		_: return resource_key
 
 func _step_second() -> void:
 	sim_time += 1
@@ -1455,6 +1620,12 @@ func _refresh() -> void:
 	log_label.text = "\n".join(log_lines)
 	if zoom_label != null:
 		zoom_label.text = "%d%%" % int(map_camera.zoom.x * 100.0)
+	if intelligence_button != null:
+		intelligence_button.text = "情报 %d" % reported_signals.size()
+	if intelligence_panel != null and intelligence_panel.visible:
+		_refresh_intelligence_panel()
+	if deception_panel != null and deception_panel.visible:
+		_refresh_deception_panel()
 	sand_table.set_selection(selected_unit_id, selected_target_area_id)
 	sand_table.set_commander_layers(friendly_units, reported_signals, order, pending_observations, sim_time)
 
