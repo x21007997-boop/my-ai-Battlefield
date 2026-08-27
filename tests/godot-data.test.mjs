@@ -43,6 +43,8 @@ test('Godot client data contains only commander-known unit layers', () => {
   assert.equal(data.playerCommanderId, 'bai-qi');
   assert.equal(data.commanders.find((commander) => commander.id === 'wang-he').attachedUnitId, 'qin-detachment');
   assert.equal(data.commanders.find((commander) => commander.id === 'wang-he').locationAreaId, 'western-gate');
+  assert.equal(data.commanders.find((commander) => commander.id === 'wang-he').decisionProfile.riskTolerance, 'calculated');
+  assert.equal(data.commanders.find((commander) => commander.id === 'wang-he').decisionProfile.status, 'simulation_variable');
   assert.equal(data.commandChain.messengerPolicy.baseDelaySeconds, 1);
   assert.equal(data.commandChain.messengerPolicy.routeTravelFactor, 0.25);
   assert.deepEqual(data.deceptionActions[0].cost, { intelligencePoints: 1, deceptionAssets: 1 });

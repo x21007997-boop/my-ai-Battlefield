@@ -6,6 +6,7 @@ import {
   commanderLocation,
   createBattleWorld,
   interpretCommanderInstruction,
+  officerDecisionLabel,
   stepBattle,
 } from '../src/battlefield/index.js';
 import { CHANGPING_PROFILE } from '../src/battlefield/changpingScenario.js';
@@ -83,7 +84,11 @@ test('a remote deputy receives the order before the unit begins moving', () => {
   const delivered = stepBattle(beforeDelivery, 1);
   assert.equal(delivered.orders[0].status, 'executing');
   assert.equal(delivered.orders[0].messenger.status, 'delivered');
+  assert.equal(delivered.orders[0].officerDecision.decision, 'accepted');
+  assert.match(delivered.orders[0].officerFeedback, /王副将/);
+  assert.equal(officerDecisionLabel(delivered.orders[0].officerDecision.decision), '接受执行');
   assert.ok(delivered.eventLog.some((event) => event.type === 'command_delivered' && event.recipientCommanderId === 'deputy'));
+  assert.ok(delivered.eventLog.some((event) => event.type === 'officer_decision' && event.officerId === 'deputy'));
 
   const arrived = stepBattle(delivered, 3);
   assert.equal(arrived.units.wing.location, 'west');
@@ -130,4 +135,32 @@ test('free-form instruction accepts the short name of a caveated historical area
   });
   assert.equal(interpretation.error, null);
   assert.equal(interpretation.command.targetAreaId, 'dan-river-valley');
+});
+
+test('officer delays a low-readiness order before movement begins', () => {
+  const world = createBattleWorld({
+    scenarioId: 'officer-readiness-test',
+    areas: [
+      { id: 'camp', name: '营地', position: { x: 20, y: 50 }, neighbors: [{ id: 'pass', travelSeconds: 3 }] },
+      { id: 'pass', name: '关口', position: { x: 80, y: 50 }, neighbors: [{ id: 'camp', travelSeconds: 3 }] },
+    ],
+    units: [{ id: 'wing', side: 'player', name: '前锋', commanderId: 'deputy', location: 'camp', strength: 40, morale: 42, fatigue: 22, supplyDays: 4, readiness: 0.7 }],
+    sides: [{ id: 'player', name: '秦军' }, { id: 'enemy', name: '赵军' }],
+    commanders: [
+      { id: 'general', side: 'player', name: '统帅', role: '统帅', isPlayer: true, locationAreaId: 'camp' },
+      { id: 'deputy', side: 'player', name: '疲惫副将', role: '前线副将', superiorCommanderId: 'general', attachedUnitId: 'wing', locationStatus: 'with_unit' },
+    ],
+    commandChain: { playerCommanderIdsBySide: { player: 'general' }, messengerPolicy: { directDelaySeconds: 0 } },
+  });
+  const issued = applyCommanderCommand(world, { type: 'move', unitId: 'wing', targetAreaId: 'pass', recipientCommanderId: 'deputy' }, { side: 'player' });
+  const delivered = stepBattle(issued.world, 1);
+  assert.equal(delivered.orders[0].officerDecision.decision, 'delayed');
+  assert.equal(delivered.orders[0].executionResumeAt, 4);
+  assert.equal(delivered.units.wing.location, 'camp');
+  assert.match(delivered.orders[0].officerFeedback, /休整/);
+
+  const resumed = stepBattle(delivered, 3);
+  assert.equal(resumed.orders[0].executionResumeAt, null);
+  assert.equal(resumed.units.wing.location, 'camp');
+  assert.ok(resumed.eventLog.some((event) => event.type === 'officer_delay_completed'));
 });

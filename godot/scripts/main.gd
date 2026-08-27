@@ -186,6 +186,7 @@ func _on_engine_response(operation: String, response: Dictionary) -> void:
 				"order_issued": _set_feedback("命令已接收：部队进入传递状态。", "success")
 				"command_interpreted": _set_feedback("AI已理解军令，正在交给接收军官。", "success")
 				"command_delivered": _set_feedback("传令抵达：接收军官已收到军令。", "success")
+				"officer_decision": _set_feedback(_officer_decision_feedback(response_events.back()), "success" if str(response_events.back().get("decision", "")) != "refused" else "error")
 				"observation_created": _set_feedback("侦察已接收：报告正在返回指挥部。", "success")
 				"reconnaissance_issued": _set_feedback("侦察已接收：斥候正在准备，资源已扣除。", "success")
 				"reconnaissance_command_delivered": _set_feedback("侦察军令抵达：前线副将开始整备斥候。", "success")
@@ -1301,6 +1302,10 @@ func _replay_event_text(event: Dictionary) -> String:
 			return "回放：命令抵达，部队开始执行。"
 		"command_delivered":
 			return "回放：传令抵达，接收军官收到军令。"
+		"officer_decision":
+			return "回放：%s。" % _officer_decision_feedback(event)
+		"officer_delay_completed":
+			return "回放：副将整备完成，部队恢复执行。"
 		"command_interpreted":
 			return "回放：AI完成军令识别，已交给接收军官。"
 		"unit_arrived":
@@ -1448,7 +1453,7 @@ func _refresh() -> void:
 	if zoom_label != null:
 		zoom_label.text = "%d%%" % int(map_camera.zoom.x * 100.0)
 	sand_table.set_selection(selected_unit_id, selected_target_area_id)
-	sand_table.set_commander_layers(friendly_units, reported_signals, order, pending_observations)
+	sand_table.set_commander_layers(friendly_units, reported_signals, order, pending_observations, sim_time)
 
 func _pending_observation_count() -> int:
 	if engine_connected:
@@ -1493,6 +1498,7 @@ func _order_status_text(status: String) -> String:
 		"transmitting": return "传令中"
 		"executing": return "执行中"
 		"completed": return "已完成"
+		"refused": return "副将拒绝"
 		"rejected": return "已驳回"
 		"expired": return "已失效"
 		"awaiting_report": return "等待前线报告"
@@ -1511,7 +1517,8 @@ func _command_state_text() -> String:
 	var chain_summary := "交给%s · %s" % [recipient_name, "传令兵在途" if communication_mode == "messenger" and status == "传令中" else ("当面传令" if communication_mode == "direct" else "常规链路")]
 	var target := _area_name(str(order.get("targetAreaId", "")))
 	if order.get("type", "move") == "hold":
-		return "军令状态\n%s · %s\n%s" % [order_type, status, chain_summary]
+		var hold_feedback := str(order.get("officerFeedback", ""))
+		return "军令状态\n%s · %s\n%s%s" % [order_type, status, chain_summary, "\n" + hold_feedback if hold_feedback != "" else ""]
 	var remaining := int(order.get("remainingTravelSeconds", 0))
 	var progress := "目标：%s" % target if target != "未知区域" else "目标尚未确认"
 	var current_terrain_value = order.get("currentTerrain", {})
@@ -1525,7 +1532,22 @@ func _command_state_text() -> String:
 			progress += " · 已%s" % _terrain_action_word(str(last_terrain.get("terrainType", "")))
 	if status == "执行中" and remaining > 0:
 		progress += " · 约%d秒" % remaining
+	var feedback := str(order.get("officerFeedback", ""))
+	if feedback != "":
+		progress += "\n" + feedback
 	return "军令状态\n%s · %s\n%s · %s" % [order_type, status, chain_summary, progress]
+
+func _officer_decision_feedback(event: Dictionary) -> String:
+	var payload_value = event.get("payload", {})
+	var payload: Dictionary = payload_value if payload_value is Dictionary else event
+	var officer_name := str(payload.get("officerName", "前线军官"))
+	var decision := str(payload.get("decision", ""))
+	var decision_label := "接受执行"
+	match decision:
+		"modified": decision_label = "调整执行"
+		"delayed": decision_label = "延后执行"
+		"refused": decision_label = "拒绝执行"
+	return "%s%s：%s" % [officer_name, decision_label, str(payload.get("rationale", "已形成执行意见"))]
 
 func _terrain_action_word(terrain_type: String) -> String:
 	match terrain_type:

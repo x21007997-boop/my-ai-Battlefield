@@ -12,6 +12,7 @@ import {
   strategyCooldownRemaining,
 } from './strategy.js';
 import { queueObservation } from './perception.js';
+import { decideOfficerStrategy, recordOfficerDecision } from './officerAi.js';
 
 export const DEFAULT_REPORT_FRESHNESS_SECONDS = BATTLEFIELD_CONFIG.defaults.reportFreshnessSeconds;
 
@@ -168,6 +169,7 @@ export function dispatchReconnaissance(world, options = /** @type {any} */ ({}))
     kind: 'scout',
     side,
     targetUnitId: options.targetUnitId,
+    commandUnitId: options.commandUnitId ?? null,
     reportedAreaId: options.reportedAreaId,
     actualAreaId: options.actualAreaId ?? next.units[options.targetUnitId].location,
     sourceId: options.sourceId ?? null,
@@ -238,7 +240,27 @@ export function resolveReconnaissanceActions(world) {
       recipientCommanderId: action.recipientCommanderId,
       communicationMode: action.communicationMode,
     });
+    const officerDecision = decideOfficerStrategy(next, action);
+    if (officerDecision) {
+      recordOfficerDecision(next, action, officerDecision);
+      action.officerDecision = officerDecision;
+      action.officerFeedback = officerDecision.rationale;
+      action.executionDelaySeconds = officerDecision.executionDelaySeconds;
+      action.executionPace = officerDecision.executionPace;
+      if (officerDecision.decision === 'refused') {
+        action.status = 'refused';
+        action.refusedAt = next.simTime;
+        const refusedStrategy = next.strategy.actions.find((candidate) => candidate.id === action.id);
+        if (refusedStrategy) refusedStrategy.status = 'refused';
+        return;
+      }
+      if (officerDecision.executionDelaySeconds > 0) action.readyAt += officerDecision.executionDelaySeconds;
+    }
     if (action.preparationSeconds === 0) {
+      if (action.readyAt > next.simTime) {
+        action.status = 'preparing';
+        return;
+      }
       const result = dispatchPreparedScout(next, action);
       next = result.world;
     }

@@ -22,6 +22,7 @@ var friendly_units: Array = []
 var reported_signals: Array = []
 var active_order: Dictionary = {}
 var pending_observations: Array = []
+var current_sim_time := 0
 var selected_unit_id := ""
 var selected_area_id := ""
 
@@ -29,13 +30,14 @@ func configure(data: Dictionary) -> void:
 	scenario = data
 	queue_redraw()
 
-func set_commander_layers(units: Array, reports: Array, commander_order: Dictionary = {}, pending_reports: Array = []) -> void:
+func set_commander_layers(units: Array, reports: Array, commander_order: Dictionary = {}, pending_reports: Array = [], sim_time: int = 0) -> void:
 	# This node intentionally receives only the commander projection layers.
 	# Enemy units and combat exchanges never enter the scene tree.
 	friendly_units = units.duplicate(true)
 	reported_signals = reports.duplicate(true)
 	active_order = commander_order.duplicate(true)
 	pending_observations = pending_reports.duplicate(true)
+	current_sim_time = sim_time
 	queue_redraw()
 
 func set_selection(unit_id: String, area_id: String) -> void:
@@ -252,6 +254,7 @@ func _draw_order_feedback() -> void:
 	var status := str(active_order.get("status", ""))
 	var task_label := str(active_order.get("taskLabel", ""))
 	var accent := Color("#d8a95f") if status == "transmitting" else Color("#76a48a")
+	var officer_waiting := int(active_order.get("executionResumeAt", -1)) > current_sim_time
 	for index in range(points.size() - 1):
 		if status == "transmitting":
 			draw_dashed_line(points[index], points[index + 1], Color(accent, 0.9), 4.0, 10.0)
@@ -267,9 +270,14 @@ func _draw_order_feedback() -> void:
 	var marker_point := _point_along_path(points, progress)
 	if status == "transmitting":
 		_draw_status_pulse(points[0], accent, "传令中" if task_label == "" else "%s传令中" % task_label)
+	elif officer_waiting:
+		_draw_status_pulse(_point_along_path(points, progress), Color("#d8a95f"), "副将整备中")
 	else:
 		var terrain_label := _movement_terrain_label(active_order)
-		var movement_label := terrain_label if terrain_label != "" else ("%s执行中" % task_label if task_label != "" else "行军中")
+		var officer_decision_value = active_order.get("officerDecision", {})
+		var officer_decision: Dictionary = officer_decision_value if officer_decision_value is Dictionary else {}
+		var officer_adjustment := "调整后行军" if str(officer_decision.get("decision", "")) == "modified" else ""
+		var movement_label := terrain_label if terrain_label != "" else (officer_adjustment if officer_adjustment != "" else ("%s执行中" % task_label if task_label != "" else "行军中"))
 		_draw_marching_marker(marker_point, accent, movement_label)
 	if status == "completed":
 		_draw_status_pulse(points[points.size() - 1], Color("#b8d2a4"), "任务完成" if task_label != "" else "已抵达")

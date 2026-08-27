@@ -41,7 +41,7 @@ function commandDelivery(world, command, {
   if (plan.error) return plan;
   return {
     ...plan,
-    context: plan.context ? { ...plan.context, delaySeconds: plan.delaySeconds } : null,
+    context: plan.context ? { ...plan.context, delaySeconds: plan.delaySeconds, commandUnitId: unitId ?? null } : null,
   };
 }
 

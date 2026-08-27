@@ -14,6 +14,7 @@ export {
   resolveCommandRecipient,
 } from './commandChain.js';
 export { INSTRUCTION_INTERPRETER_SCHEMA_VERSION, interpretCommanderInstruction } from './instructionInterpreter.js';
+export { OFFICER_AI_ENGINE, OFFICER_AI_SCHEMA_VERSION, decideOfficerOrder, decideOfficerStrategy, officerDecisionLabel, recordOfficerDecision } from './officerAi.js';
 export { BATTLE_ERROR_CODES, BattleValidationError, battleError } from './errors.js';
 export { COMMANDER_EVENT_SCHEMA_VERSION, serializeCommanderEvent, serializeCommanderEvents } from './eventProtocol.js';
 export { COMMANDER_SESSION_SCHEMA_VERSION, buildCommanderSessionSnapshot } from './commanderSession.js';

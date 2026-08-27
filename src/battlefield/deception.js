@@ -11,6 +11,7 @@ import {
   registerStrategyIssue,
   sourceReliabilityScore,
 } from './strategy.js';
+import { decideOfficerStrategy, recordOfficerDecision } from './officerAi.js';
 
 export const DECEPTION_SCHEMA_VERSION = BATTLEFIELD_CONFIG.schemaVersions.deception;
 
@@ -181,6 +182,7 @@ export function issueDeception(world, {
     actionId,
     targetSide: recipientSide,
     targetUnitId: subjectUnitId,
+    commandUnitId: chainContext?.commandUnitId ?? null,
     reportedAreaId: falseAreaId,
     actualAreaId: subjectUnit.location,
     reportDelaySeconds: normalizeSeconds(delaySeconds ?? action.delaySeconds, BATTLEFIELD_CONFIG.defaults.deceptionReportDelaySeconds),
@@ -311,7 +313,33 @@ export function resolvePendingDeceptions(world) {
       recipientCommanderId: strategyAction.recipientCommanderId,
       communicationMode: strategyAction.communicationMode,
     });
+    const officerDecision = decideOfficerStrategy(next, strategyAction);
+    if (officerDecision) {
+      recordOfficerDecision(next, strategyAction, officerDecision);
+      strategyAction.officerDecision = officerDecision;
+      strategyAction.officerFeedback = officerDecision.rationale;
+      strategyAction.executionDelaySeconds = officerDecision.executionDelaySeconds;
+      strategyAction.executionPace = officerDecision.executionPace;
+      deception.officerDecision = officerDecision;
+      deception.officerFeedback = officerDecision.rationale;
+      deception.executionDelaySeconds = officerDecision.executionDelaySeconds;
+      deception.executionPace = officerDecision.executionPace;
+      if (officerDecision.decision === 'refused') {
+        strategyAction.status = 'refused';
+        strategyAction.refusedAt = next.simTime;
+        deception.status = 'refused';
+        deception.refusedAt = next.simTime;
+        return;
+      }
+      if (officerDecision.executionDelaySeconds > 0) strategyAction.readyAt += officerDecision.executionDelaySeconds;
+      deception.readyAt = strategyAction.readyAt;
+    }
     if (strategyAction.preparationSeconds === 0) {
+      if (strategyAction.readyAt > next.simTime) {
+        strategyAction.status = 'preparing';
+        deception.status = 'preparing';
+        return;
+      }
       const action = actionFor(next, strategyAction.actionId);
       if (action) next = dispatchPreparedDeception(next, strategyAction, deception, action).world;
     }

@@ -7,6 +7,7 @@ import { resolvePendingDeceptions } from './deception.js';
 import { appendBattleEvent, cloneBattleWorld } from './world.js';
 import { evaluateBattleOutcome } from './resolution.js';
 import { BATTLEFIELD_CONFIG } from './config.js';
+import { decideOfficerOrder, recordOfficerDecision } from './officerAi.js';
 
 const TERRAIN_LABELS = BATTLEFIELD_CONFIG.terrainLabels;
 
@@ -200,11 +201,34 @@ function advanceOneSecond(world) {
         communicationMode: order.communicationMode,
         messenger: order.messenger,
       });
+      const officerDecision = decideOfficerOrder(next, order);
+      if (officerDecision) {
+        recordOfficerDecision(next, order, officerDecision);
+        if (officerDecision.decision === 'refused') {
+          order.status = 'refused';
+          order.refusedAt = next.simTime;
+          order.refusalReason = officerDecision.reasonCode;
+          if (unit) unit.currentOrderId = null;
+        } else if (officerDecision.executionDelaySeconds > 0) {
+          order.executionResumeAt = next.simTime + officerDecision.executionDelaySeconds;
+        }
+      }
     }
   }
 
   for (const order of next.orders) {
     if (order.status !== 'executing') continue;
+    if (order.executionResumeAt != null && order.executionResumeAt > next.simTime) continue;
+    if (order.executionResumeAt != null && order.executionResumeAt <= next.simTime) {
+      order.executionResumeAt = null;
+      appendBattleEvent(next, {
+        type: 'officer_delay_completed',
+        side: next.units[order.unitId]?.side,
+        orderId: order.id,
+        unitId: order.unitId,
+        officerId: order.recipientCommanderId,
+      });
+    }
     if (order.type === 'hold') {
       order.taskStatus = 'active';
       order.status = 'completed';

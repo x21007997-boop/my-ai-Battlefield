@@ -27,6 +27,13 @@ function normalizeCommander(commander = {}) {
     isPlayer: commander.isPlayer === true,
     authority: commander.authority ?? 'field',
     historicalStatus: commander.historicalStatus ?? 'scenario_assumption',
+    riskProfile: commander.riskProfile ?? null,
+    decisionProfile: commander.decisionProfile ? {
+      ...commander.decisionProfile,
+      terrainFamiliarity: Array.isArray(commander.decisionProfile.terrainFamiliarity)
+        ? [...commander.decisionProfile.terrainFamiliarity]
+        : [],
+    } : null,
     sourceIds: [...(commander.sourceIds ?? [])],
   };
 }
@@ -255,6 +262,12 @@ export function commanderProjection(world, side = 'player') {
         isPlayer: commander.isPlayer,
         authority: commander.authority,
         historicalStatus: commander.historicalStatus,
+        riskProfile: commander.riskProfile,
+        decisionProfile: commander.decisionProfile ? {
+          ...commander.decisionProfile,
+          terrainFamiliarity: [...(commander.decisionProfile.terrainFamiliarity ?? [])],
+          status: 'simulation_variable',
+        } : null,
         commandedUnitIds,
       };
     });

@@ -290,6 +290,17 @@ if (!errors.length) {
     const attachedUnitIds = commander.attachedUnitIds ?? (commander.attachedUnitId ? [commander.attachedUnitId] : []);
     if (attachedUnitIds.some((unitId) => !unitIds.has(unitId))) add(`commanders.json:${commander.id}: attachedUnitId 引用了不存在的部队`);
     if (commander.locationAreaId && !areaIds.has(commander.locationAreaId)) add(`commanders.json:${commander.id}: locationAreaId 引用了不存在的区域`);
+    const decisionProfile = commander.decisionProfile;
+    if (decisionProfile !== undefined) {
+      if (!decisionProfile || typeof decisionProfile !== 'object' || Array.isArray(decisionProfile)) add(`commanders.json:${commander.id}: decisionProfile 必须是对象`);
+      else {
+        ['competence', 'initiative', 'discipline'].forEach((key) => {
+          if (decisionProfile[key] !== undefined && !probability(decisionProfile[key])) add(`commanders.json:${commander.id}: decisionProfile.${key} 必须在 0-1 范围内`);
+        });
+        if (decisionProfile.riskTolerance !== undefined && !['defensive', 'cautious', 'calculated', 'assertive'].includes(decisionProfile.riskTolerance)) add(`commanders.json:${commander.id}: decisionProfile.riskTolerance 无效`);
+        if (decisionProfile.terrainFamiliarity !== undefined && !Array.isArray(decisionProfile.terrainFamiliarity)) add(`commanders.json:${commander.id}: decisionProfile.terrainFamiliarity 必须是数组`);
+      }
+    }
   });
   if (Object.keys(commandChain).length > 0) {
     if (commandChain.schemaVersion !== 1) add('commanders.json: commandChain.schemaVersion 必须是 1');

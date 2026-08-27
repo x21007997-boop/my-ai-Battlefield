@@ -66,6 +66,7 @@ export interface BattleUnit {
   morale: number;
   fatigue: number;
   supplyDays: number;
+  supplyStatus?: string;
   readiness: number;
   status: string;
   posture?: string;
@@ -86,6 +87,15 @@ export interface BattleCommander {
   isPlayer?: boolean;
   authority?: string;
   historicalStatus?: string;
+  riskProfile?: string | null;
+  decisionProfile?: {
+    competence?: number;
+    initiative?: number;
+    discipline?: number;
+    riskTolerance?: string;
+    terrainFamiliarity?: string[];
+    status?: string;
+  } | null;
   commandedUnitIds?: string[];
 }
 
@@ -119,6 +129,11 @@ export interface BattleOrder {
   taskStatus?: string | null;
   blockedAt?: number | null;
   blockReason?: string | null;
+  officerDecision?: Record<string, unknown> | null;
+  officerFeedback?: string | null;
+  executionDelaySeconds?: number;
+  executionResumeAt?: number | null;
+  executionPace?: string | null;
 }
 
 export interface BattleObservation {
@@ -192,6 +207,11 @@ export interface StrategyAction {
   commandPath?: string[];
   messenger?: Record<string, unknown> | null;
   commandDeliveredAt?: number | null;
+  commandUnitId?: string | null;
+  officerDecision?: Record<string, unknown> | null;
+  officerFeedback?: string | null;
+  executionDelaySeconds?: number;
+  executionPace?: string | null;
   failedAt?: number | null;
   exposedAt?: number | null;
   failureReason?: string | null;

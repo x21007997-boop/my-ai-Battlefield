@@ -22,6 +22,13 @@
       "authority": "army-command",
       "historicalStatus": "historical_fact",
       "riskProfile": "calculated",
+      "decisionProfile": {
+        "competence": 0.92,
+        "initiative": 0.86,
+        "discipline": 0.95,
+        "riskTolerance": "calculated",
+        "terrainFamiliarity": ["river", "mountain"]
+      },
       "sourceIds": ["shiji-baiqi"]
     },
     {
@@ -34,6 +41,14 @@
       "locationStatus": "with_unit",
       "authority": "field-command",
       "historicalStatus": "historical_estimate",
+      "riskProfile": "calculated",
+      "decisionProfile": {
+        "competence": 0.78,
+        "initiative": 0.68,
+        "discipline": 0.84,
+        "riskTolerance": "calculated",
+        "terrainFamiliarity": ["river"]
+      },
       "sourceIds": ["shiji-baiqi"]
     },
     {

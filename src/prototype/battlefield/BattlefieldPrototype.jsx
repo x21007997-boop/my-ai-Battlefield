@@ -131,6 +131,9 @@ function candidateAreaLabel(report, areas) {
 
 function deceptionDeliveryLabel(deception, world) {
   if (deception.status === 'exposed') return '已暴露 · 未进入敌方认知';
+  if (deception.status === 'refused') return `副将拒绝 · ${deception.officerDecision?.rationale ?? '未执行'}`;
+  if (deception.officerDecision?.decision === 'modified') return `副将调整后准备 · 余 ${Math.max(0, (deception.readyAt ?? world.simTime) - world.simTime)} 秒`;
+  if (deception.officerDecision?.decision === 'delayed') return `副将要求延后 · 余 ${Math.max(0, (deception.readyAt ?? world.simTime) - world.simTime)} 秒`;
   if (deception.status === 'transmitting') return `传令中 · 余 ${Math.max(0, (deception.commandDeliveredAt ?? world.simTime) - world.simTime)} 秒`;
   if (deception.status === 'preparing') return `准备中 · 余 ${Math.max(0, (deception.readyAt ?? world.simTime) - world.simTime)} 秒`;
   const observation = world.observations.find((item) => item.id === deception.observationId);
@@ -149,8 +152,11 @@ function formatClock(seconds) {
   return `${hours}:${minutes}:${rest}`;
 }
 
-function orderStatus(order) {
+function orderStatus(order, simTime = 0) {
   if (order.status === 'transmitting') return '传递中';
+  if (order.status === 'refused') return '副将拒绝';
+  if (order.executionResumeAt != null && order.executionResumeAt > simTime) return `副将整备 · 余 ${order.executionResumeAt - simTime} 秒`;
+  if (order.status === 'executing' && order.officerDecision?.decision === 'modified') return '副将调整后执行';
   if (order.status === 'executing') return '执行中';
   if (order.status === 'completed') return '已完成';
   if (order.status === 'cancelled') return '已取消';
@@ -160,6 +166,8 @@ function orderStatus(order) {
 
 function movementLabel(unit) {
   if (unit.movement?.status === 'transmitting') return '传递中';
+  if (unit.movement?.officerWaiting) return '副将整备中';
+  if (unit.movement?.officerDecision?.decision === 'modified' && (unit.movement?.progress ?? 0) === 0) return '副将调整中';
   if (unit.movement?.currentTerrain?.terrainType === 'river') return '渡河中';
   if (unit.movement?.currentTerrain?.terrainType === 'mountain') return '翻山中';
   return '行军中';
@@ -183,6 +191,13 @@ function commanderPresenceLabel(commander, commanders, playerId) {
   return commander?.locationAreaId && player?.locationAreaId && commander.locationAreaId === player.locationAreaId ? '在场' : '远程';
 }
 
+function commanderDecisionText(commander) {
+  const profile = commander?.decisionProfile;
+  if (!profile) return '未配置判断画像';
+  const riskLabel = { defensive: '谨慎', cautious: '稳健', calculated: '权衡', assertive: '果断' }[profile.riskTolerance] ?? profile.riskTolerance ?? '权衡';
+  return `倾向${riskLabel} · 执行力 ${Math.round((profile.competence ?? 0) * 100)}%`;
+}
+
 function resourceLabel(key) {
   return BATTLEFIELD_CONFIG.resourceLabels?.[key] ?? ({ intelligencePoints: '情报点', scoutTeams: '侦察队', deceptionAssets: '计策资源' }[key] ?? key);
 }
@@ -202,6 +217,10 @@ function eventText(event, world) {
   if (event.type === 'order_issued') return `已发令：${unit?.name ?? event.unitId} → ${area?.name ?? event.targetAreaId}`;
   if (event.type === 'order_delivered') return `命令抵达：${unit?.name ?? event.unitId} 已收到指令`;
   if (event.type === 'command_delivered') return `传令抵达：${recipient?.name ?? event.recipientCommanderId ?? '前线军官'} 已收到军令`;
+  if (event.type === 'officer_decision') {
+    const decisionLabel = { accepted: '接受执行', modified: '调整执行', delayed: '延后执行', refused: '拒绝执行' }[event.decision] ?? '作出判断';
+    return `${event.officerName ?? '前线军官'}${decisionLabel}：${event.rationale ?? '已形成执行意见'}`;
+  }
   if (event.type === 'command_interpreted') return `AI军令识别：${event.interpretation?.intentLabel ?? '已解析'} · ${event.interpretation?.confidence ?? '待定'}可信`;
   if (event.type === 'unit_arrived') return `部队到达：${unit?.name ?? event.unitId} 进入${area?.name ?? event.areaId}`;
   if (event.type === 'order_completed') return `命令完成：${unit?.name ?? event.unitId} 暂守原地`;
@@ -479,7 +498,7 @@ export function BattlefieldPrototype({ mode = 'fixture', onBack = () => { window
               {commanders.length === 0 ? <p className="empty-panel">当前场景未配置军官链路。</p> : commanders.map((commander) => (
                 <button key={commander.id} className={selectedCommander?.id === commander.id ? 'commander-row selected' : 'commander-row'} onClick={() => { setSelectedCommanderId(commander.id); if (commander.attachedUnitId && world.units[commander.attachedUnitId]) setSelectedUnitId(commander.attachedUnitId); notify(`已选定接收军官：${commander.name}。`, 'info'); }}>
                   <span className="commander-row-mark">{commander.isPlayer ? '帅' : '将'}</span>
-                  <span><strong>{commander.name}</strong><small>{commander.role} · {commanderLocationText(commander, world)}</small></span>
+                  <span><strong>{commander.name}</strong><small>{commander.role} · {commanderLocationText(commander, world)}</small><small className="commander-trait">{commanderDecisionText(commander)}</small></span>
                   <em>{commanderPresenceLabel(commander, commanders, playerCommanderId)}</em>
                 </button>
               ))}
@@ -586,7 +605,7 @@ export function BattlefieldPrototype({ mode = 'fixture', onBack = () => { window
 
           <div className="battle-panel order-panel">
             <div className="panel-kicker"><Play size={15} /> 命令队列</div>
-            {activeOrders.length === 0 ? <p className="empty-panel">当前没有传递中或执行中的命令。</p> : activeOrders.map((order) => <div className="order-row" key={order.id}><div><strong>{world.units[order.unitId]?.name}</strong><small>{world.areas[order.targetAreaId]?.name} · {orderStatus(order)}</small></div><button onClick={() => cancelActiveOrder(order.id)}>取消</button></div>)}
+            {activeOrders.length === 0 ? <p className="empty-panel">当前没有传递中或执行中的命令。</p> : activeOrders.map((order) => <div className="order-row" key={order.id}><div><strong>{world.units[order.unitId]?.name}</strong><small>{world.areas[order.targetAreaId]?.name} · {orderStatus(order, world.simTime)}</small>{order.officerFeedback && <small className="officer-feedback">{order.officerFeedback}</small>}</div><button onClick={() => cancelActiveOrder(order.id)}>取消</button></div>)}
           </div>
         </aside>
       </section>

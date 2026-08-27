@@ -76,6 +76,7 @@ function normalizeUnit(unit) {
     morale: unit.morale ?? 50,
     fatigue: unit.fatigue ?? 0,
     supplyDays: unit.supplyDays ?? 0,
+    supplyStatus: unit.supplyStatus ?? (unit.supplyDays === undefined ? 'unknown' : 'simulation_variable'),
     readiness: unit.readiness ?? 1,
     posture: unit.posture ?? 'standard',
     communication: unit.communication ?? 'clear',

@@ -65,6 +65,11 @@ export function buildCommanderSessionSnapshot(world, {
       taskStatus: order.taskStatus ?? null,
       blockedAt: order.blockedAt ?? null,
       blockReason: order.blockReason ?? null,
+      officerDecision: order.officerDecision ? JSON.parse(JSON.stringify(order.officerDecision)) : null,
+      officerFeedback: order.officerFeedback ?? null,
+      executionDelaySeconds: order.executionDelaySeconds ?? 0,
+      executionResumeAt: order.executionResumeAt ?? null,
+      executionPace: order.executionPace ?? null,
     }));
   const ownObservations = world.observations
     .filter((observation) => observation.observerSide === side)
@@ -128,6 +133,11 @@ export function buildCommanderSessionSnapshot(world, {
       communicationMode: item.communicationMode ?? 'legacy',
       commandPath: Array.isArray(item.commandPath) ? item.commandPath.filter(Boolean).map(String) : [],
       commandDeliveredAt: item.commandDeliveredAt ?? null,
+      commandUnitId: item.commandUnitId ?? null,
+      officerDecision: item.officerDecision ? JSON.parse(JSON.stringify(item.officerDecision)) : null,
+      officerFeedback: item.officerFeedback ?? null,
+      executionDelaySeconds: item.executionDelaySeconds ?? 0,
+      executionPace: item.executionPace ?? null,
     }));
   const strategyActions = (world.strategy?.actions ?? [])
     .filter((action) => action.side === side)
@@ -158,6 +168,11 @@ export function buildCommanderSessionSnapshot(world, {
         commandPath: Array.isArray(action.commandPath) ? action.commandPath.filter(Boolean).map(String) : [],
         messenger: action.messenger ? JSON.parse(JSON.stringify(action.messenger)) : null,
         commandDeliveredAt: action.commandDeliveredAt ?? null,
+        commandUnitId: action.commandUnitId ?? null,
+        officerDecision: action.officerDecision ? JSON.parse(JSON.stringify(action.officerDecision)) : null,
+        officerFeedback: action.officerFeedback ?? null,
+        executionDelaySeconds: action.executionDelaySeconds ?? 0,
+        executionPace: action.executionPace ?? null,
       });
     });
   const eventLog = serializeCommanderEvents(

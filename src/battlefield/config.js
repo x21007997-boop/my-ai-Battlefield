@@ -19,6 +19,7 @@ export const BATTLEFIELD_CONFIG = Object.freeze({
     deception: 1,
     strategy: 1,
     commandChain: 1,
+    officerAi: 1,
     map: 1,
     commanderGateway: 1,
   }),

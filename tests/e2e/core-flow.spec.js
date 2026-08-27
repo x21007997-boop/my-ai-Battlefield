@@ -170,4 +170,5 @@ test('routes a free-form order through a named remote deputy', async ({ page }) 
   for (let i = 0; i < 4; i += 1) await page.getByRole('button', { name: '手动推进 1 秒' }).click();
   await expect(page.locator('.order-row')).toContainText('执行中');
   await expect(page.locator('.battle-event-list')).toContainText('传令抵达：王龁');
+  await expect(page.locator('.battle-event-list')).toContainText('王龁接受执行');
 });

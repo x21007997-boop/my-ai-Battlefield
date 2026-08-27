@@ -26,6 +26,7 @@ export function consumeLogistics(world, { intervalSeconds = DEFAULT_SUPPLY_TICK_
     const before = unit.supplyDays;
     const consumedDays = 1 + (interdictions.length > 0 ? 1 : 0);
     unit.supplyDays = Math.max(0, unit.supplyDays - consumedDays);
+    unit.supplyStatus = unit.supplyDays === 0 ? 'depleted' : unit.supplyStatus === 'unknown' ? 'simulation_variable' : unit.supplyStatus;
     unit.fatigue = Math.min(100, unit.fatigue + 1);
     if (interdictions.length > 0) {
       appendBattleEvent(next, {

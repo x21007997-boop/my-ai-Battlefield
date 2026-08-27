@@ -173,6 +173,10 @@ export function buildCommanderMapModel(world, {
           progress: activeOrder.movementProgress ?? 0,
           currentTerrain: activeOrder.currentTerrain ?? null,
           lastTerrainTransition: activeOrder.lastTerrainTransition ?? null,
+          officerDecision: activeOrder.officerDecision ?? null,
+          officerFeedback: activeOrder.officerFeedback ?? null,
+          executionResumeAt: activeOrder.executionResumeAt ?? null,
+          officerWaiting: activeOrder.executionResumeAt != null && activeOrder.executionResumeAt > world.simTime,
         };
       })(),
     }))

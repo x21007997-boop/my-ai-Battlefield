@@ -861,6 +861,18 @@
       "isPlayer": true,
       "authority": "army-command",
       "historicalStatus": "historical_fact",
+      "riskProfile": "calculated",
+      "decisionProfile": {
+        "competence": 0.92,
+        "initiative": 0.86,
+        "discipline": 0.95,
+        "riskTolerance": "calculated",
+        "terrainFamiliarity": [
+          "river",
+          "mountain"
+        ],
+        "status": "simulation_variable"
+      },
       "commandedUnitIds": [
         "qin-main",
         "qin-detachment"
@@ -880,6 +892,17 @@
       "isPlayer": false,
       "authority": "field-command",
       "historicalStatus": "historical_estimate",
+      "riskProfile": "calculated",
+      "decisionProfile": {
+        "competence": 0.78,
+        "initiative": 0.68,
+        "discipline": 0.84,
+        "riskTolerance": "calculated",
+        "terrainFamiliarity": [
+          "river"
+        ],
+        "status": "simulation_variable"
+      },
       "commandedUnitIds": [
         "qin-detachment"
       ]
@@ -1883,6 +1906,18 @@
         "isPlayer": true,
         "authority": "army-command",
         "historicalStatus": "historical_fact",
+        "riskProfile": "calculated",
+        "decisionProfile": {
+          "competence": 0.92,
+          "initiative": 0.86,
+          "discipline": 0.95,
+          "riskTolerance": "calculated",
+          "terrainFamiliarity": [
+            "river",
+            "mountain"
+          ],
+          "status": "simulation_variable"
+        },
         "commandedUnitIds": [
           "qin-main",
           "qin-detachment"
@@ -1902,6 +1937,17 @@
         "isPlayer": false,
         "authority": "field-command",
         "historicalStatus": "historical_estimate",
+        "riskProfile": "calculated",
+        "decisionProfile": {
+          "competence": 0.78,
+          "initiative": 0.68,
+          "discipline": 0.84,
+          "riskTolerance": "calculated",
+          "terrainFamiliarity": [
+            "river"
+          ],
+          "status": "simulation_variable"
+        },
         "commandedUnitIds": [
           "qin-detachment"
         ]
