@@ -81,6 +81,7 @@ var battle_panel: Panel
 var battle_label: RichTextLabel
 var speed_option: OptionButton
 var new_battle_button: Button
+var guide_label: Label
 
 const TASK_COMMANDS := [
 	{"type": "guard", "label": "警戒"},
@@ -425,8 +426,15 @@ func _build_interface() -> void:
 	run_button.pressed.connect(_toggle_running)
 	top_bar.add_child(run_button)
 
-	var visual_hint := _add_label(hud, "秦军旗帜·已知位置    赵军朱红旗·疑似情报    城邑·粮仓·堡垒·关隘·地标", Rect2(116, 104, 760, 22), 12, Color(0.92, 0.83, 0.63, 0.88))
-	visual_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	var guide_panel := Panel.new()
+	guide_panel.position = Vector2(226, 101)
+	guide_panel.size = Vector2(930, 32)
+	guide_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	guide_panel.add_theme_stylebox_override("panel", _panel_style(Color(0.10, 0.07, 0.05, 0.48), Color(0.66, 0.47, 0.27, 0.58), 8, 1))
+	hud.add_child(guide_panel)
+	guide_label = _add_label(guide_panel, "", Rect2(12, 5, 906, 22), 11, Color("#f0d8a6"))
+	guide_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	guide_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 	var unit_rail := Panel.new()
 	unit_rail.position = Vector2(18, 140)
@@ -1818,6 +1826,8 @@ func _refresh() -> void:
 	if clock_label == null:
 		return
 	clock_label.text = "模拟时间  %02d:%02d:%02d" % [int(sim_time / 3600), int(sim_time / 60) % 60, sim_time % 60]
+	if guide_label != null:
+		guide_label.text = _guide_text()
 	var mode := "战场推演中" if running else "战场已暂停"
 	if engine_connected and not replay_mode:
 		mode = "战场推演中" if running else "战场已暂停"
@@ -1899,6 +1909,24 @@ func _refresh() -> void:
 		_refresh_deception_panel()
 	sand_table.set_selection(selected_unit_id, selected_target_area_id)
 	sand_table.set_commander_layers(friendly_units, reported_signals, order, pending_observations, sim_time)
+
+func _guide_text() -> String:
+	if replay_mode:
+		return "回放模式：拖动时间轴查看军令、行军与前线回报的先后关系"
+	if outcome.size() > 0:
+		return "战役已结束：打开“战局”查看复盘，或点击右侧“新局”重新开始"
+	var order_status := str(order.get("status", "")) if not order.is_empty() else ""
+	if order_status in ["transmitting", "executing"]:
+		return "军令已下达：继续推进时间，观察传令、行军和副将回报"
+	if _pending_observation_count() > 0 or _preparing_strategy_count() > 0:
+		return "前线正在回传：继续推进时间，等待可能失真的情报抵达"
+	if selected_target_area_id != "":
+		return "目标已选：点击下方“传达”下达军令，部队会按地形和传令时间推进"
+	if selected_unit_id != "":
+		return "已选秦军部队：点击沙盘上的区域选择目标"
+	if not engine_connected:
+		return "实时内核未接入：请先启动正式战场内核，再下达军令"
+	return "第一步：从左侧选择一支秦军部队"
 
 func _pending_observation_count() -> int:
 	if engine_connected:

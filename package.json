@@ -12,7 +12,7 @@
     "validate:battle": "node scripts/validate-battle-scenario.mjs tests/fixtures/battle-scenario && node scripts/validate-battle-scenario.mjs scenarios/changping-260",
     "test:e2e": "playwright test",
     "test:ci": "npm run validate:scenario && npm run validate:battle && npm run typecheck:battlefield && npm run godot:sync && npm run test:godot-data && npm test && npm run test:e2e && npm run build && npm run test:sites",
-    "test:godot-data": "node --test tests/godot-data.test.mjs",
+    "test:godot-data": "node --test tests/godot-data.test.mjs tests/godot-layout.test.mjs",
     "test:sites": "node --test tests/sites-worker.test.mjs",
     "typecheck:battlefield": "tsc --project tsconfig.json",
     "validate:scenario": "node scripts/validate-scenario.mjs scenarios/hongguang-1645 && node scripts/validate-scenario.mjs scenarios/yangzhou-1645",
