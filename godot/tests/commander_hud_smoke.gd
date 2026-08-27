@@ -9,7 +9,10 @@ func _init() -> void:
 	assert(main.intelligence_panel != null)
 	assert(main.deception_panel != null)
 	assert(main.battle_panel != null)
+	assert(main.speed_option != null)
 	assert(main.intelligence_button.text == "情报 0")
+	main._on_speed_selected(2)
+	assert(main.simulation_speed == 5)
 
 	main._toggle_battle_panel()
 	assert(main.battle_panel.visible)

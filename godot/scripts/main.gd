@@ -40,6 +40,7 @@ var engine_gateway: Node
 var engine_session: Dictionary = {}
 var engine_connected := false
 var engine_tick_accumulator := 0.0
+var simulation_speed := 1
 var clock_label: Label
 var status_label: Label
 var selection_label: Label
@@ -75,6 +76,7 @@ var selected_deception_action_id := ""
 var battle_button: Button
 var battle_panel: Panel
 var battle_label: RichTextLabel
+var speed_option: OptionButton
 
 const TASK_COMMANDS := [
 	{"type": "guard", "label": "警戒"},
@@ -143,20 +145,22 @@ func _process(delta: float) -> void:
 			return
 		engine_tick_accumulator += delta
 		while engine_tick_accumulator >= 1.0 and not engine_gateway.busy():
-			engine_tick_accumulator -= 1.0
-			engine_gateway.send_command({"type": "advance", "seconds": 1})
+			var advance_seconds: int = min(simulation_speed, int(engine_tick_accumulator))
+			advance_seconds = max(1, advance_seconds)
+			engine_tick_accumulator -= advance_seconds
+			engine_gateway.send_command({"type": "advance", "seconds": advance_seconds})
 		return
 	if replay_mode:
 		if not running:
 			return
-		replay_accumulator += delta
+		replay_accumulator += delta * float(simulation_speed)
 		while replay_accumulator >= 1.0:
 			replay_accumulator -= 1.0
 			_step_replay_second()
 		return
 	if not running:
 		return
-	tick_accumulator += delta
+	tick_accumulator += delta * float(simulation_speed)
 	while tick_accumulator >= 1.0:
 		tick_accumulator -= 1.0
 		_step_second()
@@ -181,6 +185,8 @@ func _on_engine_response(operation: String, response: Dictionary) -> void:
 	_apply_engine_session(session)
 	for event in response.get("events", []):
 		_add_log(_replay_event_text(event))
+		if operation != "command":
+			_apply_runtime_event_feedback(event)
 	if outcome.size() > 0:
 		_set_feedback("战役已结束：%s。可导出或载入本局回放。" % str(outcome.get("title", outcome.get("result", "战役结束"))), "success")
 	elif operation == "start_session":
@@ -208,6 +214,26 @@ func _on_engine_response(operation: String, response: Dictionary) -> void:
 				"strategy_reliability_reduced": _set_feedback("情报链可信度下降：后续同类行动更容易被识破。", "error")
 				_: _set_feedback("操作已接收，战场状态正在刷新。", "success")
 	_refresh()
+
+func _apply_runtime_event_feedback(event: Dictionary) -> void:
+	var payload_value = event.get("payload", {})
+	var payload: Dictionary = payload_value if payload_value is Dictionary else event
+	match str(event.get("type", "")):
+		"report_arrived":
+			var area_id := str(payload.get("reportedAreaId", payload.get("areaId", "")))
+			_set_feedback("前线情报抵达：%s（%s，%s）。" % [_area_name(area_id), _confidence_label(str(payload.get("confidence", "unknown"))), _uncertainty_label(payload)], "success")
+		"report_expired":
+			_set_feedback("前线情报已失效：沙盘上的疑似敌情将被移除。", "info")
+		"order_blocked":
+			_set_feedback("部队机动受阻：目标区域的通路暂时被封锁。", "error")
+		"supply_depleted":
+			_set_feedback("后勤警报：一支部队的补给已耗尽，战力会受到影响。", "error")
+		"unit_entered_terrain":
+			_set_feedback("前线回报：部队已进入%s段。" % str(payload.get("label", "复杂地形")), "info")
+		"unit_exited_terrain":
+			_set_feedback("前线回报：部队已完成%s。" % str(payload.get("label", "地形通过")), "info")
+		"battle_ended":
+			_set_feedback("战役已结束：请打开“战局”查看战后复盘。", "success")
 
 func _on_engine_request_failed(_operation: String, message: String) -> void:
 	engine_connected = false
@@ -431,6 +457,23 @@ func _build_interface() -> void:
 	_style_button(reset_view)
 	reset_view.pressed.connect(_reset_view)
 	view_rail.add_child(reset_view)
+
+	var speed_rail := Panel.new()
+	speed_rail.position = Vector2(18, 454)
+	speed_rail.size = Vector2(190, 44)
+	speed_rail.add_theme_stylebox_override("panel", _panel_style(Color(0.10, 0.07, 0.05, 0.72), Color(0.66, 0.47, 0.27, 0.7), 12, 1))
+	hud.add_child(speed_rail)
+	_add_label(speed_rail, "推演速度", Rect2(10, 7, 58, 28), 11, Color("#e4c58e"))
+	speed_option = OptionButton.new()
+	speed_option.position = Vector2(70, 6)
+	speed_option.size = Vector2(110, 32)
+	speed_option.tooltip_text = "调整实时推演或回放速度"
+	_style_button(speed_option)
+	for speed in [1, 2, 5, 10]:
+		speed_option.add_item("%dx %s" % [speed, "实时" if speed == 1 else "加速"])
+		speed_option.set_item_metadata(speed_option.item_count - 1, speed)
+	speed_option.item_selected.connect(_on_speed_selected)
+	speed_rail.add_child(speed_option)
 
 	var utility_rail := Panel.new()
 	utility_rail.position = Vector2(1184, 140)
@@ -675,6 +718,13 @@ func _toggle_deception_panel() -> void:
 		intelligence_panel.visible = false
 		battle_panel.visible = false
 		_refresh_deception_panel()
+
+func _on_speed_selected(index: int) -> void:
+	if speed_option == null:
+		return
+	simulation_speed = max(1, int(speed_option.get_item_metadata(index)))
+	_set_feedback("推演速度已切换为 %dx。" % simulation_speed, "info")
+	_refresh()
 
 func _toggle_running() -> void:
 	running = not running
@@ -1116,6 +1166,18 @@ func _refresh_battle_panel() -> void:
 	lines.append("可用资源")
 	lines.append("情报点 %s · 斥候队 %s · 计策资源 %s" % [_resource_text("intelligencePoints"), _resource_text("scoutTeams"), _resource_text("deceptionAssets")])
 	lines.append("情报链可信度：%d%%" % int(strategy_reliability * 100.0))
+	if outcome.size() > 0:
+		lines.append("")
+		lines.append("战后复盘")
+		var result_label := str(review.get("resultLabel", outcome.get("result", "战役结束")))
+		var reason_label := str(review.get("reasonLabel", outcome.get("reason", "")))
+		lines.append("结果：%s" % result_label)
+		if reason_label != "":
+			lines.append("原因：%s" % reason_label)
+		var stats_value = review.get("stats", {})
+		var stats: Dictionary = stats_value if stats_value is Dictionary else {}
+		lines.append("命令 %d · 情报 %d · 计策 %d" % [int(stats.get("commandCount", 0)), int(stats.get("reportCount", 0)), int(stats.get("deceptionCount", 0))])
+		lines.append("这份复盘只记录指挥官已知事件，不回填隐藏战斗真值。")
 	lines.append("")
 	lines.append("提示：地图只显示我方已知信息和延迟报告；敌军真值不会直接显示。")
 	battle_label.text = "\n".join(lines)
@@ -1216,6 +1278,7 @@ func _step_second() -> void:
 			elif order.get("type", "move") != "hold":
 				delivery_action = "开始执行机动"
 			_add_log("命令抵达：部队%s。" % delivery_action)
+			_set_feedback("命令已抵达：%s开始执行。" % delivery_action, "info")
 		if order.get("status", "") == "executing" and order.get("type", "move") == "hold":
 			order["status"] = "completed"
 			event_log.append(sim_time, "order_completed", {
@@ -1238,6 +1301,7 @@ func _step_second() -> void:
 				_add_log("部队到达：已进入%s，%s任务生效。" % [_area_name(str(order.get("targetAreaId", ""))), str(order.get("taskLabel", "任务"))])
 			else:
 				_add_log("部队到达：已进入%s。" % _area_name(str(order.get("targetAreaId", ""))))
+			_set_feedback("部队已抵达：%s。" % _area_name(str(order.get("targetAreaId", ""))), "success")
 		elif order.get("status", "") == "executing" and order.get("type", "move") != "hold":
 			order["remainingTravelSeconds"] = max(0, int(order.get("remainingTravelSeconds", 0)) - 1)
 
@@ -1269,6 +1333,7 @@ func _step_second() -> void:
 			"expiresAt": report["expiresAt"],
 		})
 		_add_log("情报抵达：赵军援军疑似位于主壁方向。")
+		_set_feedback("前线情报抵达：赵军援军疑似位于主壁方向。", "success")
 
 	for index in range(reported_signals.size() - 1, -1, -1):
 		if sim_time >= int(reported_signals[index].get("expiresAt", 999999)):
@@ -1278,6 +1343,7 @@ func _step_second() -> void:
 			})
 			reported_signals.remove_at(index)
 			_add_log("情报失效：前方敌情标记超过有效时限。")
+			_set_feedback("前线情报已失效：沙盘上的疑似敌情已移除。", "info")
 
 	_refresh()
 
@@ -1703,6 +1769,11 @@ func _refresh() -> void:
 	log_label.text = "\n".join(log_lines)
 	if zoom_label != null:
 		zoom_label.text = "%d%%" % int(map_camera.zoom.x * 100.0)
+	if speed_option != null:
+		for index in range(speed_option.item_count):
+			if int(speed_option.get_item_metadata(index)) == simulation_speed:
+				speed_option.select(index)
+				break
 	if intelligence_button != null:
 		intelligence_button.text = "情报 %d" % reported_signals.size()
 	if battle_button != null:
