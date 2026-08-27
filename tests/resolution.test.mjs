@@ -29,6 +29,36 @@ test('ends a battle when data-driven victory conditions are met', () => {
   assert.deepEqual(stepBattle(ended, 10), ended);
 });
 
+test('can require a tactical condition to hold before declaring victory', () => {
+  const world = createBattleWorld({
+    scenarioId: 'hold-resolution-test',
+    areas: [
+      { id: 'camp', neighbors: [{ id: 'ridge', travelSeconds: 1 }] },
+      { id: 'ridge', neighbors: [{ id: 'camp', travelSeconds: 1 }] },
+    ],
+    units: [
+      { id: 'player', side: 'player', location: 'camp', strength: 100 },
+      { id: 'enemy', side: 'enemy', location: 'ridge', strength: 100 },
+    ],
+    resolution: {
+      victory: {
+        id: 'hold-ridge',
+        result: 'victory',
+        requiredHoldSeconds: 2,
+        requiredUnitPositions: [{ unitId: 'player', areaId: 'ridge' }],
+      },
+    },
+  });
+  const issued = issueOrder(world, { type: BATTLE_ORDER_TYPES.MOVE, unitId: 'player', targetAreaId: 'ridge' });
+  const holding = stepBattle(issued.world, 1);
+  assert.equal(holding.status, 'running');
+  assert.equal(holding.resolutionProgress.victory.status, 'holding');
+  assert.equal(holding.resolutionProgress.victory.elapsedSeconds, 0);
+  const ended = stepBattle(holding, 2);
+  assert.equal(ended.status, 'ended');
+  assert.equal(ended.outcome.reason, 'victory_conditions_held');
+});
+
 test('ends a battle by time limit without exposing enemy truth', () => {
   const world = createBattleWorld({
     scenarioId: 'timeout-test',

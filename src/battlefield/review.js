@@ -13,6 +13,7 @@ const RESULT_LABELS = {
 
 const REASON_LABELS = {
   victory_conditions_met: '满足关卡胜利条件',
+  victory_conditions_held: '关键态势已维持到确认窗口',
   time_limit_reached: '达到本局时间上限',
 };
 
@@ -59,6 +60,8 @@ function eventLabel(event) {
     case 'report_arrived': return '前线情报抵达';
     case 'report_expired': return '过期情报移出沙盘';
     case 'deception_issued': return '计策送入敌方认知';
+    case 'victory_hold_started': return '关键态势进入确认窗口';
+    case 'victory_hold_broken': return '关键态势中断，需要重新建立';
     case 'ai_decision': return '敌方依据情报采取行动';
     case 'supply_consumed': return '补给持续消耗';
     case 'supply_depleted': return '部队出现断粮压力';

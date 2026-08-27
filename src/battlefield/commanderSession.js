@@ -1,6 +1,7 @@
 import { buildCommanderMapModel } from './projection.js';
 import { serializeCommanderEvents } from './eventProtocol.js';
 import { buildCommanderObjectiveSnapshot, buildCommanderReview } from './review.js';
+import { buildCommanderResolutionSnapshot } from './resolution.js';
 import { BATTLEFIELD_CONFIG } from './config.js';
 import { commanderProjection, playerCommanderId } from './commandChain.js';
 
@@ -193,6 +194,7 @@ export function buildCommanderSessionSnapshot(world, {
     outcome: world.outcome ?? null,
     objectives: buildCommanderObjectiveSnapshot(world, side),
     review: world.outcome ? buildCommanderReview(world, { side }) : null,
+    resolution: buildCommanderResolutionSnapshot(world, side),
     map,
     ownOrders,
     ownObservations,

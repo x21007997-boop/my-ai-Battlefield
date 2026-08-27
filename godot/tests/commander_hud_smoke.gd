@@ -17,6 +17,9 @@ func _init() -> void:
 	main._toggle_battle_panel()
 	assert(main.battle_panel.visible)
 	assert(main.battle_label.text.contains("统帅层战役意图"))
+	assert(main.battle_label.text.contains("当前胜利门槛"))
+	assert(main.battle_label.text.contains("封锁"))
+	assert(main.battle_label.text.contains("待完成部署后开始确认"))
 	assert(main.battle_label.text.contains("剩余"))
 
 	main._toggle_intelligence_panel()

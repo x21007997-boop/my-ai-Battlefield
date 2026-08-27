@@ -112,6 +112,14 @@ const simulationResolution = {
       ...condition,
       side: condition.side === 'qin' ? 'player' : condition.side === 'zhao' ? 'enemy' : condition.side,
     })),
+    requiredHoldBeliefs: (simulationParameters.resolution.victory.requiredHoldBeliefs ?? []).map((condition) => ({
+      ...condition,
+      side: condition.side === 'qin' ? 'player' : condition.side === 'zhao' ? 'enemy' : condition.side,
+    })),
+    requiredTaskEffects: (simulationParameters.resolution.victory.requiredTaskEffects ?? []).map((condition) => ({
+      ...condition,
+      side: condition.side === 'qin' ? 'player' : condition.side === 'zhao' ? 'enemy' : condition.side,
+    })),
   } : simulationParameters.resolution?.victory,
 };
 const simulationWorld = createBattleWorld({

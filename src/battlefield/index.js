@@ -45,7 +45,7 @@ export {
 } from './counterIntelligence.js';
 export { applyObservation, queueObservation, viewBelief, REPORT_UNCERTAINTY_PROFILES } from './perception.js';
 export { DECEPTION_SCHEMA_VERSION, issueDeception, resolvePendingDeceptions } from './deception.js';
-export { BATTLE_RESOLUTION_SCHEMA_VERSION, evaluateBattleOutcome } from './resolution.js';
+export { BATTLE_RESOLUTION_SCHEMA_VERSION, buildCommanderResolutionSnapshot, evaluateBattleOutcome } from './resolution.js';
 export { BATTLE_REVIEW_SCHEMA_VERSION, buildCommanderObjectiveSnapshot, buildCommanderReview } from './review.js';
 export { BATTLEFIELD_MAP_COORDINATE_SYSTEM, BATTLEFIELD_MAP_SCHEMA_VERSION, buildCommanderMapModel } from './projection.js';
 export { createBattleWorldFromScenario } from './scenario.js';

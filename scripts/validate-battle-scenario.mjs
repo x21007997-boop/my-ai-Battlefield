@@ -223,8 +223,20 @@ if (!errors.length) {
         if (!unitIds.has(condition.unitId) || !areaIds.has(condition.areaId)) add('simulation-parameters.json: resolution.victory.requiredUnitPositions 引用了不存在的部队或区域');
       });
       (victory?.requiredBeliefs ?? []).forEach((condition) => {
-        if (!sideIds.has(condition.side) || !unitIds.has(condition.targetUnitId) || !areaIds.has(condition.areaId)) add('simulation-parameters.json: resolution.victory.requiredBeliefs 引用了不存在的阵营、部队或区域');
+        const beliefAreas = Array.isArray(condition.areaIds) ? condition.areaIds : condition.areaId ? [condition.areaId] : [];
+        if (!sideIds.has(condition.side) || !unitIds.has(condition.targetUnitId) || beliefAreas.length === 0 || beliefAreas.some((areaId) => !areaIds.has(areaId))) add('simulation-parameters.json: resolution.victory.requiredBeliefs 引用了不存在的阵营、部队或区域');
       });
+      (victory?.requiredHoldBeliefs ?? []).forEach((condition) => {
+        const beliefAreas = Array.isArray(condition.areaIds) ? condition.areaIds : condition.areaId ? [condition.areaId] : [];
+        if (!sideIds.has(condition.side) || !unitIds.has(condition.targetUnitId) || beliefAreas.length === 0 || beliefAreas.some((areaId) => !areaIds.has(areaId))) add('simulation-parameters.json: resolution.victory.requiredHoldBeliefs 引用了不存在的阵营、部队或区域');
+      });
+      (victory?.requiredTaskEffects ?? []).forEach((condition) => {
+        if (!['blockade', 'interdict_supply'].includes(condition.type)) add('simulation-parameters.json: resolution.victory.requiredTaskEffects.type 不受支持');
+        if (condition.unitId && !unitIds.has(condition.unitId)) add('simulation-parameters.json: resolution.victory.requiredTaskEffects 引用了不存在的部队');
+        if (condition.areaId && !areaIds.has(condition.areaId)) add('simulation-parameters.json: resolution.victory.requiredTaskEffects 引用了不存在的区域');
+        if (condition.side && !sideIds.has(condition.side)) add('simulation-parameters.json: resolution.victory.requiredTaskEffects 引用了不存在的阵营');
+      });
+      if (victory?.requiredHoldSeconds !== undefined && !nonNegativeInteger(victory.requiredHoldSeconds)) add('simulation-parameters.json: resolution.victory.requiredHoldSeconds 必须是非负整数');
       if (!resolution.timeout?.id || !resolution.timeout?.result) add('simulation-parameters.json: resolution.timeout 必须包含 id 和 result');
     }
   }

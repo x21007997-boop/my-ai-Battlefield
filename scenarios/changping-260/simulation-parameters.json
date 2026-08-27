@@ -3,7 +3,7 @@
   "status": "experimental",
   "parameterType": "scenario_assumption",
   "note": "以下数值只用于让历史背景进入可玩的实时窗口，不代表史料中的真实人数、距离或士气。",
-  "commandDelaySeconds": 3,
+  "commandDelaySeconds": 8,
   "resources": {
     "qin": {
       "intelligencePoints": 3,
@@ -17,19 +17,19 @@
     }
   },
   "routeTravelSeconds": {
-    "qin-west-camp->western-gate": 10,
-    "qin-west-camp->dan-river-valley": 14,
-    "western-gate->zhao-main-camp": 12,
-    "dan-river-valley->zhao-main-camp": 10,
-    "dan-river-valley->east-highland": 13,
-    "zhao-main-camp->zhao-relief-route": 11,
-    "zhao-relief-route->east-highland": 14
+    "qin-west-camp->western-gate": 90,
+    "qin-west-camp->dan-river-valley": 150,
+    "western-gate->zhao-main-camp": 150,
+    "dan-river-valley->zhao-main-camp": 120,
+    "dan-river-valley->east-highland": 150,
+    "zhao-main-camp->zhao-relief-route": 120,
+    "zhao-relief-route->east-highland": 180
   },
   "initialUnits": [
-    { "id": "qin-main", "strength": 86, "strengthUnit": "战力指数", "strengthStatus": "scenario_assumption", "morale": 72, "fatigue": 18, "supplyDays": 8, "readiness": 0.86 },
-    { "id": "qin-detachment", "strength": 42, "strengthUnit": "战力指数", "strengthStatus": "scenario_assumption", "morale": 68, "fatigue": 15, "supplyDays": 7, "readiness": 0.82 },
-    { "id": "zhao-main", "strength": 92, "strengthUnit": "战力指数", "strengthStatus": "scenario_assumption", "morale": 66, "fatigue": 26, "supplyDays": 5, "readiness": 0.74 },
-    { "id": "zhao-relief", "strength": 38, "strengthUnit": "战力指数", "strengthStatus": "scenario_assumption", "morale": 61, "fatigue": 20, "supplyDays": 6, "readiness": 0.7 }
+    { "id": "qin-main", "strength": 86, "strengthUnit": "战力指数", "strengthStatus": "scenario_assumption", "morale": 72, "fatigue": 18, "supplyDays": 18, "readiness": 0.86 },
+    { "id": "qin-detachment", "strength": 56, "strengthUnit": "战力指数", "strengthStatus": "scenario_assumption", "morale": 68, "fatigue": 15, "supplyDays": 16, "readiness": 0.82 },
+    { "id": "zhao-main", "strength": 92, "strengthUnit": "战力指数", "strengthStatus": "scenario_assumption", "morale": 66, "fatigue": 26, "supplyDays": 14, "readiness": 0.74 },
+    { "id": "zhao-relief", "strength": 34, "strengthUnit": "战力指数", "strengthStatus": "scenario_assumption", "morale": 61, "fatigue": 20, "supplyDays": 15, "readiness": 0.7 }
   ],
   "scout": {
     "commandUnitId": "qin-detachment",
@@ -37,14 +37,14 @@
     "targetUnitId": "zhao-relief",
     "reportedAreaId": "zhao-main-camp",
     "actualAreaId": "zhao-relief-route",
-    "delaySeconds": 5,
-    "preparationSeconds": 3,
+    "delaySeconds": 20,
+    "preparationSeconds": 30,
     "cost": { "intelligencePoints": 1, "scoutTeams": 1 },
-    "cooldownSeconds": 20,
+    "cooldownSeconds": 90,
     "exposureProbability": 0.18,
     "exposureDelaySeconds": 3,
     "failureReliabilityPenalty": 0.12,
-    "freshnessSeconds": 24,
+    "freshnessSeconds": 720,
     "confidence": "medium",
     "sourceId": "qin-forward-scouts",
     "sourceType": "前出斥候",
@@ -53,17 +53,21 @@
   "resolution": {
     "schemaVersion": 1,
     "status": "experimental",
-    "timeLimitSeconds": 180,
+    "timeLimitSeconds": 1800,
     "victory": {
       "id": "qin-isolate-relief",
       "result": "qin-advantage",
       "side": "player",
+      "requiredHoldSeconds": 600,
       "requiredUnitPositions": [
         { "unitId": "qin-main", "areaId": "dan-river-valley" },
         { "unitId": "qin-detachment", "areaId": "zhao-relief-route" }
       ],
       "requiredBeliefs": [
-        { "side": "qin", "targetUnitId": "zhao-relief", "areaId": "zhao-main-camp" }
+        { "side": "qin", "targetUnitId": "zhao-relief", "areaIds": ["zhao-main-camp", "zhao-relief-route"] }
+      ],
+      "requiredTaskEffects": [
+        { "type": "blockade", "side": "qin", "unitId": "qin-detachment", "areaId": "zhao-relief-route" }
       ]
     },
     "timeout": {

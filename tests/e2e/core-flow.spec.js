@@ -148,8 +148,8 @@ test('opens the formal Changping battle level', async ({ page }) => {
   await deceptionButton.click();
   await expect(page.locator('.battle-notice')).toContainText('计策已接收');
   await expect(page.locator('.deception-history')).toContainText('准备中');
-  for (let i = 0; i < 9; i += 1) await page.getByRole('button', { name: '手动推进 1 秒' }).click();
-  await expect(page.locator('.deception-history')).toContainText('已送达敌方认知');
+  for (let i = 0; i < 45; i += 1) await page.getByRole('button', { name: '手动推进 1 秒' }).click();
+  await expect(page.locator('.deception-history')).toContainText(/已送达敌方认知|已暴露/);
 });
 
 test('routes a free-form order through a named remote deputy', async ({ page }) => {
@@ -167,7 +167,7 @@ test('routes a free-form order through a named remote deputy', async ({ page }) 
   await expect(page.locator('.order-row')).toContainText('传递中');
   await expect(page.locator('.battle-map-surface')).toContainText('传递中');
 
-  for (let i = 0; i < 4; i += 1) await page.getByRole('button', { name: '手动推进 1 秒' }).click();
+  for (let i = 0; i < 24; i += 1) await page.getByRole('button', { name: '手动推进 1 秒' }).click();
   await expect(page.locator('.order-row')).toContainText('执行中');
   await expect(page.locator('.battle-event-list')).toContainText('传令抵达：王龁');
   await expect(page.locator('.battle-event-list')).toContainText('王龁接受执行');

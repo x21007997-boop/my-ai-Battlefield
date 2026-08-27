@@ -26,6 +26,7 @@ var strategy_actions: Array = []
 var resource_state: Dictionary = {}
 var strategy_reliability := 1.0
 var objectives: Array = []
+var resolution_state: Dictionary = {}
 var review: Dictionary = {}
 var log_lines: Array[String] = []
 var selected_unit_id := ""
@@ -90,6 +91,12 @@ const TASK_COMMANDS := [
 func _ready() -> void:
 	scenario = _load_json("res://data/changping-260.json")
 	_apply_commander_session()
+	var initial_session_value = scenario.get("commanderSession", {})
+	if initial_session_value is Dictionary:
+		var initial_session: Dictionary = initial_session_value
+		var initial_resolution_value = initial_session.get("resolution", {})
+		if initial_resolution_value is Dictionary:
+			resolution_state = initial_resolution_value.duplicate(true)
 	event_log = EventLog.new()
 	event_log.configure(str(scenario.get("sourceScenarioId", "changping-260")))
 	event_log.append(0, "scenario_loaded", {"commanderSide": "qin", "rawEnemyTruthIncluded": false})
@@ -232,6 +239,10 @@ func _apply_runtime_event_feedback(event: Dictionary) -> void:
 			_set_feedback("前线回报：部队已进入%s段。" % str(payload.get("label", "复杂地形")), "info")
 		"unit_exited_terrain":
 			_set_feedback("前线回报：部队已完成%s。" % str(payload.get("label", "地形通过")), "info")
+		"victory_hold_started":
+			_set_feedback("隔离态势已建立：请继续维持，等待确认窗口完成。", "success")
+		"victory_hold_broken":
+			_set_feedback("隔离态势中断：需要重新建立封锁或前线认知。", "error")
 		"battle_ended":
 			_set_feedback("战役已结束：请打开“战局”查看战后复盘。", "success")
 
@@ -282,6 +293,9 @@ func _apply_engine_session(session: Dictionary) -> void:
 	resource_state = session.get("resources", resource_state).duplicate(true)
 	strategy_reliability = float(session.get("strategyReliability", strategy_reliability))
 	objectives = session.get("objectives", objectives).duplicate(true)
+	var session_resolution_value = session.get("resolution", resolution_state)
+	if session_resolution_value is Dictionary:
+		resolution_state = session_resolution_value.duplicate(true)
 	review = session.get("review", {}).duplicate(true) if session.get("review", {}) is Dictionary else {}
 	outcome = session.get("outcome", {}).duplicate(true) if session.get("outcome", {}) is Dictionary else {}
 	if outcome.size() > 0:
@@ -1162,6 +1176,27 @@ func _refresh_battle_panel() -> void:
 		visible_objective_count += 1
 	if visible_objective_count == 0:
 		lines.append("· 当前战役意图由前线态势决定。")
+	var resolution_state_value = resolution_state
+	if resolution_state_value.is_empty():
+		var scenario_resolution_value = scenario.get("resolution", {})
+		resolution_state_value = scenario_resolution_value if scenario_resolution_value is Dictionary else {}
+	var victory_state_value = resolution_state_value.get("victory", {})
+	var victory_state: Dictionary = victory_state_value if victory_state_value is Dictionary else {}
+	var required_task_effects_value = victory_state.get("requiredTaskEffects", [])
+	if required_task_effects_value is Array and not required_task_effects_value.is_empty():
+		lines.append("")
+		lines.append("当前胜利门槛")
+		for effect_value in required_task_effects_value:
+			if not effect_value is Dictionary:
+				continue
+			var effect: Dictionary = effect_value
+			var effect_status := "已建立" if str(effect.get("status", "pending")) == "achieved" else "待建立"
+			lines.append("· %s：%s" % [_task_label(str(effect.get("type", ""))), effect_status])
+	var required_hold := int(victory_state.get("requiredHoldSeconds", 0))
+	if required_hold > 0:
+		var hold_elapsed := int(victory_state.get("holdElapsedSeconds", 0))
+		var hold_status := str(victory_state.get("holdStatus", "not_started"))
+		lines.append("· 态势确认：%s" % _hold_status_text(hold_status, hold_elapsed, required_hold))
 	lines.append("")
 	lines.append("可用资源")
 	lines.append("情报点 %s · 斥候队 %s · 计策资源 %s" % [_resource_text("intelligencePoints"), _resource_text("scoutTeams"), _resource_text("deceptionAssets")])
@@ -1262,6 +1297,12 @@ func _resource_label(resource_key: String) -> String:
 func _format_duration(total_seconds: int) -> String:
 	var seconds: int = max(0, total_seconds)
 	return "%02d:%02d" % [int(seconds / 60), seconds % 60]
+
+func _hold_status_text(status: String, elapsed: int, required: int) -> String:
+	match status:
+		"holding": return "维持中 %s / %s" % [_format_duration(elapsed), _format_duration(required)]
+		"broken": return "已中断，需重新建立"
+		_: return "待完成部署后开始确认"
 
 func _step_second() -> void:
 	sim_time += 1
@@ -1559,6 +1600,11 @@ func _exit_replay() -> void:
 	pending_observations = []
 	outcome = {}
 	objectives = scenario.get("objectives", []).duplicate(true)
+	var replay_session_value = scenario.get("commanderSession", {})
+	if replay_session_value is Dictionary:
+		var replay_session: Dictionary = replay_session_value
+		var replay_resolution_value = replay_session.get("resolution", {})
+		resolution_state = replay_resolution_value.duplicate(true) if replay_resolution_value is Dictionary else {}
 	review = {}
 	log_lines = []
 	event_log = EventLog.new()
@@ -1654,6 +1700,8 @@ func _replay_event_text(event: Dictionary) -> String:
 		"deception_command_delivered": return "回放：计策军令抵达，前线开始准备。"
 		"deception_exposed": return "回放：计策暴露，后续误导可信度下降。"
 		"strategy_reliability_reduced": return "回放：情报链可信度下降。"
+		"victory_hold_started": return "回放：隔离态势已建立，进入确认窗口。"
+		"victory_hold_broken": return "回放：隔离态势中断，需要重新建立。"
 		"commander_unit_selected":
 			return "回放：选中部队。"
 		"commander_target_selected":

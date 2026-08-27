@@ -54,6 +54,14 @@ function mapResolution(resolution) {
         ...condition,
         side: sideMap[condition.side] ?? condition.side,
       })),
+      requiredHoldBeliefs: (resolution.victory.requiredHoldBeliefs ?? []).map((condition) => ({
+        ...condition,
+        side: sideMap[condition.side] ?? condition.side,
+      })),
+      requiredTaskEffects: (resolution.victory.requiredTaskEffects ?? []).map((condition) => ({
+        ...condition,
+        side: sideMap[condition.side] ?? condition.side,
+      })),
     } : resolution.victory,
     timeout: resolution.timeout ? {
       ...resolution.timeout,

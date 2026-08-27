@@ -33,13 +33,13 @@
       "neighbors": [
         {
           "id": "western-gate",
-          "travelSeconds": 10,
+          "travelSeconds": 90,
           "routeId": "route-qin-camp-western-gate",
           "terrainTransitions": []
         },
         {
           "id": "dan-river-valley",
-          "travelSeconds": 14,
+          "travelSeconds": 150,
           "routeId": "route-qin-camp-dan-valley",
           "terrainTransitions": [
             {
@@ -74,13 +74,13 @@
       "neighbors": [
         {
           "id": "qin-west-camp",
-          "travelSeconds": 10,
+          "travelSeconds": 90,
           "routeId": "route-qin-camp-western-gate",
           "terrainTransitions": []
         },
         {
           "id": "zhao-main-camp",
-          "travelSeconds": 12,
+          "travelSeconds": 150,
           "routeId": "route-western-gate-zhao-camp",
           "terrainTransitions": []
         }
@@ -99,7 +99,7 @@
       "neighbors": [
         {
           "id": "qin-west-camp",
-          "travelSeconds": 14,
+          "travelSeconds": 150,
           "routeId": "route-qin-camp-dan-valley",
           "terrainTransitions": [
             {
@@ -121,13 +121,13 @@
         },
         {
           "id": "zhao-main-camp",
-          "travelSeconds": 10,
+          "travelSeconds": 120,
           "routeId": "route-dan-valley-zhao-camp",
           "terrainTransitions": []
         },
         {
           "id": "east-highland",
-          "travelSeconds": 13,
+          "travelSeconds": 150,
           "routeId": "route-dan-valley-east-highland",
           "terrainTransitions": [
             {
@@ -162,19 +162,19 @@
       "neighbors": [
         {
           "id": "western-gate",
-          "travelSeconds": 12,
+          "travelSeconds": 150,
           "routeId": "route-western-gate-zhao-camp",
           "terrainTransitions": []
         },
         {
           "id": "dan-river-valley",
-          "travelSeconds": 10,
+          "travelSeconds": 120,
           "routeId": "route-dan-valley-zhao-camp",
           "terrainTransitions": []
         },
         {
           "id": "zhao-relief-route",
-          "travelSeconds": 11,
+          "travelSeconds": 120,
           "routeId": "route-zhao-camp-relief",
           "terrainTransitions": []
         }
@@ -193,13 +193,13 @@
       "neighbors": [
         {
           "id": "zhao-main-camp",
-          "travelSeconds": 11,
+          "travelSeconds": 120,
           "routeId": "route-zhao-camp-relief",
           "terrainTransitions": []
         },
         {
           "id": "east-highland",
-          "travelSeconds": 14,
+          "travelSeconds": 180,
           "routeId": "route-relief-east-highland",
           "terrainTransitions": [
             {
@@ -234,7 +234,7 @@
       "neighbors": [
         {
           "id": "dan-river-valley",
-          "travelSeconds": 13,
+          "travelSeconds": 150,
           "routeId": "route-dan-valley-east-highland",
           "terrainTransitions": [
             {
@@ -256,7 +256,7 @@
         },
         {
           "id": "zhao-relief-route",
-          "travelSeconds": 14,
+          "travelSeconds": 180,
           "routeId": "route-relief-east-highland",
           "terrainTransitions": [
             {
@@ -284,7 +284,7 @@
       "id": "route-qin-west-camp-western-gate",
       "fromAreaId": "qin-west-camp",
       "toAreaId": "western-gate",
-      "travelSeconds": 10,
+      "travelSeconds": 90,
       "routeId": "route-qin-camp-western-gate",
       "terrainTransitions": [],
       "points": [
@@ -302,7 +302,7 @@
       "id": "route-dan-river-valley-qin-west-camp",
       "fromAreaId": "qin-west-camp",
       "toAreaId": "dan-river-valley",
-      "travelSeconds": 14,
+      "travelSeconds": 150,
       "routeId": "route-qin-camp-dan-valley",
       "terrainTransitions": [
         {
@@ -336,7 +336,7 @@
       "id": "route-western-gate-zhao-main-camp",
       "fromAreaId": "western-gate",
       "toAreaId": "zhao-main-camp",
-      "travelSeconds": 12,
+      "travelSeconds": 150,
       "routeId": "route-western-gate-zhao-camp",
       "terrainTransitions": [],
       "points": [
@@ -354,7 +354,7 @@
       "id": "route-dan-river-valley-zhao-main-camp",
       "fromAreaId": "dan-river-valley",
       "toAreaId": "zhao-main-camp",
-      "travelSeconds": 10,
+      "travelSeconds": 120,
       "routeId": "route-dan-valley-zhao-camp",
       "terrainTransitions": [],
       "points": [
@@ -372,7 +372,7 @@
       "id": "route-dan-river-valley-east-highland",
       "fromAreaId": "dan-river-valley",
       "toAreaId": "east-highland",
-      "travelSeconds": 13,
+      "travelSeconds": 150,
       "routeId": "route-dan-valley-east-highland",
       "terrainTransitions": [
         {
@@ -406,7 +406,7 @@
       "id": "route-zhao-main-camp-zhao-relief-route",
       "fromAreaId": "zhao-main-camp",
       "toAreaId": "zhao-relief-route",
-      "travelSeconds": 11,
+      "travelSeconds": 120,
       "routeId": "route-zhao-camp-relief",
       "terrainTransitions": [],
       "points": [
@@ -424,7 +424,7 @@
       "id": "route-east-highland-zhao-relief-route",
       "fromAreaId": "zhao-relief-route",
       "toAreaId": "east-highland",
-      "travelSeconds": 14,
+      "travelSeconds": 180,
       "routeId": "route-relief-east-highland",
       "terrainTransitions": [
         {
@@ -768,11 +768,11 @@
       "posture": "standard",
       "symbolType": "friendly-flag",
       "movement": null,
-      "strength": 42,
+      "strength": 56,
       "strengthUnit": "战力指数"
     }
   ],
-  "commandDelaySeconds": 3,
+  "commandDelaySeconds": 8,
   "resources": {
     "intelligencePoints": 3,
     "scoutTeams": 2,
@@ -783,17 +783,17 @@
     "recipientCommanderId": "wang-he",
     "targetUnitId": "zhao-relief",
     "reportedAreaId": "zhao-main-camp",
-    "delaySeconds": 5,
-    "preparationSeconds": 3,
+    "delaySeconds": 20,
+    "preparationSeconds": 30,
     "cost": {
       "intelligencePoints": 1,
       "scoutTeams": 1
     },
-    "cooldownSeconds": 20,
+    "cooldownSeconds": 90,
     "exposureProbability": 0.18,
     "exposureDelaySeconds": 3,
     "failureReliabilityPenalty": 0.12,
-    "freshnessSeconds": 24,
+    "freshnessSeconds": 720,
     "confidence": "medium",
     "sourceId": "qin-forward-scouts",
     "sourceType": "前出斥候",
@@ -809,11 +809,11 @@
       "targetUnitId": "qin-main",
       "recipientCommanderId": "bai-qi",
       "reportedAreaId": "western-gate",
-      "delaySeconds": 4,
-      "freshnessSeconds": 30,
+      "delaySeconds": 15,
+      "freshnessSeconds": 300,
       "confidence": "medium",
       "cooldownSeconds": 45,
-      "preparationSeconds": 5,
+      "preparationSeconds": 30,
       "cost": {
         "intelligencePoints": 1,
         "deceptionAssets": 1
@@ -832,11 +832,11 @@
       "targetUnitId": "qin-detachment",
       "recipientCommanderId": "wang-he",
       "reportedAreaId": "western-gate",
-      "delaySeconds": 3,
-      "freshnessSeconds": 24,
+      "delaySeconds": 15,
+      "freshnessSeconds": 300,
       "confidence": "high",
       "cooldownSeconds": 30,
-      "preparationSeconds": 4,
+      "preparationSeconds": 25,
       "cost": {
         "deceptionAssets": 1
       },
@@ -989,11 +989,12 @@
   "resolution": {
     "schemaVersion": 1,
     "status": "experimental",
-    "timeLimitSeconds": 180,
+    "timeLimitSeconds": 1800,
     "victory": {
       "id": "qin-isolate-relief",
       "result": "qin-advantage",
       "side": "player",
+      "requiredHoldSeconds": 600,
       "requiredUnitPositions": [
         {
           "unitId": "qin-main",
@@ -1008,9 +1009,21 @@
         {
           "side": "player",
           "targetUnitId": "zhao-relief",
-          "areaId": "zhao-main-camp"
+          "areaIds": [
+            "zhao-main-camp",
+            "zhao-relief-route"
+          ]
         }
-      ]
+      ],
+      "requiredTaskEffects": [
+        {
+          "type": "blockade",
+          "side": "player",
+          "unitId": "qin-detachment",
+          "areaId": "zhao-relief-route"
+        }
+      ],
+      "requiredHoldBeliefs": []
     },
     "timeout": {
       "id": "qin-fails-to-isolate",
@@ -1061,6 +1074,35 @@
       }
     ],
     "review": null,
+    "resolution": {
+      "timeLimitSeconds": 1800,
+      "victory": {
+        "id": "qin-isolate-relief",
+        "requiredHoldSeconds": 600,
+        "holdElapsedSeconds": 0,
+        "holdStatus": "not_started",
+        "requiredUnitPositions": [
+          {
+            "unitId": "qin-main",
+            "areaId": "dan-river-valley",
+            "status": "pending"
+          },
+          {
+            "unitId": "qin-detachment",
+            "areaId": "zhao-relief-route",
+            "status": "pending"
+          }
+        ],
+        "requiredTaskEffects": [
+          {
+            "type": "blockade",
+            "unitId": "qin-detachment",
+            "areaId": "zhao-relief-route",
+            "status": "pending"
+          }
+        ]
+      }
+    },
     "map": {
       "schemaVersion": 1,
       "coordinateSystem": "normalized-2d",
@@ -1192,13 +1234,13 @@
           "neighbors": [
             {
               "id": "western-gate",
-              "travelSeconds": 10,
+              "travelSeconds": 90,
               "routeId": "route-qin-camp-western-gate",
               "terrainTransitions": []
             },
             {
               "id": "dan-river-valley",
-              "travelSeconds": 14,
+              "travelSeconds": 150,
               "routeId": "route-qin-camp-dan-valley",
               "terrainTransitions": [
                 {
@@ -1233,13 +1275,13 @@
           "neighbors": [
             {
               "id": "qin-west-camp",
-              "travelSeconds": 10,
+              "travelSeconds": 90,
               "routeId": "route-qin-camp-western-gate",
               "terrainTransitions": []
             },
             {
               "id": "zhao-main-camp",
-              "travelSeconds": 12,
+              "travelSeconds": 150,
               "routeId": "route-western-gate-zhao-camp",
               "terrainTransitions": []
             }
@@ -1258,7 +1300,7 @@
           "neighbors": [
             {
               "id": "qin-west-camp",
-              "travelSeconds": 14,
+              "travelSeconds": 150,
               "routeId": "route-qin-camp-dan-valley",
               "terrainTransitions": [
                 {
@@ -1280,13 +1322,13 @@
             },
             {
               "id": "zhao-main-camp",
-              "travelSeconds": 10,
+              "travelSeconds": 120,
               "routeId": "route-dan-valley-zhao-camp",
               "terrainTransitions": []
             },
             {
               "id": "east-highland",
-              "travelSeconds": 13,
+              "travelSeconds": 150,
               "routeId": "route-dan-valley-east-highland",
               "terrainTransitions": [
                 {
@@ -1321,19 +1363,19 @@
           "neighbors": [
             {
               "id": "western-gate",
-              "travelSeconds": 12,
+              "travelSeconds": 150,
               "routeId": "route-western-gate-zhao-camp",
               "terrainTransitions": []
             },
             {
               "id": "dan-river-valley",
-              "travelSeconds": 10,
+              "travelSeconds": 120,
               "routeId": "route-dan-valley-zhao-camp",
               "terrainTransitions": []
             },
             {
               "id": "zhao-relief-route",
-              "travelSeconds": 11,
+              "travelSeconds": 120,
               "routeId": "route-zhao-camp-relief",
               "terrainTransitions": []
             }
@@ -1352,13 +1394,13 @@
           "neighbors": [
             {
               "id": "zhao-main-camp",
-              "travelSeconds": 11,
+              "travelSeconds": 120,
               "routeId": "route-zhao-camp-relief",
               "terrainTransitions": []
             },
             {
               "id": "east-highland",
-              "travelSeconds": 14,
+              "travelSeconds": 180,
               "routeId": "route-relief-east-highland",
               "terrainTransitions": [
                 {
@@ -1393,7 +1435,7 @@
           "neighbors": [
             {
               "id": "dan-river-valley",
-              "travelSeconds": 13,
+              "travelSeconds": 150,
               "routeId": "route-dan-valley-east-highland",
               "terrainTransitions": [
                 {
@@ -1415,7 +1457,7 @@
             },
             {
               "id": "zhao-relief-route",
-              "travelSeconds": 14,
+              "travelSeconds": 180,
               "routeId": "route-relief-east-highland",
               "terrainTransitions": [
                 {
@@ -1443,7 +1485,7 @@
           "id": "route-qin-west-camp-western-gate",
           "fromAreaId": "qin-west-camp",
           "toAreaId": "western-gate",
-          "travelSeconds": 10,
+          "travelSeconds": 90,
           "routeId": "route-qin-camp-western-gate",
           "terrainTransitions": [],
           "points": [
@@ -1461,7 +1503,7 @@
           "id": "route-dan-river-valley-qin-west-camp",
           "fromAreaId": "qin-west-camp",
           "toAreaId": "dan-river-valley",
-          "travelSeconds": 14,
+          "travelSeconds": 150,
           "routeId": "route-qin-camp-dan-valley",
           "terrainTransitions": [
             {
@@ -1495,7 +1537,7 @@
           "id": "route-western-gate-zhao-main-camp",
           "fromAreaId": "western-gate",
           "toAreaId": "zhao-main-camp",
-          "travelSeconds": 12,
+          "travelSeconds": 150,
           "routeId": "route-western-gate-zhao-camp",
           "terrainTransitions": [],
           "points": [
@@ -1513,7 +1555,7 @@
           "id": "route-dan-river-valley-zhao-main-camp",
           "fromAreaId": "dan-river-valley",
           "toAreaId": "zhao-main-camp",
-          "travelSeconds": 10,
+          "travelSeconds": 120,
           "routeId": "route-dan-valley-zhao-camp",
           "terrainTransitions": [],
           "points": [
@@ -1531,7 +1573,7 @@
           "id": "route-dan-river-valley-east-highland",
           "fromAreaId": "dan-river-valley",
           "toAreaId": "east-highland",
-          "travelSeconds": 13,
+          "travelSeconds": 150,
           "routeId": "route-dan-valley-east-highland",
           "terrainTransitions": [
             {
@@ -1565,7 +1607,7 @@
           "id": "route-zhao-main-camp-zhao-relief-route",
           "fromAreaId": "zhao-main-camp",
           "toAreaId": "zhao-relief-route",
-          "travelSeconds": 11,
+          "travelSeconds": 120,
           "routeId": "route-zhao-camp-relief",
           "terrainTransitions": [],
           "points": [
@@ -1583,7 +1625,7 @@
           "id": "route-east-highland-zhao-relief-route",
           "fromAreaId": "zhao-relief-route",
           "toAreaId": "east-highland",
-          "travelSeconds": 14,
+          "travelSeconds": 180,
           "routeId": "route-relief-east-highland",
           "terrainTransitions": [
             {
@@ -1847,11 +1889,11 @@
         "targetUnitId": "qin-main",
         "recipientCommanderId": "bai-qi",
         "reportedAreaId": "western-gate",
-        "delaySeconds": 4,
-        "freshnessSeconds": 30,
+        "delaySeconds": 15,
+        "freshnessSeconds": 300,
         "confidence": "medium",
         "cooldownSeconds": 45,
-        "preparationSeconds": 5,
+        "preparationSeconds": 30,
         "cost": {
           "intelligencePoints": 1,
           "deceptionAssets": 1
@@ -1870,11 +1912,11 @@
         "targetUnitId": "qin-detachment",
         "recipientCommanderId": "wang-he",
         "reportedAreaId": "western-gate",
-        "delaySeconds": 3,
-        "freshnessSeconds": 24,
+        "delaySeconds": 15,
+        "freshnessSeconds": 300,
         "confidence": "high",
         "cooldownSeconds": 30,
-        "preparationSeconds": 4,
+        "preparationSeconds": 25,
         "cost": {
           "deceptionAssets": 1
         },

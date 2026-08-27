@@ -13,12 +13,27 @@ function command(world, value) {
 
 test('Changping level keeps route estimates playable in both directions', () => {
   const world = CHANGPING_PROFILE.createWorld();
-  assert.equal(world.areas['western-gate'].neighbors.find((item) => item.id === 'qin-west-camp').travelSeconds, 10);
-  assert.equal(world.areas['dan-river-valley'].neighbors.find((item) => item.id === 'qin-west-camp').travelSeconds, 14);
-  assert.equal(world.areas['zhao-main-camp'].neighbors.find((item) => item.id === 'zhao-relief-route').travelSeconds, 11);
+  assert.equal(world.areas['western-gate'].neighbors.find((item) => item.id === 'qin-west-camp').travelSeconds, 90);
+  assert.equal(world.areas['dan-river-valley'].neighbors.find((item) => item.id === 'qin-west-camp').travelSeconds, 150);
+  assert.equal(world.areas['zhao-main-camp'].neighbors.find((item) => item.id === 'zhao-relief-route').travelSeconds, 120);
   assert.equal(world.terrainFeatures.find((feature) => feature.id === 'dan-river').type, 'river');
   assert.equal(world.areas['qin-west-camp'].neighbors.find((item) => item.id === 'dan-river-valley').terrainTransitions[0].transitionType, 'river-crossing');
 });
+
+test('Changping level does not resolve from arrival alone', () => {
+  let world = CHANGPING_PROFILE.createWorld();
+  world = command(world, { type: 'move', unitId: 'qin-main', targetAreaId: 'dan-river-valley' }).world;
+  world = command(world, { type: 'move', unitId: 'qin-detachment', targetAreaId: 'zhao-relief-route' }).world;
+  world = command(world, { type: 'scout' }).world;
+  world = command(world, { type: 'advance', seconds: 330 }).world;
+  assert.equal(world.status, 'running');
+  assert.equal(world.resolutionProgress.victory.status, 'not_started');
+  assert.equal(buildTaskStatus(world), 'missing');
+});
+
+function buildTaskStatus(world) {
+  return world.blockades.some((blockade) => blockade.status === 'active') ? 'active' : 'missing';
+}
 
 test('Changping level can reach a safe commander-visible victory review', () => {
   let world = CHANGPING_PROFILE.createWorld();
@@ -26,7 +41,7 @@ test('Changping level can reach a safe commander-visible victory review', () => 
   assert.equal(response.accepted, true);
   world = response.world;
 
-  response = command(world, { type: 'move', unitId: 'qin-detachment', targetAreaId: 'zhao-relief-route' });
+  response = command(world, { type: 'blockade', unitId: 'qin-detachment', targetAreaId: 'zhao-relief-route' });
   assert.equal(response.accepted, true);
   world = response.world;
 
@@ -34,19 +49,23 @@ test('Changping level can reach a safe commander-visible victory review', () => 
   assert.equal(response.accepted, true);
   world = response.world;
 
-  response = command(world, { type: 'advance', seconds: 40 });
+  response = command(world, { type: 'advance', seconds: 1000 });
   assert.equal(response.accepted, true);
   assert.equal(response.world.status, 'ended');
   assert.equal(response.world.outcome.id, 'qin-isolate-relief');
   assert.equal(response.world.outcome.side, 'player');
   assert.equal(response.world.outcome.title, '秦军完成隔离态势');
+  assert.equal(response.world.outcome.reason, 'victory_conditions_held');
 
   const session = response.response.session;
   assert.equal(session.status, 'ended');
   assert.equal(session.review.resultLabel, '秦军达成战役目标');
   assert.equal(session.review.stats.commandCount, 2);
-  assert.equal(session.review.stats.reportCount, 1);
+  assert.ok(session.review.stats.reportCount >= 1);
   assert.equal(session.objectives.every((objective) => objective.status === 'achieved'), true);
+  assert.equal(session.resolution.victory.holdStatus, 'holding');
+  assert.equal(session.resolution.victory.holdElapsedSeconds, 600);
+  assert.equal(session.resolution.victory.requiredTaskEffects[0].status, 'achieved');
   assert.equal(JSON.stringify(session).includes('actualAreaId'), false);
   assert.equal(JSON.stringify(session).includes('combatExchange'), false);
 });
