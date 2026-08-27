@@ -24,8 +24,13 @@ func configure(url: String) -> void:
 func busy() -> bool:
 	return request_in_flight
 
-func start_session() -> void:
-	_post("/sessions", {}, "start_session")
+func start_session(resume_session_id: String = "", new_session: bool = false) -> void:
+	var body := {
+		"newSession": new_session,
+	}
+	if resume_session_id != "":
+		body["resumeSessionId"] = resume_session_id
+	_post("/sessions", body, "start_session")
 
 func send_command(command: Dictionary) -> void:
 	if session_id == "":

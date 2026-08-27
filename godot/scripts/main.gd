@@ -3,6 +3,7 @@ extends Node2D
 const EventLog = preload("res://scripts/event_log.gd")
 const ReplayPlayer = preload("res://scripts/replay_player.gd")
 const EngineGateway = preload("res://scripts/engine_gateway.gd")
+const SESSION_SAVE_PATH := "user://changping-session.json"
 
 @onready var sand_table: Node2D = $SandTable
 @onready var interface: CanvasLayer = $Interface
@@ -42,6 +43,7 @@ var engine_session: Dictionary = {}
 var engine_connected := false
 var engine_tick_accumulator := 0.0
 var simulation_speed := 1
+var session_was_resumed := false
 var clock_label: Label
 var status_label: Label
 var selection_label: Label
@@ -78,6 +80,7 @@ var battle_button: Button
 var battle_panel: Panel
 var battle_label: RichTextLabel
 var speed_option: OptionButton
+var new_battle_button: Button
 
 const TASK_COMMANDS := [
 	{"type": "guard", "label": "警戒"},
@@ -181,7 +184,7 @@ func _connect_engine_gateway_if_configured() -> void:
 	engine_gateway.response_received.connect(_on_engine_response)
 	engine_gateway.request_failed.connect(_on_engine_request_failed)
 	add_child(engine_gateway)
-	engine_gateway.start_session()
+	engine_gateway.start_session(_load_saved_session_id())
 
 func _on_engine_response(operation: String, response: Dictionary) -> void:
 	var session: Dictionary = response.get("session", {})
@@ -189,6 +192,9 @@ func _on_engine_response(operation: String, response: Dictionary) -> void:
 		return
 	engine_session = session.duplicate(true)
 	engine_connected = true
+	var response_session_id := str(response.get("sessionId", ""))
+	if response_session_id != "":
+		_save_session_id(response_session_id)
 	_apply_engine_session(session)
 	for event in response.get("events", []):
 		_add_log(_replay_event_text(event))
@@ -197,7 +203,17 @@ func _on_engine_response(operation: String, response: Dictionary) -> void:
 	if outcome.size() > 0:
 		_set_feedback("战役已结束：%s。可导出或载入本局回放。" % str(outcome.get("title", outcome.get("result", "战役结束"))), "success")
 	elif operation == "start_session":
-		_set_feedback("前线已接入，命令与侦察链路就绪。", "success")
+		if response.get("resumed", false):
+			session_was_resumed = true
+			_add_log("已恢复上一局战局：当前进度与前线认知已载入。")
+			_set_feedback("已恢复上一局战局：命令与侦察链路就绪。", "success")
+		elif response.get("resumeRequested", false):
+			session_was_resumed = false
+			_add_log("上一局存档未找到，已建立新的长平战局。")
+			_set_feedback("未找到上一局存档，已建立新的长平战局。", "info")
+		else:
+			session_was_resumed = false
+			_set_feedback("前线已接入，命令与侦察链路就绪。", "success")
 	elif not response.get("accepted", true):
 		_set_feedback("操作未执行：%s" % str(response.get("error", "内核拒绝了这次操作。")), "error")
 	elif operation == "command":
@@ -251,6 +267,30 @@ func _on_engine_request_failed(_operation: String, message: String) -> void:
 	_add_log("通用内核未连接：%s" % message)
 	_set_feedback("实时内核连接失败：%s" % message, "error")
 	_refresh()
+
+func _load_saved_session_id() -> String:
+	var file := FileAccess.open(SESSION_SAVE_PATH, FileAccess.READ)
+	if file == null:
+		return ""
+	var parsed = JSON.parse_string(file.get_as_text())
+	if not parsed is Dictionary:
+		return ""
+	if str(parsed.get("scenarioId", "")) != str(scenario.get("sourceScenarioId", "changping-260")):
+		return ""
+	return str(parsed.get("sessionId", ""))
+
+func _save_session_id(session_id: String) -> void:
+	if session_id == "":
+		return
+	var file := FileAccess.open(SESSION_SAVE_PATH, FileAccess.WRITE)
+	if file == null:
+		_add_log("战局已运行，但本地存档记录无法写入。")
+		return
+	file.store_string(JSON.stringify({
+		"schemaVersion": 1,
+		"scenarioId": scenario.get("sourceScenarioId", "changping-260"),
+		"sessionId": session_id,
+	}))
 
 func _apply_engine_session(session: Dictionary) -> void:
 	sim_time = int(session.get("simTime", sim_time))
@@ -491,7 +531,7 @@ func _build_interface() -> void:
 
 	var utility_rail := Panel.new()
 	utility_rail.position = Vector2(1184, 140)
-	utility_rail.size = Vector2(78, 276)
+	utility_rail.size = Vector2(78, 322)
 	utility_rail.add_theme_stylebox_override("panel", _panel_style(Color(0.10, 0.07, 0.05, 0.78), Color(0.66, 0.47, 0.27, 0.8), 12, 1))
 	hud.add_child(utility_rail)
 	var utility_title := _add_label(utility_rail, "指挥", Rect2(8, 10, 62, 22), 13, Color("#e4c58e"))
@@ -543,6 +583,15 @@ func _build_interface() -> void:
 	_style_button(exit_replay_button)
 	exit_replay_button.pressed.connect(_exit_replay)
 	utility_rail.add_child(exit_replay_button)
+
+	new_battle_button = Button.new()
+	new_battle_button.text = "新局"
+	new_battle_button.position = Vector2(8, 276)
+	new_battle_button.size = Vector2(62, 34)
+	new_battle_button.tooltip_text = "建立新的长平战局，不覆盖上一局存档"
+	_style_button(new_battle_button)
+	new_battle_button.pressed.connect(_start_new_battle)
+	utility_rail.add_child(new_battle_button)
 
 	replay_panel = Panel.new()
 	replay_panel.position = Vector2(850, 126)
@@ -752,6 +801,20 @@ func _toggle_running() -> void:
 		return
 	event_log.append(sim_time, "simulation_resumed" if running else "simulation_paused", {})
 	_set_feedback("实时推演%s。" % ("已开始" if running else "已暂停"), "info")
+	_refresh()
+
+func _start_new_battle() -> void:
+	if replay_mode:
+		_set_feedback("回放模式不能建立新战局。", "error")
+		return
+	if engine_gateway == null or not engine_connected:
+		_set_feedback("新战局未建立：实时内核未连接。", "error")
+		return
+	running = false
+	engine_tick_accumulator = 0.0
+	selected_target_area_id = ""
+	engine_gateway.start_session("", true)
+	_set_feedback("正在建立新的长平战局……", "info")
 	_refresh()
 
 func _issue_move() -> void:
@@ -1806,6 +1869,8 @@ func _refresh() -> void:
 	replay_button.disabled = replay_mode
 	load_replay_button.disabled = replay_mode
 	exit_replay_button.disabled = not replay_mode
+	if new_battle_button != null:
+		new_battle_button.disabled = replay_mode or (engine_gateway != null and engine_gateway.busy())
 	if replay_panel != null:
 		replay_panel.visible = replay_mode
 	replay_slider.editable = replay_mode

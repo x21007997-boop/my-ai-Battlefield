@@ -30,7 +30,7 @@
 - 绑定分支节点的 AI 回合纪事，以及 Markdown、Word 小说卷宗下载。
 - 剧本选择首页，以及“江南残局”“扬州孤城”两套独立可玩内容。
 
-当前版本包含确定性战场规则内核、Godot 正式游戏客户端和浏览器过渡验证入口。自动存档和手动快照暂保存在本地，正式账号、云存档和联机服务尚未接入。
+当前版本包含确定性战场规则内核、Godot 正式游戏客户端和浏览器过渡验证入口。战场内核会把本地战局会话保存到 `.data/battle-engine/`，Godot 会记住最近一局并在重新启动时恢复；正式账号、云存档和联机服务尚未接入。
 
 ## 本地运行
 
@@ -38,6 +38,8 @@
 npm install
 npm run dev
 ```
+
+如需单独启动正式战场内核，可运行 `npm start`；试玩入口 `npm run playtest` 会自动启动它。可通过 `BATTLE_ENGINE_STORAGE_DIR` 指定战局存档目录。
 
 DeepSeek 的本地密钥放在 `.env.local`，部署时需要在托管环境设置 `DEEPSEEK_API_KEY`，不要把密钥写入前端代码或提交到 Git。具体说明见 `docs/deepseek.md`。
 
