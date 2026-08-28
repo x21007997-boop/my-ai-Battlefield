@@ -1921,7 +1921,7 @@ func _guide_text() -> String:
 	if _pending_observation_count() > 0 or _preparing_strategy_count() > 0:
 		return "前线正在回传：继续推进时间，等待可能失真的情报抵达"
 	if selected_target_area_id != "":
-		return "目标已选：点击下方“传达”下达军令，部队会按地形和传令时间推进"
+		return "目标已选：点击“机动”快捷下令，或输入自由军令后点击“传达”"
 	if selected_unit_id != "":
 		return "已选秦军部队：点击沙盘上的区域选择目标"
 	if not engine_connected:

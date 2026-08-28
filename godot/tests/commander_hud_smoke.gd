@@ -15,8 +15,19 @@ func _init() -> void:
 	assert(main.guide_label != null)
 	assert(main.guide_label.text.contains("点击沙盘"))
 	assert(main.intelligence_button.text == "情报 0")
+	# Keep the onboarding path deterministic without requiring a running gateway.
+	main.engine_connected = false
 	main._on_area_selected("dan-river-valley")
+	assert(main.guide_label.text.contains("机动"))
 	assert(main.guide_label.text.contains("传达"))
+	main._issue_move()
+	assert(main.order.get("status", "") == "transmitting")
+	assert(main.feedback_label.text.contains("命令已接收"))
+	assert(main.guide_label.text.contains("军令已下达"))
+	main._step_second()
+	assert(main.order.get("status", "") == "executing")
+	assert(main.command_state_label.text.contains("执行中"))
+	assert(main.feedback_label.text.contains("命令已抵达"))
 	main._on_speed_selected(2)
 	assert(main.simulation_speed == 5)
 
