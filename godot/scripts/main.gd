@@ -245,6 +245,19 @@ func _apply_runtime_event_feedback(event: Dictionary) -> void:
 	match str(event.get("type", "")):
 		"order_delivered":
 			_set_feedback("命令已经抵达部队，开始执行。", "success")
+		"unit_departed":
+			_add_map_notice("unit_departed", str(payload.get("areaId", "")), "部队离营", 10)
+			_set_feedback("前线回报：部队已经离营，进入行军序列。", "success")
+		"route_segment_entered":
+			_set_feedback("前线回报：部队进入%s通路。" % _road_type_label(str(payload.get("roadType", ""))), "info")
+		"route_segment_completed":
+			_set_feedback("前线回报：部队已通过当前路段，继续向前推进。", "success")
+		"unit_passed_pass":
+			_add_map_notice("unit_passed_pass", str(payload.get("areaId", "")), "通过关隘", 10)
+			_set_feedback("前线回报：部队已经通过关隘。", "success")
+		"unit_encamped":
+			_add_map_notice("unit_encamped", str(payload.get("areaId", "")), "扎营坚守", 12)
+			_set_feedback("部队已在%s扎营并转入坚守。" % _area_name(str(payload.get("areaId", ""))), "success")
 		"officer_decision":
 			if str(payload.get("decision", "")) == "refused":
 				_set_feedback(_officer_decision_feedback(event), "error")
@@ -1808,6 +1821,11 @@ func _replay_event_text(event: Dictionary) -> String:
 			return "回放：已发令，部队向%s机动。" % _area_name(str(payload.get("targetAreaId", "")))
 		"order_delivered":
 			return "回放：命令抵达，部队开始执行。"
+		"unit_departed": return "回放：部队离营，开始行军。"
+		"route_segment_entered": return "回放：部队进入%s通路。" % _road_type_label(str(payload.get("roadType", "")))
+		"route_segment_completed": return "回放：部队通过当前路段。"
+		"unit_passed_pass": return "回放：部队通过关隘。"
+		"unit_encamped": return "回放：部队在%s扎营坚守。" % _area_name(str(payload.get("areaId", "")))
 		"command_delivered":
 			return "回放：传令抵达，接收军官收到军令。"
 		"officer_decision":
@@ -2143,6 +2161,16 @@ func _terrain_action_word(terrain_type: String) -> String:
 		"river": return "渡河"
 		"mountain": return "翻山"
 		_: return "通过"
+
+func _road_type_label(road_type: String) -> String:
+	match road_type:
+		"camp-road": return "营道"
+		"river-valley-track": return "河谷道"
+		"pass-road": return "关隘道"
+		"valley-road": return "谷道"
+		"mountain-path": return "山路"
+		"supply-road": return "粮道"
+		_: return "道路"
 
 func _outcome_text() -> String:
 	var title := str(outcome.get("title", outcome.get("id", "战役结束")))

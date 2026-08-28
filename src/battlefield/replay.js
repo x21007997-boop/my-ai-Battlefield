@@ -135,6 +135,18 @@ export function applyCommanderReplayEvent(state, event) {
     case 'officer_delay_completed':
       if (!next.order.id || next.order.id === payload.orderId) next.order = { ...next.order, executionResumeAt: null };
       break;
+    case 'unit_departed':
+      if (!next.order.unitId || next.order.unitId === payload.unitId) next.order = { ...next.order, departedAt: event.simTime };
+      break;
+    case 'route_segment_entered':
+      if (!next.order.unitId || next.order.unitId === payload.unitId) next.order = { ...next.order, currentRouteSegmentIndex: payload.routeSegmentIndex ?? null };
+      break;
+    case 'unit_reached_waypoint':
+      updateUnitArea(next, payload.unitId, payload.areaId ?? '');
+      break;
+    case 'unit_encamped':
+      updateUnitArea(next, payload.unitId, payload.areaId ?? '');
+      break;
     case 'unit_arrived':
       updateUnitArea(next, payload.unitId, payload.areaId ?? payload.targetAreaId ?? '');
       if (!next.order.unitId || next.order.unitId === payload.unitId) next.order = { ...next.order, ...payload, status: 'completed' };

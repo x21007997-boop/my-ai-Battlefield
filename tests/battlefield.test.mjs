@@ -88,6 +88,27 @@ test('orders transmit before a unit begins moving', () => {
   assert.ok(arrived.eventLog.some((event) => event.type === 'unit_arrived'));
 });
 
+test('multi-segment movement records departure, road progress, waypoint and arrival', () => {
+  const issued = issueOrder(createFixture(), { type: BATTLE_ORDER_TYPES.MOVE, unitId: 'player-wing', targetAreaId: 'ridge' }, { delaySeconds: 0 });
+  const reachedValley = stepBattle(issued.world, 3);
+  assert.equal(reachedValley.units['player-wing'].location, 'valley');
+  assert.equal(reachedValley.orders[0].currentRouteSegmentIndex, 1);
+  assert.ok(reachedValley.eventLog.some((event) => event.type === 'unit_departed' && event.areaId === 'north'));
+  assert.ok(reachedValley.eventLog.some((event) => event.type === 'route_segment_entered' && event.routeSegmentIndex === 0));
+  assert.ok(reachedValley.eventLog.some((event) => event.type === 'route_segment_completed' && event.toAreaId === 'valley'));
+  assert.ok(reachedValley.eventLog.some((event) => event.type === 'unit_reached_waypoint' && event.areaId === 'valley' && event.final === false));
+  const arrived = stepBattle(reachedValley, 4);
+  assert.equal(arrived.units['player-wing'].location, 'ridge');
+  assert.equal(arrived.orders[0].status, 'completed');
+  assert.ok(arrived.eventLog.some((event) => event.type === 'unit_reached_waypoint' && event.areaId === 'ridge' && event.final === true));
+});
+
+test('hold orders create an explicit encampment event', () => {
+  const issued = issueOrder(createFixture(), { type: BATTLE_ORDER_TYPES.HOLD, unitId: 'player-wing' }, { delaySeconds: 0 });
+  const completed = stepBattle(issued.world, 1);
+  assert.ok(completed.eventLog.some((event) => event.type === 'unit_encamped' && event.areaId === 'north'));
+});
+
 test('movement enters and exits modeled terrain instead of teleporting between areas', () => {
   const issued = issueOrder(createTerrainFixture(), { type: BATTLE_ORDER_TYPES.MOVE, unitId: 'player', targetAreaId: 'east' }, { delaySeconds: 0 });
   assert.equal(issued.error, null);

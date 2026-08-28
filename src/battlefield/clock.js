@@ -94,6 +94,76 @@ function advanceTerrainTransitions(next, order, unit, currentElapsed) {
     : 1;
 }
 
+function routeSegmentPayload(order, unit, segment, segmentIndex) {
+  return {
+    orderId: order.id,
+    unitId: order.unitId,
+    side: unit?.side,
+    routeId: segment.routeId ?? null,
+    routeSegmentIndex: segmentIndex,
+    fromAreaId: segment.fromAreaId,
+    toAreaId: segment.toAreaId,
+    roadType: segment.roadType ?? null,
+    grade: segment.grade ?? null,
+    surface: segment.surface ?? null,
+  };
+}
+
+function advanceRouteSegments(next, order, unit, currentElapsed) {
+  const segments = order.routeSegments ?? [];
+  if (!unit || segments.length === 0 || order.totalTravelSeconds <= 0) return;
+  if (order.departedAt == null) {
+    order.departedAt = next.simTime;
+    appendBattleEvent(next, {
+      type: 'unit_departed',
+      orderId: order.id,
+      unitId: order.unitId,
+      side: unit.side,
+      areaId: order.originAreaId,
+      targetAreaId: order.targetAreaId,
+    });
+  }
+  let elapsedBeforeSegment = 0;
+  segments.forEach((segment, segmentIndex) => {
+    const segmentSeconds = Math.max(0, segment.travelSeconds ?? 0);
+    const segmentEnd = elapsedBeforeSegment + segmentSeconds;
+    if (segment.status == null) segment.status = 'upcoming';
+    if (segment.status === 'upcoming' && currentElapsed > 0 && currentElapsed >= elapsedBeforeSegment) {
+      segment.status = 'active';
+      segment.enteredAt = next.simTime;
+      order.currentRouteSegmentIndex = segmentIndex;
+      appendBattleEvent(next, { type: 'route_segment_entered', ...routeSegmentPayload(order, unit, segment, segmentIndex) });
+    }
+    if (segment.status === 'active' && currentElapsed >= segmentEnd) {
+      segment.status = 'completed';
+      segment.completedAt = next.simTime;
+      unit.location = segment.toAreaId;
+      appendBattleEvent(next, { type: 'route_segment_completed', ...routeSegmentPayload(order, unit, segment, segmentIndex) });
+      appendBattleEvent(next, {
+        type: 'unit_reached_waypoint',
+        orderId: order.id,
+        unitId: order.unitId,
+        side: unit.side,
+        areaId: segment.toAreaId,
+        final: segmentIndex === segments.length - 1,
+      });
+      if (segment.roadType === 'pass-road') {
+        appendBattleEvent(next, {
+          type: 'unit_passed_pass',
+          orderId: order.id,
+          unitId: order.unitId,
+          side: unit.side,
+          areaId: segment.toAreaId,
+          routeId: segment.routeId ?? null,
+        });
+      }
+    }
+    elapsedBeforeSegment = segmentEnd;
+  });
+  const activeIndex = segments.findIndex((segment) => segment.status === 'active');
+  order.currentRouteSegmentIndex = activeIndex >= 0 ? activeIndex : null;
+}
+
 function opposingSide(world, side) {
   return Object.keys(world.sides ?? {}).find((candidate) => candidate !== side) ?? null;
 }
@@ -266,6 +336,7 @@ function advanceOneSecond(world) {
         next.units[order.unitId].posture = 'hold';
       }
       appendBattleEvent(next, { type: 'order_completed', orderId: order.id, unitId: order.unitId, side: next.units[order.unitId]?.side, outcome: 'held' });
+      appendBattleEvent(next, { type: 'unit_encamped', orderId: order.id, unitId: order.unitId, side: next.units[order.unitId]?.side, areaId: next.units[order.unitId]?.location, posture: 'hold' });
       continue;
     }
     const movingUnit = next.units[order.unitId];
@@ -281,12 +352,15 @@ function advanceOneSecond(world) {
         side: movingUnit.side,
         targetAreaId: order.targetAreaId,
         reason: 'opposing_blockade',
+        routeSegmentIndex: order.currentRouteSegmentIndex ?? 0,
+        routeId: order.routeSegments?.[order.currentRouteSegmentIndex ?? 0]?.routeId ?? null,
       });
       continue;
     }
     const previousElapsed = Math.max(0, order.totalTravelSeconds - order.remainingTravelSeconds);
     order.remainingTravelSeconds = Math.max(0, order.remainingTravelSeconds - Math.max(0.1, Number(order.executionRate ?? 1)));
     const currentElapsed = Math.max(0, order.totalTravelSeconds - order.remainingTravelSeconds);
+    advanceRouteSegments(next, order, movingUnit, currentElapsed);
     advanceTerrainTransitions(next, order, next.units[order.unitId], currentElapsed);
     applyTerrainEffects(next, order, next.units[order.unitId], previousElapsed, currentElapsed);
     if (order.remainingTravelSeconds > 0) continue;

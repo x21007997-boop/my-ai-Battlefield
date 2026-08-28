@@ -194,6 +194,8 @@ export function applyOrderRoute(order, route) {
   order.movementProgress = 0;
   order.currentTerrain = null;
   order.lastTerrainTransition = null;
+  order.currentRouteSegmentIndex = null;
+  order.departedAt = null;
   order.totalTravelSeconds = route.travelSeconds;
   order.remainingTravelSeconds = route.travelSeconds;
   return order;
@@ -261,6 +263,8 @@ export function issueOrder(world, draft, { delaySeconds = 0, commandContext = nu
     routeSegments: route.segments ?? [],
     terrainTransitions: transitionSchedule(route.segments ?? []),
     movementProgress: 0,
+    currentRouteSegmentIndex: null,
+    departedAt: null,
     currentTerrain: null,
     lastTerrainTransition: null,
     totalTravelSeconds: route.travelSeconds,

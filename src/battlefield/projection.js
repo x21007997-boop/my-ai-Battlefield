@@ -191,6 +191,7 @@ export function buildCommanderMapModel(world, {
           orderId: activeOrder.id,
           status: activeOrder.status,
           progress: activeOrder.movementProgress ?? 0,
+          currentRouteSegmentIndex: activeOrder.currentRouteSegmentIndex ?? null,
           currentTerrain: activeOrder.currentTerrain ?? null,
           lastTerrainTransition: activeOrder.lastTerrainTransition ?? null,
           officerDecision: activeOrder.officerDecision ?? null,

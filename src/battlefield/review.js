@@ -53,6 +53,12 @@ function eventLabel(event) {
   switch (event.type) {
     case 'order_issued': return '命令已下达';
     case 'order_delivered': return '命令抵达部队';
+    case 'unit_departed': return '部队离营';
+    case 'route_segment_entered': return '部队进入行军路段';
+    case 'route_segment_completed': return '部队通过行军路段';
+    case 'unit_passed_pass': return '部队通过关隘';
+    case 'unit_reached_waypoint': return event.final ? '部队抵达目标' : '部队抵达中途节点';
+    case 'unit_encamped': return '部队扎营坚守';
     case 'unit_arrived': return '部队完成机动';
     case 'unit_entered_terrain': return `部队进入${event.label ?? '地形'}`;
     case 'unit_exited_terrain': return `部队完成${event.label ?? '地形通过'}`;
@@ -74,6 +80,11 @@ function buildMilestones(world, side) {
   return visibleEvents(world, side)
     .filter((event) => [
       'order_issued',
+      'unit_departed',
+      'route_segment_entered',
+      'route_segment_completed',
+      'unit_passed_pass',
+      'unit_encamped',
       'unit_entered_terrain',
       'unit_exited_terrain',
       'unit_arrived',

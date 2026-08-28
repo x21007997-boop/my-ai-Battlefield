@@ -125,6 +125,8 @@ export interface BattleOrder {
   routeSegments: Array<Record<string, unknown>>;
   terrainTransitions: TerrainTransition[];
   movementProgress: number;
+  currentRouteSegmentIndex?: number | null;
+  departedAt?: number | null;
   remainingTravelSeconds: number;
   deliveredAt?: number;
   completedAt?: number;

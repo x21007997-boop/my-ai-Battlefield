@@ -55,6 +55,8 @@ export function buildCommanderSessionSnapshot(world, {
       terrainTransitions: JSON.parse(JSON.stringify(order.terrainTransitions ?? [])),
       distanceEstimate: routeDistanceEstimate(order.routeSegments ?? []),
       movementProgress: order.movementProgress ?? 0,
+      currentRouteSegmentIndex: order.currentRouteSegmentIndex ?? null,
+      departedAt: order.departedAt ?? null,
       currentTerrain: order.currentTerrain ?? null,
       lastTerrainTransition: order.lastTerrainTransition ?? null,
       rawText: order.rawText ?? '',
