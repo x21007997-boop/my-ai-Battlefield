@@ -1,6 +1,7 @@
 import { BATTLEFIELD_CONFIG } from './config.js';
 import { appendBattleEvent } from './world.js';
 import { findRouteCandidates } from './orders.js';
+import { movementEnvironment } from './mobility.js';
 
 export const OFFICER_AI_SCHEMA_VERSION = 1;
 export const OFFICER_AI_ENGINE = 'rule-based-officer-v1';
@@ -89,7 +90,11 @@ function routeRisk(world, route, profile, side) {
 function saferRouteFor(world, commander, order, profile) {
   if (!order?.targetAreaId || order.type === 'hold' || !Array.isArray(order.route) || order.route.length < 2) return null;
   if (!['defensive', 'cautious'].includes(profile.riskTolerance)) return null;
-  const candidates = findRouteCandidates(world.areas, order.route[0], order.targetAreaId, { maxCandidates: 10 });
+  const candidates = findRouteCandidates(world.areas, order.route[0], order.targetAreaId, {
+    maxCandidates: 10,
+    traveler: world.units?.[order.unitId] ?? {},
+    environment: movementEnvironment(world),
+  });
   if (candidates.length < 2) return null;
   const currentRoute = candidates.find((candidate) => routeKey(candidate) === routeKey({ areaIds: order.route })) ?? {
     areaIds: [...order.route],

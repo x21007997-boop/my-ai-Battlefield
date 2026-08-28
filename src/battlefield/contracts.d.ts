@@ -253,6 +253,7 @@ export interface BattleWorld {
   seed: number;
   simTime: number;
   calendar?: BattleCalendar | null;
+  environment?: { weather: string; light: string; congestion: number };
   status: 'running' | 'ended' | string;
   areas: Record<string, BattleArea>;
   units: Record<string, BattleUnit>;
@@ -332,6 +333,7 @@ export interface CreateBattleWorldOptions {
   commanders?: Array<Record<string, unknown>>;
   commandChain?: Record<string, unknown>;
   calendar?: BattleCalendar | null;
+  environment?: { weather?: string; light?: string; congestion?: number };
 }
 
 export interface BattleCalendar {

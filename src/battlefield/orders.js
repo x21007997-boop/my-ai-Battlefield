@@ -1,6 +1,7 @@
 import { appendBattleEvent, cloneBattleWorld } from './world.js';
 import { BATTLEFIELD_CONFIG } from './config.js';
 import { BATTLE_ERROR_CODES, battleError } from './errors.js';
+import { calculateEdgeTravel, movementEnvironment } from './mobility.js';
 
 function clone(value) {
   return JSON.parse(JSON.stringify(value));
@@ -70,7 +71,7 @@ function transitionSchedule(segments = []) {
  * @param {string} toAreaId
  * @returns {{ areaIds: string[], travelSeconds: number, segments?: Array<Record<string, unknown>> } | null}
  */
-export function findRoute(areas, fromAreaId, toAreaId) {
+export function findRoute(areas, fromAreaId, toAreaId, { traveler = {}, environment = {} } = {}) {
   if (!areas[fromAreaId] || !areas[toAreaId]) return null;
   if (fromAreaId === toAreaId) return { areaIds: [fromAreaId], travelSeconds: 0, segments: [] };
 
@@ -80,15 +81,18 @@ export function findRoute(areas, fromAreaId, toAreaId) {
     const current = queue.shift();
     for (const edge of neighborsOf(areas[current.areaId])) {
       if (visited.has(edge.id) || !areas[edge.id]) continue;
+      const mobility = calculateEdgeTravel(edge, traveler, environment);
       const next = {
         areaId: edge.id,
         areaIds: [...current.areaIds, edge.id],
-        travelSeconds: current.travelSeconds + (edge.travelSeconds ?? BATTLEFIELD_CONFIG.defaults.areaTravelSeconds),
+        travelSeconds: current.travelSeconds + mobility.travelSeconds,
         segments: [...current.segments, {
           fromAreaId: current.areaId,
           toAreaId: edge.id,
           routeId: edge.routeId ?? null,
-          travelSeconds: edge.travelSeconds ?? BATTLEFIELD_CONFIG.defaults.areaTravelSeconds,
+          travelSeconds: mobility.travelSeconds,
+          travelTimeSource: mobility.source,
+          mobilityFactors: mobility.factors,
           distanceLi: edge.distanceLi ?? null,
           distanceUncertainty: edge.distanceUncertainty ?? null,
           distanceStatus: edge.distanceStatus ?? null,
@@ -117,12 +121,14 @@ export function findRoute(areas, fromAreaId, toAreaId) {
  * @param {Record<string, import('./contracts').BattleArea>} areas
  * @param {string} fromAreaId
  * @param {string} toAreaId
- * @param {{ maxCandidates?: number, maxDepth?: number }} [options]
+ * @param {{ maxCandidates?: number, maxDepth?: number, traveler?: Record<string, any>, environment?: Record<string, any> }} [options]
  * @returns {Array<{ areaIds: string[], travelSeconds: number, segments: Array<Record<string, unknown>> }>}
  */
 export function findRouteCandidates(areas, fromAreaId, toAreaId, {
   maxCandidates = 12,
   maxDepth = Math.max(2, Object.keys(areas ?? {}).length),
+  traveler = {},
+  environment = {},
 } = {}) {
   if (!areas?.[fromAreaId] || !areas?.[toAreaId]) return [];
   if (fromAreaId === toAreaId) return [{ areaIds: [fromAreaId], travelSeconds: 0, segments: [] }];
@@ -135,12 +141,15 @@ export function findRouteCandidates(areas, fromAreaId, toAreaId, {
     for (const edge of neighborsOf(areas[areaId])) {
       const nextId = edge.id;
       if (!nextId || visited.has(nextId) || !areas[nextId]) continue;
-      const edgeTravelSeconds = edge.travelSeconds ?? BATTLEFIELD_CONFIG.defaults.areaTravelSeconds;
+      const mobility = calculateEdgeTravel(edge, traveler, environment);
+      const edgeTravelSeconds = mobility.travelSeconds;
       const nextSegments = [...segments, {
         fromAreaId: areaId,
         toAreaId: nextId,
         routeId: edge.routeId ?? null,
         travelSeconds: edgeTravelSeconds,
+        travelTimeSource: mobility.source,
+        mobilityFactors: mobility.factors,
         distanceLi: edge.distanceLi ?? null,
         distanceUncertainty: edge.distanceUncertainty ?? null,
         distanceStatus: edge.distanceStatus ?? null,
@@ -222,7 +231,7 @@ export function issueOrder(world, draft, { delaySeconds = 0, commandContext = nu
   const unit = next.units[draft.unitId];
   const routeTargetAreaId = draft.targetAreaId ?? unit.location;
   const route = draft.type === BATTLE_ORDER_TYPES.MOVE || isTaskOrderType(draft.type)
-    ? findRoute(next.areas, unit.location, routeTargetAreaId)
+    ? findRoute(next.areas, unit.location, routeTargetAreaId, { traveler: unit, environment: movementEnvironment(next) })
     : { areaIds: [unit.location], travelSeconds: 0, segments: [] };
   const order = {
     id: nextId(next),

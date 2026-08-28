@@ -140,6 +140,7 @@ export function createBattleWorld({
   commanders = [],
   commandChain = {},
   calendar = null,
+  environment = {},
 } = {}) {
   const normalizedUnits = units.map(normalizeUnit);
   const sideMap = Object.fromEntries(sides.map((side) => [side.id, { ...side }]));
@@ -151,6 +152,11 @@ export function createBattleWorld({
     simulatorVersion: BATTLEFIELD_SIMULATOR_VERSION,
     scenarioId,
     calendar: normalizeBattleCalendar(calendar),
+    environment: {
+      weather: environment.weather ?? 'clear',
+      light: environment.light ?? 'day',
+      congestion: Math.min(1, Math.max(0, Number(environment.congestion ?? 0) || 0)),
+    },
     seed,
     resolution: clone(resolution),
     simTime: 0,

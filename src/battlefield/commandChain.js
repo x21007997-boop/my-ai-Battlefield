@@ -1,5 +1,6 @@
 import { BATTLEFIELD_CONFIG } from './config.js';
 import { BATTLE_ERROR_CODES, battleError } from './errors.js';
+import { calculateEdgeTravel, movementEnvironment } from './mobility.js';
 
 export const COMMAND_CHAIN_SCHEMA_VERSION = BATTLEFIELD_CONFIG.schemaVersions.commandChain;
 
@@ -104,7 +105,7 @@ export function commanderLocation(world, commanderId) {
   };
 }
 
-function areaRoute(areas = {}, fromAreaId, toAreaId) {
+function areaRoute(areas = {}, fromAreaId, toAreaId, environment = {}) {
   if (!fromAreaId || !toAreaId || !areas[fromAreaId] || !areas[toAreaId]) return null;
   if (fromAreaId === toAreaId) return { areaIds: [fromAreaId], travelSeconds: 0 };
   const queue = [{ areaId: fromAreaId, areaIds: [fromAreaId], travelSeconds: 0 }];
@@ -114,10 +115,13 @@ function areaRoute(areas = {}, fromAreaId, toAreaId) {
     for (const edge of areas[current.areaId]?.neighbors ?? []) {
       const nextId = typeof edge === 'string' ? edge : edge.id;
       if (!nextId || visited.has(nextId) || !areas[nextId]) continue;
+      const edgeTravelSeconds = typeof edge === 'string'
+        ? BATTLEFIELD_CONFIG.defaults.areaTravelSeconds
+        : calculateEdgeTravel(edge, { kind: 'messenger', baggage: 'none', fatigue: 0 }, environment).travelSeconds;
       const next = {
         areaId: nextId,
         areaIds: [...current.areaIds, nextId],
-        travelSeconds: current.travelSeconds + (typeof edge === 'string' ? BATTLEFIELD_CONFIG.defaults.areaTravelSeconds : edge.travelSeconds ?? BATTLEFIELD_CONFIG.defaults.areaTravelSeconds),
+        travelSeconds: current.travelSeconds + edgeTravelSeconds,
       };
       if (nextId === toAreaId) return next;
       visited.add(nextId);
@@ -212,7 +216,7 @@ export function buildCommandDeliveryPlan(world, options = {}) {
   const recipientLocation = commanderLocation(world, recipientId);
   const policy = chain.messengerPolicy ?? createCommandChainState().messengerPolicy;
   const direct = Boolean(issuerLocation.areaId && recipientLocation.areaId && issuerLocation.areaId === recipientLocation.areaId);
-  const route = direct ? { areaIds: [issuerLocation.areaId], travelSeconds: 0 } : areaRoute(world.areas, issuerLocation.areaId, recipientLocation.areaId);
+  const route = direct ? { areaIds: [issuerLocation.areaId], travelSeconds: 0 } : areaRoute(world.areas, issuerLocation.areaId, recipientLocation.areaId, movementEnvironment(world));
   const messengerTravelSeconds = route
     ? Math.max(1, Math.ceil(route.travelSeconds * policy.routeTravelFactor))
     : policy.fallbackDelaySeconds;
