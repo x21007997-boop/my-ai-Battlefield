@@ -77,7 +77,7 @@
       "neighbors": [
         {
           "id": "western-gate",
-          "travelSeconds": 90,
+          "travelSeconds": 119,
           "routeId": "route-qin-camp-western-gate",
           "distanceLi": 8,
           "distanceUncertainty": 0.25,
@@ -92,7 +92,7 @@
         },
         {
           "id": "dan-river-valley",
-          "travelSeconds": 150,
+          "travelSeconds": 390,
           "routeId": "route-qin-camp-dan-valley",
           "distanceLi": 14,
           "distanceUncertainty": 0.3,
@@ -136,7 +136,7 @@
       "neighbors": [
         {
           "id": "qin-west-camp",
-          "travelSeconds": 90,
+          "travelSeconds": 119,
           "routeId": "route-qin-camp-western-gate",
           "distanceLi": 8,
           "distanceUncertainty": 0.25,
@@ -151,7 +151,7 @@
         },
         {
           "id": "zhao-main-camp",
-          "travelSeconds": 150,
+          "travelSeconds": 384,
           "routeId": "route-western-gate-zhao-camp",
           "distanceLi": 16,
           "distanceUncertainty": 0.35,
@@ -179,7 +179,7 @@
       "neighbors": [
         {
           "id": "qin-west-camp",
-          "travelSeconds": 150,
+          "travelSeconds": 390,
           "routeId": "route-qin-camp-dan-valley",
           "distanceLi": 14,
           "distanceUncertainty": 0.3,
@@ -210,7 +210,7 @@
         },
         {
           "id": "zhao-main-camp",
-          "travelSeconds": 120,
+          "travelSeconds": 179,
           "routeId": "route-dan-valley-zhao-camp",
           "distanceLi": 12,
           "distanceUncertainty": 0.3,
@@ -225,7 +225,7 @@
         },
         {
           "id": "east-highland",
-          "travelSeconds": 150,
+          "travelSeconds": 883,
           "routeId": "route-dan-valley-east-highland",
           "distanceLi": 18,
           "distanceUncertainty": 0.4,
@@ -269,7 +269,7 @@
       "neighbors": [
         {
           "id": "western-gate",
-          "travelSeconds": 150,
+          "travelSeconds": 384,
           "routeId": "route-western-gate-zhao-camp",
           "distanceLi": 16,
           "distanceUncertainty": 0.35,
@@ -284,7 +284,7 @@
         },
         {
           "id": "dan-river-valley",
-          "travelSeconds": 120,
+          "travelSeconds": 179,
           "routeId": "route-dan-valley-zhao-camp",
           "distanceLi": 12,
           "distanceUncertainty": 0.3,
@@ -299,7 +299,7 @@
         },
         {
           "id": "zhao-relief-route",
-          "travelSeconds": 120,
+          "travelSeconds": 223,
           "routeId": "route-zhao-camp-relief",
           "distanceLi": 15,
           "distanceUncertainty": 0.35,
@@ -327,7 +327,7 @@
       "neighbors": [
         {
           "id": "zhao-main-camp",
-          "travelSeconds": 120,
+          "travelSeconds": 223,
           "routeId": "route-zhao-camp-relief",
           "distanceLi": 15,
           "distanceUncertainty": 0.35,
@@ -342,7 +342,7 @@
         },
         {
           "id": "east-highland",
-          "travelSeconds": 180,
+          "travelSeconds": 981,
           "routeId": "route-relief-east-highland",
           "distanceLi": 20,
           "distanceUncertainty": 0.4,
@@ -386,7 +386,7 @@
       "neighbors": [
         {
           "id": "dan-river-valley",
-          "travelSeconds": 150,
+          "travelSeconds": 883,
           "routeId": "route-dan-valley-east-highland",
           "distanceLi": 18,
           "distanceUncertainty": 0.4,
@@ -417,7 +417,7 @@
         },
         {
           "id": "zhao-relief-route",
-          "travelSeconds": 180,
+          "travelSeconds": 981,
           "routeId": "route-relief-east-highland",
           "distanceLi": 20,
           "distanceUncertainty": 0.4,

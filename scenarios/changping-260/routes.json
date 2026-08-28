@@ -1,11 +1,10 @@
 {
   "edges": [
-    { "id": "route-qin-camp-western-gate", "from": "qin-west-camp", "to": "western-gate", "travelSeconds": 900, "distanceLi": 8, "distanceUncertainty": 0.25, "distanceStatus": "scenario_assumption", "roadType": "camp-road", "surface": "packed-earth", "grade": "gentle", "capacity": "army-column", "concealment": "low", "baggageAccess": "full", "historicalClaim": false },
+    { "id": "route-qin-camp-western-gate", "from": "qin-west-camp", "to": "western-gate", "distanceLi": 8, "distanceUncertainty": 0.25, "distanceStatus": "scenario_assumption", "roadType": "camp-road", "surface": "packed-earth", "grade": "gentle", "capacity": "army-column", "concealment": "low", "baggageAccess": "full", "historicalClaim": false },
     {
       "id": "route-qin-camp-dan-valley",
       "from": "qin-west-camp",
       "to": "dan-river-valley",
-      "travelSeconds": 1200,
       "distanceLi": 14,
       "distanceUncertainty": 0.3,
       "distanceStatus": "scenario_assumption",
@@ -34,13 +33,12 @@
         }
       ]
     },
-    { "id": "route-western-gate-zhao-camp", "from": "western-gate", "to": "zhao-main-camp", "travelSeconds": 1200, "distanceLi": 16, "distanceUncertainty": 0.35, "distanceStatus": "scenario_assumption", "roadType": "pass-road", "surface": "stony-earth", "grade": "rolling", "capacity": "formation", "concealment": "medium", "baggageAccess": "limited", "historicalClaim": false },
-    { "id": "route-dan-valley-zhao-camp", "from": "dan-river-valley", "to": "zhao-main-camp", "travelSeconds": 1000, "distanceLi": 12, "distanceUncertainty": 0.3, "distanceStatus": "scenario_assumption", "roadType": "valley-road", "surface": "packed-earth", "grade": "gentle", "capacity": "army-column", "concealment": "low", "baggageAccess": "full", "historicalClaim": false },
+    { "id": "route-western-gate-zhao-camp", "from": "western-gate", "to": "zhao-main-camp", "distanceLi": 16, "distanceUncertainty": 0.35, "distanceStatus": "scenario_assumption", "roadType": "pass-road", "surface": "stony-earth", "grade": "rolling", "capacity": "formation", "concealment": "medium", "baggageAccess": "limited", "historicalClaim": false },
+    { "id": "route-dan-valley-zhao-camp", "from": "dan-river-valley", "to": "zhao-main-camp", "distanceLi": 12, "distanceUncertainty": 0.3, "distanceStatus": "scenario_assumption", "roadType": "valley-road", "surface": "packed-earth", "grade": "gentle", "capacity": "army-column", "concealment": "low", "baggageAccess": "full", "historicalClaim": false },
     {
       "id": "route-dan-valley-east-highland",
       "from": "dan-river-valley",
       "to": "east-highland",
-      "travelSeconds": 1300,
       "distanceLi": 18,
       "distanceUncertainty": 0.4,
       "distanceStatus": "scenario_assumption",
@@ -69,12 +67,11 @@
         }
       ]
     },
-    { "id": "route-zhao-camp-relief", "from": "zhao-main-camp", "to": "zhao-relief-route", "travelSeconds": 1100, "distanceLi": 15, "distanceUncertainty": 0.35, "distanceStatus": "scenario_assumption", "roadType": "supply-road", "surface": "packed-earth", "grade": "gentle", "capacity": "army-column", "concealment": "low", "baggageAccess": "full", "historicalClaim": false },
+    { "id": "route-zhao-camp-relief", "from": "zhao-main-camp", "to": "zhao-relief-route", "distanceLi": 15, "distanceUncertainty": 0.35, "distanceStatus": "scenario_assumption", "roadType": "supply-road", "surface": "packed-earth", "grade": "gentle", "capacity": "army-column", "concealment": "low", "baggageAccess": "full", "historicalClaim": false },
     {
       "id": "route-relief-east-highland",
       "from": "zhao-relief-route",
       "to": "east-highland",
-      "travelSeconds": 1400,
       "distanceLi": 20,
       "distanceUncertainty": 0.4,
       "distanceStatus": "scenario_assumption",

@@ -289,7 +289,7 @@ if (!errors.length) {
   });
   routes.forEach((edge) => {
     if (!areaIds.has(edge.from) || !areaIds.has(edge.to)) add(`routes.json:${edge.id}: from 或 to 引用了不存在的区域`);
-    if (!positiveNumber(edge.travelSeconds)) add(`routes.json:${edge.id}: travelSeconds 必须是正数`);
+    if (edge.travelSeconds !== undefined && !positiveNumber(edge.travelSeconds)) add(`routes.json:${edge.id}: 兼容字段 travelSeconds 必须是正数`);
     if (!positiveNumber(edge.distanceLi)) add(`routes.json:${edge.id}: distanceLi 必须是正数`);
     if (!probability(edge.distanceUncertainty)) add(`routes.json:${edge.id}: distanceUncertainty 必须在 0-1 范围内`);
     if (!['historical_fact', 'historical_estimate', 'scenario_assumption', 'simulation_variable'].includes(edge.distanceStatus)) add(`routes.json:${edge.id}: distanceStatus 无效`);

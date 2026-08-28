@@ -16,15 +16,6 @@
       "deceptionAssets": 1
     }
   },
-  "routeTravelSeconds": {
-    "qin-west-camp->western-gate": 90,
-    "qin-west-camp->dan-river-valley": 150,
-    "western-gate->zhao-main-camp": 150,
-    "dan-river-valley->zhao-main-camp": 120,
-    "dan-river-valley->east-highland": 150,
-    "zhao-main-camp->zhao-relief-route": 120,
-    "zhao-relief-route->east-highland": 180
-  },
   "initialUnits": [
     { "id": "qin-main", "strength": 86, "strengthUnit": "战力指数", "strengthStatus": "scenario_assumption", "morale": 72, "fatigue": 18, "supplyDays": 18, "readiness": 0.86 },
     { "id": "qin-detachment", "strength": 56, "strengthUnit": "战力指数", "strengthStatus": "scenario_assumption", "morale": 68, "fatigue": 15, "supplyDays": 16, "readiness": 0.82 },

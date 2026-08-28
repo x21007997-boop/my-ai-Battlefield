@@ -13,9 +13,9 @@ function command(world, value) {
 
 test('Changping level keeps route estimates playable in both directions', () => {
   const world = CHANGPING_PROFILE.createWorld();
-  assert.equal(world.areas['western-gate'].neighbors.find((item) => item.id === 'qin-west-camp').travelSeconds, 90);
-  assert.equal(world.areas['dan-river-valley'].neighbors.find((item) => item.id === 'qin-west-camp').travelSeconds, 150);
-  assert.equal(world.areas['zhao-main-camp'].neighbors.find((item) => item.id === 'zhao-relief-route').travelSeconds, 120);
+  assert.equal(world.areas['western-gate'].neighbors.find((item) => item.id === 'qin-west-camp').distanceLi, 8);
+  assert.equal(world.areas['dan-river-valley'].neighbors.find((item) => item.id === 'qin-west-camp').distanceLi, 14);
+  assert.equal(world.areas['zhao-main-camp'].neighbors.find((item) => item.id === 'zhao-relief-route').distanceLi, 15);
   const riverRoute = world.areas['qin-west-camp'].neighbors.find((item) => item.id === 'dan-river-valley');
   assert.equal(riverRoute.distanceLi, 14);
   assert.equal(riverRoute.distanceStatus, 'scenario_assumption');
@@ -23,6 +23,9 @@ test('Changping level keeps route estimates playable in both directions', () => 
   assert.equal(riverRoute.baggageAccess, 'limited');
   assert.equal(world.terrainFeatures.find((feature) => feature.id === 'dan-river').type, 'river');
   assert.equal(riverRoute.terrainTransitions[0].transitionType, 'river-crossing');
+  const issued = command(world, { type: 'move', unitId: 'qin-main', targetAreaId: 'dan-river-valley' });
+  assert.equal(issued.world.orders[0].routeSegments[0].travelTimeSource, 'mobility-model');
+  assert.notEqual(issued.world.orders[0].routeSegments[0].travelSeconds, riverRoute.travelSeconds);
 });
 
 test('Changping level does not resolve from arrival alone', () => {

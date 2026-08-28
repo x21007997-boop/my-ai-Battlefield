@@ -71,16 +71,6 @@ function mapResolution(resolution) {
   };
 }
 
-function routeKey(from, to) {
-  return `${from}->${to}`;
-}
-
-function routeSeconds(routeTravelSeconds, from, to, fallback) {
-  return routeTravelSeconds[routeKey(from, to)]
-    ?? routeTravelSeconds[routeKey(to, from)]
-    ?? fallback;
-}
-
 function routeDefinition(from, to) {
   const direct = routes.edges.find((edge) => edge.from === from && edge.to === to);
   if (direct) return direct;
@@ -97,19 +87,18 @@ function routeDefinition(from, to) {
 }
 
 function buildChangpingGamePackage() {
-  const routeTravelSeconds = simulationParameters.routeTravelSeconds;
   const terrainByArea = Object.fromEntries(terrain.areas.map((item) => [item.areaId, terrainLabels[item.type] ?? '待审地形']));
   const mappedGeography = {
     areas: geography.areas.map((area) => ({
       ...area,
       terrain: terrainByArea[area.id],
       neighbors: area.neighbors.map((neighbor) => {
-        const neighborId = typeof neighbor === 'string' ? neighbor : neighbor.id;
-        const fallback = typeof neighbor === 'string' ? 10 : neighbor.travelSeconds;
+        const neighborId = neighbor;
+        const fallback = 10;
         const route = routeDefinition(area.id, neighborId);
         return {
           id: neighborId,
-          travelSeconds: routeSeconds(routeTravelSeconds, area.id, neighborId, fallback),
+          travelSeconds: fallback,
           routeId: route?.id ?? null,
           distanceLi: route?.distanceLi ?? null,
           distanceUncertainty: route?.distanceUncertainty ?? null,

@@ -2,6 +2,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildCommanderSessionSnapshot, createBattleWorld } from '../src/battlefield/index.js';
+import { calculateEdgeTravel } from '../src/battlefield/mobility.js';
 
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 const root = resolve(scriptDir, '..');
@@ -38,12 +39,7 @@ const terrainLabels = {
   'highland-zone': '高地',
 };
 const terrainByArea = Object.fromEntries(terrain.areas.map((item) => [item.areaId, terrainLabels[item.type] ?? '待审地形']));
-const routeOverrides = simulationParameters.routeTravelSeconds ?? {};
 const routeDefinitions = routes?.edges ?? [];
-const routeKey = (from, to) => `${from}->${to}`;
-const routeSeconds = (from, to, fallback) => routeOverrides[routeKey(from, to)]
-  ?? routeOverrides[routeKey(to, from)]
-  ?? fallback;
 
 function routeDefinition(from, to) {
   const direct = routeDefinitions.find((edge) => edge.from === from && edge.to === to);
@@ -73,7 +69,7 @@ const areas = geography.areas.map((area) => ({
     const route = routeDefinition(area.id, neighborId);
     return {
       id: neighborId,
-      travelSeconds: routeSeconds(area.id, neighborId, fallback),
+      travelSeconds: calculateEdgeTravel(route ?? { travelSeconds: fallback }, { kind: 'formation', baggage: 'full', fatigue: 0 }, { weather: 'clear', light: 'day', congestion: 0 }).travelSeconds,
       routeId: route?.id ?? null,
       distanceLi: route?.distanceLi ?? null,
       distanceUncertainty: route?.distanceUncertainty ?? null,
