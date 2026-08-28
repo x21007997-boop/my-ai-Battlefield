@@ -22,6 +22,7 @@ var friendly_units: Array = []
 var reported_signals: Array = []
 var active_order: Dictionary = {}
 var pending_observations: Array = []
+var transient_notices: Array = []
 var current_sim_time := 0
 var selected_unit_id := ""
 var selected_area_id := ""
@@ -30,13 +31,14 @@ func configure(data: Dictionary) -> void:
 	scenario = data
 	queue_redraw()
 
-func set_commander_layers(units: Array, reports: Array, commander_order: Dictionary = {}, pending_reports: Array = [], sim_time: int = 0) -> void:
+func set_commander_layers(units: Array, reports: Array, commander_order: Dictionary = {}, pending_reports: Array = [], sim_time: int = 0, notices: Array = []) -> void:
 	# This node intentionally receives only the commander projection layers.
 	# Enemy units and combat exchanges never enter the scene tree.
 	friendly_units = units.duplicate(true)
 	reported_signals = reports.duplicate(true)
 	active_order = commander_order.duplicate(true)
 	pending_observations = pending_reports.duplicate(true)
+	transient_notices = notices.duplicate(true)
 	current_sim_time = sim_time
 	queue_redraw()
 
@@ -72,6 +74,7 @@ func _draw() -> void:
 
 	_draw_order_feedback()
 	_draw_pending_observations()
+	_draw_transient_notices()
 
 	for area in scenario.get("areas", []):
 		var point := _area_point(area.get("id", ""))
@@ -103,6 +106,7 @@ func _draw() -> void:
 		if report_point != Vector2.ZERO:
 			_draw_report_uncertainty(report, report_point)
 			_draw_flag(report_point + Vector2(18, -2), CINNABAR, true, false, "赵?")
+			_draw_report_badge(report, report_point)
 
 	draw_string(ThemeDB.fallback_font, MAP_RECT.position + Vector2(18, 34), "长平决战前 · 指挥官认知沙盘", HORIZONTAL_ALIGNMENT_LEFT, -1, 20, INK)
 	draw_string(ThemeDB.fallback_font, MAP_RECT.position + Vector2(18, 57), "河流与山脊来自结构地形；敌情来自延迟前线报告", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, MUTED_INK)
@@ -334,6 +338,50 @@ func _draw_report_uncertainty(report: Dictionary, center: Vector2) -> void:
 	draw_arc(center, radius, 0.0, TAU, 48, Color(color, 0.48), 1.5)
 	draw_arc(center, radius + 4.0, 0.2, 1.55, 18, Color(color, 0.28), 1.0)
 
+func _draw_report_badge(report: Dictionary, center: Vector2) -> void:
+	var remaining := _report_remaining_seconds(report)
+	var warning := remaining >= 0 and remaining <= 10
+	var badge_color := CINNABAR if warning else GOLD
+	var rect := Rect2(center + Vector2(48, -54), Vector2(144, 28))
+	draw_rect(rect, Color("#f3dfb2"), true)
+	draw_rect(rect, Color(badge_color, 0.92), false, 1.5)
+	draw_string(ThemeDB.fallback_font, rect.position + Vector2(8, 19), _report_status_text(report), HORIZONTAL_ALIGNMENT_LEFT, -1, 10, badge_color)
+
+func _report_status_text(report: Dictionary) -> String:
+	var confidence := _confidence_label(str(report.get("confidence", "unknown")))
+	var remaining := _report_remaining_seconds(report)
+	if remaining < 0:
+		return confidence + " · 时效未知"
+	if remaining <= 10:
+		return "%s · 将失效 %d秒" % [confidence, remaining]
+	return "%s · 有效 %d秒" % [confidence, remaining]
+
+func _report_remaining_seconds(report: Dictionary) -> int:
+	if report.get("expiresAt", null) == null:
+		return -1
+	return max(0, int(report.get("expiresAt", current_sim_time)) - current_sim_time)
+
+func _confidence_label(confidence: String) -> String:
+	match confidence:
+		"high": return "高可信"
+		"medium": return "中可信"
+		"low": return "低可信"
+		_: return "可信度未知"
+
+func _draw_transient_notices() -> void:
+	for notice_value in transient_notices:
+		if not notice_value is Dictionary:
+			continue
+		var notice: Dictionary = notice_value
+		if int(notice.get("expiresAt", current_sim_time)) < current_sim_time:
+			continue
+		var point := _area_point(str(notice.get("areaId", "")))
+		if point == Vector2.ZERO:
+			continue
+		var kind := str(notice.get("kind", "info"))
+		var color := CINNABAR if kind == "report_expired" else GOLD
+		_draw_status_pulse(point + Vector2(0, 34), color, str(notice.get("label", "战场状态变化")))
+
 func _report_radius_normalized(level: String) -> float:
 	match level:
 		"high": return 0.04
@@ -381,7 +429,11 @@ func _draw_marching_marker(point: Vector2, color: Color, label: String) -> void:
 	draw_circle(point, 9.0, Color("#f5e2b3"))
 	draw_circle(point, 6.0, color)
 	draw_arc(point, 14.0, 0.0, TAU, 24, Color(color, 0.95), 2.0)
-	draw_string(ThemeDB.fallback_font, point + Vector2(18, 4), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 11, color)
+	var label_width: float = max(72.0, float(label.length() * 13 + 16))
+	var label_rect := Rect2(point + Vector2(16, -13), Vector2(label_width, 26))
+	draw_rect(label_rect, Color("#f3dfb2"), true)
+	draw_rect(label_rect, Color(color, 0.88), false, 1.5)
+	draw_string(ThemeDB.fallback_font, label_rect.position + Vector2(8, 18), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 11, color)
 
 func _draw_flag(point: Vector2, color: Color, uncertain: bool, selected: bool = false, label: String = "") -> void:
 	if selected:

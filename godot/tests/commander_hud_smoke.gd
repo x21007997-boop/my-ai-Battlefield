@@ -28,6 +28,15 @@ func _init() -> void:
 	assert(main.order.get("status", "") == "executing")
 	assert(main.command_state_label.text.contains("执行中"))
 	assert(main.feedback_label.text.contains("命令已抵达"))
+	main.sand_table.current_sim_time = 20
+	assert(main.sand_table._movement_terrain_label({"currentTerrain": {"terrainType": "river"}}) == "渡河中")
+	assert(main.sand_table._movement_terrain_label({"currentTerrain": {"terrainType": "mountain"}}) == "翻山中")
+	assert(main.sand_table._report_status_text({"confidence": "medium", "expiresAt": 44}) == "中可信 · 有效 24秒")
+	assert(main.sand_table._report_status_text({"confidence": "low", "expiresAt": 26}) == "低可信 · 将失效 6秒")
+	main._apply_runtime_event_feedback({"type": "report_expired", "payload": {"reportedAreaId": "zhao-main-camp"}})
+	main._refresh()
+	assert(main.map_notices.size() == 1)
+	assert(main.sand_table.transient_notices[0].get("label", "") == "情报失效")
 	main._on_speed_selected(2)
 	assert(main.simulation_speed == 5)
 

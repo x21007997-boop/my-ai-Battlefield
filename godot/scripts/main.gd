@@ -18,6 +18,7 @@ var commanders: Array = []
 var player_commander_id := ""
 var selected_commander_id := ""
 var reported_signals: Array = []
+var map_notices: Array = []
 var order: Dictionary = {}
 var pending_scout: Dictionary = {}
 var pending_observations: Array = []
@@ -197,10 +198,9 @@ func _on_engine_response(operation: String, response: Dictionary) -> void:
 	if response_session_id != "":
 		_save_session_id(response_session_id)
 	_apply_engine_session(session)
-	for event in response.get("events", []):
+	var response_events: Array = response.get("events", [])
+	for event in response_events:
 		_add_log(_replay_event_text(event))
-		if operation != "command":
-			_apply_runtime_event_feedback(event)
 	if outcome.size() > 0:
 		_set_feedback("战役已结束：%s。可导出或载入本局回放。" % str(outcome.get("title", outcome.get("result", "战役结束"))), "success")
 	elif operation == "start_session":
@@ -219,7 +219,6 @@ func _on_engine_response(operation: String, response: Dictionary) -> void:
 		_set_feedback("操作未执行：%s" % str(response.get("error", "内核拒绝了这次操作。")), "error")
 	elif operation == "command":
 		var result: Dictionary = response.get("result", {}) if response.get("result", {}) is Dictionary else {}
-		var response_events: Array = response.get("events", [])
 		var event_type := str(response_events.back().get("type", "")) if not response_events.is_empty() else str(result.get("type", ""))
 		if event_type != "":
 			match event_type:
@@ -237,6 +236,8 @@ func _on_engine_response(operation: String, response: Dictionary) -> void:
 				"deception_exposed": _set_feedback("计策暴露：敌方可能已经识破，后续误导可信度下降。", "error")
 				"strategy_reliability_reduced": _set_feedback("情报链可信度下降：后续同类行动更容易被识破。", "error")
 				_: _set_feedback("操作已接收，战场状态正在刷新。", "success")
+	for event in response_events:
+		_apply_runtime_event_feedback(event)
 	_refresh()
 
 func _apply_runtime_event_feedback(event: Dictionary) -> void:
@@ -247,6 +248,7 @@ func _apply_runtime_event_feedback(event: Dictionary) -> void:
 			var area_id := str(payload.get("reportedAreaId", payload.get("areaId", "")))
 			_set_feedback("前线情报抵达：%s（%s，%s）。" % [_area_name(area_id), _confidence_label(str(payload.get("confidence", "unknown"))), _uncertainty_label(payload)], "success")
 		"report_expired":
+			_add_map_notice("report_expired", str(payload.get("reportedAreaId", payload.get("areaId", ""))), "情报失效", 12)
 			_set_feedback("前线情报已失效：沙盘上的疑似敌情将被移除。", "info")
 		"order_blocked":
 			_set_feedback("部队机动受阻：目标区域的通路暂时被封锁。", "error")
@@ -821,6 +823,7 @@ func _start_new_battle() -> void:
 	running = false
 	engine_tick_accumulator = 0.0
 	selected_target_area_id = ""
+	map_notices = []
 	engine_gateway.start_session("", true)
 	_set_feedback("正在建立新的长平战局……", "info")
 	_refresh()
@@ -1449,6 +1452,7 @@ func _step_second() -> void:
 
 	for index in range(reported_signals.size() - 1, -1, -1):
 		if sim_time >= int(reported_signals[index].get("expiresAt", 999999)):
+			_add_map_notice("report_expired", str(reported_signals[index].get("areaId", "")), "情报失效", 12)
 			event_log.append(sim_time, "report_expired", {
 				"reportId": reported_signals[index].get("id", ""),
 				"reportedAreaId": reported_signals[index].get("areaId", ""),
@@ -1908,7 +1912,23 @@ func _refresh() -> void:
 	if deception_panel != null and deception_panel.visible:
 		_refresh_deception_panel()
 	sand_table.set_selection(selected_unit_id, selected_target_area_id)
-	sand_table.set_commander_layers(friendly_units, reported_signals, order, pending_observations, sim_time)
+	_prune_map_notices()
+	sand_table.set_commander_layers(friendly_units, reported_signals, order, pending_observations, sim_time, map_notices)
+
+func _add_map_notice(kind: String, area_id: String, label: String, lifetime_seconds: int = 8) -> void:
+	if area_id == "":
+		return
+	map_notices.append({
+		"kind": kind,
+		"areaId": area_id,
+		"label": label,
+		"expiresAt": sim_time + max(1, lifetime_seconds),
+	})
+
+func _prune_map_notices() -> void:
+	for index in range(map_notices.size() - 1, -1, -1):
+		if int(map_notices[index].get("expiresAt", sim_time)) < sim_time:
+			map_notices.remove_at(index)
 
 func _guide_text() -> String:
 	if replay_mode:
