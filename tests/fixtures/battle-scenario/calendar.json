@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "system": "scenario-relative",
+  "eraLabel": "测试元年",
+  "start": { "year": 1, "month": 1, "day": 1, "secondOfDay": 36000 },
+  "monthLengths": [30, 29, 30, 29, 30, 29, 30, 29, 30, 29, 30, 29],
+  "shichenNames": ["子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"],
+  "secondsPerKe": 900,
+  "sunriseSecond": 21600,
+  "sunsetSecond": 64800,
+  "status": "scenario_assumption",
+  "sourceIds": []
+}

@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "system": "scenario-relative",
+  "eraLabel": "秦昭襄王四十七年",
+  "start": { "year": -260, "month": 7, "day": 12, "secondOfDay": 36000 },
+  "monthLengths": [30, 29, 30, 29, 30, 29, 30, 29, 30, 29, 30, 29],
+  "shichenNames": ["子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"],
+  "secondsPerKe": 900,
+  "sunriseSecond": 21600,
+  "sunsetSecond": 64800,
+  "status": "scenario_assumption",
+  "sourceIds": []
+}

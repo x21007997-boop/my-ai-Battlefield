@@ -9,6 +9,7 @@ const root = resolve('tests/fixtures/battle-scenario');
 const validator = resolve('scripts/validate-battle-scenario.mjs');
 const scenarioFileMap = {
   manifest: 'manifest.json',
+  calendar: 'calendar.json',
   sources: 'sources.json',
   geography: 'geography.json',
   terrain: 'terrain.json',
@@ -36,6 +37,7 @@ async function loadScenario(directory) {
   const json = async (name) => JSON.parse(await readFile(resolve(directory, name), 'utf8'));
   return {
     manifest: await json('manifest.json'),
+    calendar: await json('calendar.json'),
     sources: await json('sources.json'),
     geography: await json('geography.json'),
     terrain: await json('terrain.json'),
@@ -72,6 +74,7 @@ test('validates the battle scenario fixture', () => {
 test('loads a validated scenario into the generic battlefield world', async () => {
   const world = createBattleWorldFromScenario(await loadFixture());
   assert.equal(world.scenarioId, 'battle-test-fixture');
+  assert.equal(world.calendar.eraLabel, '测试元年');
   assert.equal(world.units['player-wing'].commanderId, 'player-commander');
   assert.equal(world.units['enemy-main'].location, 'ridge');
   assert.equal(world.areas.valley.neighbors[0].travelSeconds, 3);

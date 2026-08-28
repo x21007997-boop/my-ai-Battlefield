@@ -9,6 +9,9 @@ test('Godot client data is generated from a battle scenario and preserves the ma
   assert.equal(data.map.coordinateSystem, 'normalized-2d');
   assert.equal(data.map.renderMode, 'vector-terrain');
   assert.equal(data.commanderSession.map.backgroundAsset, null);
+  assert.equal(data.calendar.schemaVersion, 1);
+  assert.equal(data.commanderSession.historicalTime.label, '秦昭襄王四十七年 七月十二日 · 巳时正刻');
+  assert.equal(data.commanderSession.historicalTime.calendarStatus, 'scenario_assumption');
   assert.equal(data.terrainFeatures.length, 3);
   assert.ok(data.terrainFeatures.some((feature) => feature.type === 'river' && feature.name === '丹水'));
   assert.ok(data.terrainFeatures.some((feature) => feature.type === 'mountain-range'));

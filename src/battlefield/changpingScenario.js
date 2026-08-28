@@ -8,6 +8,7 @@ import factions from '../../scenarios/changping-260/factions.json' with { type: 
 import initialWorld from '../../scenarios/changping-260/initial-world.json' with { type: 'json' };
 import simulationParameters from '../../scenarios/changping-260/simulation-parameters.json' with { type: 'json' };
 import presentation from '../../scenarios/changping-260/presentation.json' with { type: 'json' };
+import calendar from '../../scenarios/changping-260/calendar.json' with { type: 'json' };
 import intelligenceSources from '../../scenarios/changping-260/intelligence-sources.json' with { type: 'json' };
 import deception from '../../scenarios/changping-260/deception.json' with { type: 'json' };
 import objectives from '../../scenarios/changping-260/objectives.json' with { type: 'json' };
@@ -139,6 +140,7 @@ function buildChangpingGamePackage() {
     initialWorld: { ...initialWorld, units: mappedInitialUnits },
     resources: mapResources(simulationParameters.resources),
     resolution: mapResolution(simulationParameters.resolution),
+    calendar,
   };
 }
 
@@ -165,6 +167,7 @@ export const CHANGPING_PROFILE = {
   })),
   mapMarkers: presentation.mapMarkers,
   commandDelaySeconds: simulationParameters.commandDelaySeconds,
+  calendar,
   resources: mapResources(simulationParameters.resources),
   commanders: commanders.commanders.map(mapSide),
   commandChain: mapCommandChain(commanders.commandChain),

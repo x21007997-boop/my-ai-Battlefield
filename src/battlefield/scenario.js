@@ -28,6 +28,7 @@ export function createBattleWorldFromScenario(scenarioPackage) {
     endings,
     resolution,
     resources,
+    calendar,
   } = scenarioPackage ?? {};
   if (!manifest?.id || !geography?.areas || !initialWorld?.units) {
     throw new BattleValidationError(BATTLE_ERROR_CODES.SCENARIO_INVALID, '战役剧本缺少 manifest、geography 或 initial-world。');
@@ -64,5 +65,6 @@ export function createBattleWorldFromScenario(scenarioPackage) {
     resources,
     commanders: commanders?.commanders ?? [],
     commandChain: commandChain ?? commanders?.commandChain ?? {},
+    calendar,
   });
 }

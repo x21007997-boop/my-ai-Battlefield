@@ -26,6 +26,7 @@ export {
 } from './commanderGateway.js';
 export { BATTLE_ORDER_TYPES, BATTLE_TASK_ORDER_TYPES, applyOrderRoute, cancelOrder, findRoute, findRouteCandidates, issueOrder, validateOrderDraft } from './orders.js';
 export { advanceBattle, stepBattle } from './clock.js';
+export { BATTLE_CALENDAR_SCHEMA_VERSION, formatHistoricalTime, normalizeBattleCalendar, projectHistoricalTime } from './calendar.js';
 export { DEFAULT_COMBAT_INTERVAL_SECONDS, resolveCombat } from './combat.js';
 export { DEFAULT_SUPPLY_TICK_SECONDS, consumeLogistics } from './logistics.js';
 export {

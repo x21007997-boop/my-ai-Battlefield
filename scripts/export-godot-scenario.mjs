@@ -12,8 +12,9 @@ async function json(name) {
   return JSON.parse(await readFile(resolve(scenarioDir, name), 'utf8'));
 }
 
-const [manifest, geography, terrain, routes, units, initialWorld, simulationParameters, presentation, intelligenceSources, deception, objectives, endings, commanders] = await Promise.all([
+const [manifest, calendar, geography, terrain, routes, units, initialWorld, simulationParameters, presentation, intelligenceSources, deception, objectives, endings, commanders] = await Promise.all([
   json('manifest.json'),
+  json('calendar.json'),
   json('geography.json'),
   json('terrain.json'),
   json('routes.json'),
@@ -137,6 +138,7 @@ const simulationWorld = createBattleWorld({
   endings: endings.endings,
   resources: Object.fromEntries(Object.entries(simulationParameters.resources ?? {}).map(([side, ledger]) => [side === 'qin' ? 'player' : side === 'zhao' ? 'enemy' : side, ledger])),
   resolution: simulationResolution,
+  calendar,
 });
 const commanderSession = buildCommanderSessionSnapshot(simulationWorld, {
   side: 'player',
@@ -166,6 +168,7 @@ const clientScenario = {
   sourceScenarioId: manifest.id,
   title: manifest.title,
   eraLabel: manifest.eraLabel,
+  calendar,
   status: manifest.status,
   playability: manifest.playability,
   map: {

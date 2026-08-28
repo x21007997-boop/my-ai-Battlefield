@@ -4,6 +4,7 @@ import { buildCommanderObjectiveSnapshot, buildCommanderReview } from './review.
 import { buildCommanderResolutionSnapshot } from './resolution.js';
 import { BATTLEFIELD_CONFIG } from './config.js';
 import { commanderProjection, playerCommanderId } from './commandChain.js';
+import { formatHistoricalTime, projectHistoricalTime } from './calendar.js';
 
 export const COMMANDER_SESSION_SCHEMA_VERSION = BATTLEFIELD_CONFIG.schemaVersions.commanderSession;
 
@@ -190,6 +191,11 @@ export function buildCommanderSessionSnapshot(world, {
     schemaVersion: COMMANDER_SESSION_SCHEMA_VERSION,
     scenarioId: world.scenarioId,
     simTime: world.simTime,
+    historicalTime: world.calendar ? {
+      label: formatHistoricalTime(world.calendar, world.simTime),
+      ...projectHistoricalTime(world.calendar, world.simTime),
+      calendarStatus: world.calendar.status,
+    } : null,
     status: world.status,
     outcome: world.outcome ?? null,
     objectives: buildCommanderObjectiveSnapshot(world, side),

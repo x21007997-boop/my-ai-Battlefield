@@ -4,6 +4,7 @@ import { resolve } from 'node:path';
 const scenarioDir = resolve(process.argv[2] ?? 'scenarios/changping-260');
 const requiredJson = [
   'manifest.json',
+  'calendar.json',
   'sources.json',
   'geography.json',
   'terrain.json',
@@ -93,6 +94,7 @@ try {
 
 if (!errors.length) {
   const manifest = data['manifest.json'];
+  const calendar = data['calendar.json'];
   const sourceItems = arrayAt('sources.json', 'sources');
   const areas = arrayAt('geography.json', 'areas');
   const terrain = arrayAt('terrain.json', 'areas');
@@ -116,6 +118,17 @@ if (!errors.length) {
     if (manifest[key] === undefined || manifest[key] === '') add(`manifest.json: 缺少 ${key}`);
   }
   if (manifest.schemaVersion !== 1) add('manifest.json: 当前只支持 schemaVersion=1');
+  if (calendar.schemaVersion !== 1) add('calendar.json: 当前只支持 schemaVersion=1');
+  if (calendar.system !== 'scenario-relative') add('calendar.json: system 当前只支持 scenario-relative');
+  if (!calendar.eraLabel) add('calendar.json: 缺少 eraLabel');
+  if (!Number.isInteger(calendar.start?.year) || !Number.isInteger(calendar.start?.month) || !Number.isInteger(calendar.start?.day)) add('calendar.json: start 必须包含整数 year/month/day');
+  if (!nonNegativeInteger(calendar.start?.secondOfDay) || calendar.start.secondOfDay >= 86400) add('calendar.json: start.secondOfDay 必须在 0-86399 范围内');
+  if (!Array.isArray(calendar.monthLengths) || calendar.monthLengths.length !== 12 || calendar.monthLengths.some((value) => !positiveNumber(value))) add('calendar.json: monthLengths 必须包含 12 个正数');
+  if (!Array.isArray(calendar.shichenNames) || calendar.shichenNames.length !== 12 || calendar.shichenNames.some((value) => !value)) add('calendar.json: shichenNames 必须包含 12 个名称');
+  if (!positiveNumber(calendar.secondsPerKe) || 7200 % calendar.secondsPerKe !== 0) add('calendar.json: secondsPerKe 必须为可整除一个时辰的正数');
+  if (!nonNegativeInteger(calendar.sunriseSecond) || !nonNegativeInteger(calendar.sunsetSecond) || calendar.sunriseSecond >= calendar.sunsetSecond || calendar.sunsetSecond >= 86400) add('calendar.json: 日出日落时间无效');
+  if (!['historical_fact', 'historical_estimate', 'scenario_assumption', 'simulation_variable'].includes(calendar.status)) add('calendar.json: status 无效');
+  validateSourceRefs([calendar], 'calendar.json', new Set(sourceItems.map((item) => item.id)));
   if (!['draft', 'ready'].includes(manifest.status)) add('manifest.json: status 必须是 draft 或 ready');
   if (!Array.isArray(manifest.sides) || manifest.sides.length < 2) add('manifest.json: sides 至少需要两个阵营');
   const sideIds = new Set(manifest.sides ?? []);

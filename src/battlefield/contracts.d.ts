@@ -243,6 +243,7 @@ export interface BattleWorld {
   scenarioId: string;
   seed: number;
   simTime: number;
+  calendar?: BattleCalendar | null;
   status: 'running' | 'ended' | string;
   areas: Record<string, BattleArea>;
   units: Record<string, BattleUnit>;
@@ -321,6 +322,21 @@ export interface CreateBattleWorldOptions {
   resources?: Record<SideId, Record<string, number>>;
   commanders?: Array<Record<string, unknown>>;
   commandChain?: Record<string, unknown>;
+  calendar?: BattleCalendar | null;
+}
+
+export interface BattleCalendar {
+  schemaVersion: number;
+  system: string;
+  eraLabel: string;
+  start: { year: number; month: number; day: number; secondOfDay: number };
+  monthLengths: number[];
+  shichenNames: string[];
+  secondsPerKe: number;
+  sunriseSecond: number;
+  sunsetSecond: number;
+  status: string;
+  sourceIds?: string[];
 }
 
 export interface BattleCommand {
@@ -361,6 +377,7 @@ export interface BattleScenarioPackage {
   resolution?: Record<string, unknown> | null;
   resources?: Record<SideId, Record<string, number>>;
   commandChain?: Record<string, unknown>;
+  calendar?: BattleCalendar;
 }
 
 export interface CommanderMapOptions {

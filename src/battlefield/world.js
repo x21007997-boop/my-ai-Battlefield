@@ -2,6 +2,7 @@ import { BATTLEFIELD_CONFIG } from './config.js';
 import { normalizeResourceLedger } from './resources.js';
 import { createStrategyState } from './strategy.js';
 import { createCommandChainState } from './commandChain.js';
+import { normalizeBattleCalendar } from './calendar.js';
 
 export const BATTLEFIELD_SCHEMA_VERSION = BATTLEFIELD_CONFIG.schemaVersions.world;
 export const BATTLEFIELD_SIMULATOR_VERSION = BATTLEFIELD_CONFIG.simulatorVersion;
@@ -129,6 +130,7 @@ export function createBattleWorld({
   resources = {},
   commanders = [],
   commandChain = {},
+  calendar = null,
 } = {}) {
   const normalizedUnits = units.map(normalizeUnit);
   const sideMap = Object.fromEntries(sides.map((side) => [side.id, { ...side }]));
@@ -139,6 +141,7 @@ export function createBattleWorld({
     schemaVersion: BATTLEFIELD_SCHEMA_VERSION,
     simulatorVersion: BATTLEFIELD_SIMULATOR_VERSION,
     scenarioId,
+    calendar: normalizeBattleCalendar(calendar),
     seed,
     resolution: clone(resolution),
     simTime: 0,
