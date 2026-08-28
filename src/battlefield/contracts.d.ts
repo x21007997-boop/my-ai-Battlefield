@@ -50,6 +50,15 @@ export interface BattleArea {
     id: string;
     travelSeconds?: number;
     routeId?: string | null;
+    distanceLi?: number | null;
+    distanceUncertainty?: number | null;
+    distanceStatus?: string | null;
+    roadType?: string | null;
+    surface?: string | null;
+    grade?: string | null;
+    capacity?: string | null;
+    concealment?: string | null;
+    baggageAccess?: string | null;
     terrainTransitions?: TerrainTransition[];
   }>;
   locationStatus?: string | null;

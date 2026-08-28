@@ -290,7 +290,16 @@ if (!errors.length) {
   routes.forEach((edge) => {
     if (!areaIds.has(edge.from) || !areaIds.has(edge.to)) add(`routes.json:${edge.id}: from 或 to 引用了不存在的区域`);
     if (!positiveNumber(edge.travelSeconds)) add(`routes.json:${edge.id}: travelSeconds 必须是正数`);
-    if (edge.distanceStatus === 'simulation_assumption' && edge.historicalClaim === true) add(`routes.json:${edge.id}: 模拟假设路线不能标记为 historicalClaim=true`);
+    if (!positiveNumber(edge.distanceLi)) add(`routes.json:${edge.id}: distanceLi 必须是正数`);
+    if (!probability(edge.distanceUncertainty)) add(`routes.json:${edge.id}: distanceUncertainty 必须在 0-1 范围内`);
+    if (!['historical_fact', 'historical_estimate', 'scenario_assumption', 'simulation_variable'].includes(edge.distanceStatus)) add(`routes.json:${edge.id}: distanceStatus 无效`);
+    if (!['camp-road', 'river-valley-track', 'pass-road', 'valley-road', 'mountain-path', 'supply-road'].includes(edge.roadType)) add(`routes.json:${edge.id}: roadType 无效`);
+    if (!['gentle', 'rolling', 'steep'].includes(edge.grade)) add(`routes.json:${edge.id}: grade 无效`);
+    if (!['army-column', 'formation', 'detachment'].includes(edge.capacity)) add(`routes.json:${edge.id}: capacity 无效`);
+    if (!['low', 'medium', 'high'].includes(edge.concealment)) add(`routes.json:${edge.id}: concealment 无效`);
+    if (!['full', 'limited', 'none'].includes(edge.baggageAccess)) add(`routes.json:${edge.id}: baggageAccess 无效`);
+    if (!edge.surface) add(`routes.json:${edge.id}: 缺少 surface`);
+    if (edge.distanceStatus === 'scenario_assumption' && edge.historicalClaim === true) add(`routes.json:${edge.id}: 剧本假设路线不能标记为 historicalClaim=true`);
     (edge.terrainTransitions ?? []).forEach((transition) => {
       if (!terrainFeatureIds.has(transition.featureId)) add(`routes.json:${edge.id}: terrainTransitions 引用了不存在的地形特征 ${transition.featureId}`);
       const start = transition.startProgress ?? transition.progress;
@@ -301,6 +310,7 @@ if (!errors.length) {
       if (!transition.terrainType || !transition.transitionType) add(`routes.json:${edge.id}: terrainTransitions 缺少 terrainType 或 transitionType`);
     });
   });
+  validateSourceRefs(routes, 'routes.json', sourceIds);
   settlements.forEach((item) => {
     if (!areaIds.has(item.areaId)) add(`settlements.json:${item.id}: areaId 引用了不存在的区域`);
   });

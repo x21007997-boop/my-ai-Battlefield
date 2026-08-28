@@ -16,8 +16,13 @@ test('Changping level keeps route estimates playable in both directions', () => 
   assert.equal(world.areas['western-gate'].neighbors.find((item) => item.id === 'qin-west-camp').travelSeconds, 90);
   assert.equal(world.areas['dan-river-valley'].neighbors.find((item) => item.id === 'qin-west-camp').travelSeconds, 150);
   assert.equal(world.areas['zhao-main-camp'].neighbors.find((item) => item.id === 'zhao-relief-route').travelSeconds, 120);
+  const riverRoute = world.areas['qin-west-camp'].neighbors.find((item) => item.id === 'dan-river-valley');
+  assert.equal(riverRoute.distanceLi, 14);
+  assert.equal(riverRoute.distanceStatus, 'scenario_assumption');
+  assert.equal(riverRoute.roadType, 'river-valley-track');
+  assert.equal(riverRoute.baggageAccess, 'limited');
   assert.equal(world.terrainFeatures.find((feature) => feature.id === 'dan-river').type, 'river');
-  assert.equal(world.areas['qin-west-camp'].neighbors.find((item) => item.id === 'dan-river-valley').terrainTransitions[0].transitionType, 'river-crossing');
+  assert.equal(riverRoute.terrainTransitions[0].transitionType, 'river-crossing');
 });
 
 test('Changping level does not resolve from arrival alone', () => {

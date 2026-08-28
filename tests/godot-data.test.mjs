@@ -18,6 +18,10 @@ test('Godot client data is generated from a battle scenario and preserves the ma
   const crossing = data.areas.find((area) => area.id === 'qin-west-camp').neighbors.find((neighbor) => neighbor.id === 'dan-river-valley');
   assert.equal(crossing.terrainTransitions[0].transitionType, 'river-crossing');
   assert.equal(crossing.terrainTransitions[0].method, 'ford');
+  assert.equal(crossing.distanceLi, 14);
+  assert.equal(crossing.distanceStatus, 'scenario_assumption');
+  assert.equal(crossing.roadType, 'river-valley-track');
+  assert.equal(crossing.baggageAccess, 'limited');
   assert.equal(data.areas.length, 6);
   assert.equal(data.landmarks.length, 12);
   assert.ok(data.landmarks.some((landmark) => landmark.type === 'city' && landmark.label === '长平城'));
