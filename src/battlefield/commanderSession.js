@@ -4,7 +4,7 @@ import { buildCommanderObjectiveSnapshot, buildCommanderReview } from './review.
 import { buildCommanderResolutionSnapshot } from './resolution.js';
 import { BATTLEFIELD_CONFIG } from './config.js';
 import { commanderProjection, playerCommanderId } from './commandChain.js';
-import { formatHistoricalTime, projectHistoricalTime } from './calendar.js';
+import { buildHistoricalEstimate, formatHistoricalDuration, formatHistoricalTime, projectHistoricalTime } from './calendar.js';
 
 export const COMMANDER_SESSION_SCHEMA_VERSION = BATTLEFIELD_CONFIG.schemaVersions.commanderSession;
 
@@ -74,6 +74,12 @@ export function buildCommanderSessionSnapshot(world, {
       executionPace: order.executionPace ?? null,
       executionRate: order.executionRate ?? 1,
       tacticalPosture: order.tacticalPosture ?? null,
+      deliveryEstimate: buildHistoricalEstimate(world.calendar, world.simTime, order.deliverAt),
+      movementEstimate: buildHistoricalEstimate(
+        world.calendar,
+        world.simTime,
+        world.simTime + Math.ceil((order.remainingTravelSeconds ?? 0) / Math.max(0.1, Number(order.executionRate ?? 1))),
+      ),
     }));
   const ownObservations = world.observations
     .filter((observation) => observation.observerSide === side)
@@ -90,6 +96,7 @@ export function buildCommanderSessionSnapshot(world, {
       arrivesAt: observation.arrivesAt,
       deliveredAt: observation.deliveredAt ?? null,
       remainingSeconds: Math.max(0, (observation.arrivesAt ?? world.simTime) - world.simTime),
+      arrivalEstimate: buildHistoricalEstimate(world.calendar, world.simTime, observation.arrivesAt),
       uncertainty: observation.uncertainty ?? null,
     }));
   const deceptionActions = Object.values(world.deception?.actions ?? {}).map((action) => ({
@@ -181,11 +188,15 @@ export function buildCommanderSessionSnapshot(world, {
         executionPace: action.executionPace ?? null,
         executionRate: action.executionRate ?? 1,
         tacticalPosture: action.tacticalPosture ?? null,
+        readyEstimate: buildHistoricalEstimate(world.calendar, world.simTime, action.readyAt),
       });
     });
   const eventLog = serializeCommanderEvents(
     world.eventLog.filter((event) => eventVisibleToCommander(event, side)),
-  );
+  ).map((event) => ({
+    ...event,
+    historicalTimeLabel: formatHistoricalTime(world.calendar, event.simTime),
+  }));
 
   return {
     schemaVersion: COMMANDER_SESSION_SCHEMA_VERSION,
@@ -195,6 +206,7 @@ export function buildCommanderSessionSnapshot(world, {
       label: formatHistoricalTime(world.calendar, world.simTime),
       ...projectHistoricalTime(world.calendar, world.simTime),
       calendarStatus: world.calendar.status,
+      elapsedLabel: formatHistoricalDuration(world.calendar, world.simTime),
     } : null,
     status: world.status,
     outcome: world.outcome ?? null,

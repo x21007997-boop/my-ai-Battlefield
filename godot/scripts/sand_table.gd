@@ -375,8 +375,20 @@ func _report_status_text(report: Dictionary) -> String:
 	if remaining < 0:
 		return confidence + " · 时效未知"
 	if remaining <= 10:
-		return "%s · 将失效 %d秒" % [confidence, remaining]
-	return "%s · 有效 %d秒" % [confidence, remaining]
+		return "%s · 将失效 %s" % [confidence, _historical_duration(remaining)]
+	return "%s · 有效 %s" % [confidence, _historical_duration(remaining)]
+
+func _historical_duration(seconds: int) -> String:
+	var seconds_per_ke := int(scenario.get("calendar", {}).get("secondsPerKe", 900))
+	if seconds <= 0:
+		return "此刻"
+	if seconds < seconds_per_ke:
+		return "少顷"
+	var ke := int(ceil(float(seconds) / float(seconds_per_ke)))
+	if ke < 8:
+		return "%d刻" % ke
+	var shichen := int(ceil(float(seconds) / 7200.0))
+	return "%d个时辰" % shichen if shichen < 12 else "%d日内" % int(ceil(float(seconds) / 86400.0))
 
 func _report_remaining_seconds(report: Dictionary) -> int:
 	if report.get("expiresAt", null) == null:

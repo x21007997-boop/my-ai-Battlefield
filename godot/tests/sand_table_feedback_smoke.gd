@@ -39,7 +39,7 @@ func _init() -> void:
 	main._refresh()
 
 	assert(main.sand_table._movement_terrain_label(main.order) == "渡河中")
-	assert(main.sand_table._report_status_text(main.reported_signals[0]) == "低可信 · 将失效 6秒")
+	assert(main.sand_table._report_status_text(main.reported_signals[0]) == "低可信 · 将失效 少顷")
 	assert(main.sand_table._terminal_order_label("refused") == "副将拒绝")
 	assert(main.sand_table._terminal_order_label("rejected") == "命令驳回")
 	assert(main.sand_table._terminal_order_label("expired") == "军令失效")

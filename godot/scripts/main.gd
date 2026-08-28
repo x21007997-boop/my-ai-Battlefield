@@ -1216,7 +1216,7 @@ func _dispatch_scout() -> void:
 		"arrivesAt": pending_scout["arrivesAt"],
 	})
 	_add_log("前出斥候已接收军令，正在整备。")
-	_set_feedback("侦察已接收：斥候准备 %d 秒，资源已扣除。" % preparation_seconds, "success")
+	_set_feedback("侦察已接收：斥候准备%s，资源已扣除。" % _format_duration(preparation_seconds), "success")
 	_refresh()
 
 func _issue_deception() -> void:
@@ -1339,7 +1339,7 @@ func _refresh_intelligence_panel() -> void:
 			var pending_area := _area_name(str(pending.get("reportedAreaId", "")))
 			var pending_seconds := int(pending.get("remainingSeconds", int(pending.get("arrivesAt", sim_time)) - sim_time))
 			lines.append("【回传中】%s" % pending_area)
-			lines.append("来源：%s · 预计还需 %d 秒" % [str(pending.get("sourceType", "前线报告")), max(0, pending_seconds)])
+			lines.append("来源：%s · 预计还需%s" % [str(pending.get("sourceType", "前线报告")), _format_duration(max(0, pending_seconds))])
 			lines.append("")
 		for report_value in reported_signals:
 			if not report_value is Dictionary:
@@ -1352,7 +1352,7 @@ func _refresh_intelligence_panel() -> void:
 			var expires_at := int(report.get("expiresAt", sim_time))
 			lines.append("【%s】%s" % [_confidence_label(confidence), _area_name(area_id)])
 			lines.append("来源：%s · %s" % [str(report.get("sourceType", "前线报告")), _uncertainty_label({"uncertainty": uncertainty, "confidence": confidence})])
-			lines.append("有效剩余：%d 秒" % max(0, expires_at - sim_time))
+			lines.append("有效剩余：%s" % _format_duration(max(0, expires_at - sim_time)))
 			lines.append(str(report.get("text", report.get("observation", "发现活动迹象"))))
 			lines.append("")
 	intelligence_label.text = "\n".join(lines)
@@ -1378,7 +1378,7 @@ func _refresh_deception_panel() -> void:
 		var cost_text := _cost_text(action.get("cost", {}))
 		var target_name := _area_name(str(action.get("reportedAreaId", "")))
 		var action_button := Button.new()
-		action_button.text = "%s\n准备 %d 秒 · %s · 目标 %s" % [action_name, preparation_seconds, cost_text, target_name]
+		action_button.text = "%s\n准备%s · %s · 目标 %s" % [action_name, _format_duration(preparation_seconds), cost_text, target_name]
 		action_button.tooltip_text = "选择%s" % action_name
 		action_button.custom_minimum_size = Vector2(292, 58)
 		action_button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -1404,7 +1404,44 @@ func _resource_label(resource_key: String) -> String:
 
 func _format_duration(total_seconds: int) -> String:
 	var seconds: int = max(0, total_seconds)
-	return "%02d:%02d" % [int(seconds / 60), seconds % 60]
+	var seconds_per_ke := int(scenario.get("calendar", {}).get("secondsPerKe", 900))
+	if seconds == 0:
+		return "此刻"
+	if seconds < seconds_per_ke:
+		return "少顷"
+	var ke := int(ceil(float(seconds) / float(seconds_per_ke)))
+	if ke < 8:
+		return "%d刻" % ke
+	var shichen := int(ceil(float(seconds) / 7200.0))
+	if shichen < 12:
+		return "%d个时辰" % shichen
+	return "%d日内" % int(ceil(float(seconds) / 86400.0))
+
+func _historical_time_label() -> String:
+	var calendar_value = scenario.get("calendar", {})
+	if not calendar_value is Dictionary or calendar_value.is_empty():
+		return "战时未定"
+	var calendar: Dictionary = calendar_value
+	var start_value = calendar.get("start", {})
+	var start: Dictionary = start_value if start_value is Dictionary else {}
+	var absolute_seconds := int(start.get("secondOfDay", 0)) + sim_time
+	var elapsed_days := int(absolute_seconds / 86400)
+	var second_of_day := absolute_seconds % 86400
+	var month := int(start.get("month", 1))
+	var day := int(start.get("day", 1))
+	var month_lengths: Array = calendar.get("monthLengths", [30, 29, 30, 29, 30, 29, 30, 29, 30, 29, 30, 29])
+	for _index in range(elapsed_days):
+		day += 1
+		var month_length := int(month_lengths[month - 1]) if month - 1 < month_lengths.size() else 30
+		if day > month_length:
+			day = 1
+			month = 1 if month >= month_lengths.size() else month + 1
+	var names: Array = calendar.get("shichenNames", ["子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"])
+	var shifted := (second_of_day + 3600) % 86400
+	var shichen_index := int(shifted / 7200)
+	var ke := int((shifted % 7200) / int(calendar.get("secondsPerKe", 900)))
+	var ke_label := "初刻" if ke == 0 else ("正刻" if ke == 4 else "%d刻" % ke)
+	return "%s %d月%d日 · %s时%s" % [str(calendar.get("eraLabel", "")), month, day, str(names[shichen_index]), ke_label]
 
 func _hold_status_text(status: String, elapsed: int, required: int) -> String:
 	match status:
@@ -1689,7 +1726,7 @@ func _load_replay() -> void:
 	replay_accumulator = 0.0
 	replay_player.seek(0)
 	_apply_replay_state(replay_player.current_state())
-	_add_log("已载入上一局回放：共%s秒。" % replay_player.duration())
+	_add_log("已载入上一局回放：历时%s。" % _format_duration(replay_player.duration()))
 	_refresh()
 
 func _exit_replay() -> void:
@@ -1848,7 +1885,7 @@ func _report_radius_normalized(level: String) -> float:
 		_: return 0.2
 
 func _add_log(message: String) -> void:
-	log_lines.push_front("[%02d:%02d] %s" % [int(sim_time / 60), sim_time % 60, message])
+	log_lines.push_front("[%s] %s" % [_historical_time_label(), message])
 	if log_lines.size() > 12:
 		log_lines.pop_back()
 
@@ -1864,7 +1901,7 @@ func _set_feedback(message: String, tone: String = "info") -> void:
 func _refresh() -> void:
 	if clock_label == null:
 		return
-	clock_label.text = "模拟时间  %02d:%02d:%02d" % [int(sim_time / 3600), int(sim_time / 60) % 60, sim_time % 60]
+	clock_label.text = _historical_time_label()
 	if guide_label != null:
 		guide_label.text = _guide_text()
 	var mode := "战场推演中" if running else "战场已暂停"
@@ -2067,7 +2104,7 @@ func _command_state_text() -> String:
 		if not last_terrain.is_empty():
 			progress += " · 已%s" % _terrain_action_word(str(last_terrain.get("terrainType", "")))
 	if status == "执行中" and remaining > 0:
-		progress += " · 约%d秒" % remaining
+		progress += " · 约%s" % _format_duration(remaining)
 	var feedback := str(order.get("officerFeedback", ""))
 	if feedback != "":
 		progress += "\n" + feedback

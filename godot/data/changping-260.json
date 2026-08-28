@@ -1108,7 +1108,8 @@
       "daylight": true,
       "phase": "day",
       "secondsUntilSunset": 28800,
-      "calendarStatus": "scenario_assumption"
+      "calendarStatus": "scenario_assumption",
+      "elapsedLabel": "此刻"
     },
     "status": "running",
     "outcome": null,

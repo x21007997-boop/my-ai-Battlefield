@@ -88,3 +88,28 @@ export function formatHistoricalTime(calendarInput, simTime = 0) {
   if (!calendar || !moment) return null;
   return `${calendar.eraLabel} ${dateNumber(moment.month)}月${dateNumber(moment.day)}日 · ${moment.shichen}时${moment.keLabel}`.trim();
 }
+
+export function formatHistoricalDuration(calendarInput, seconds = 0) {
+  const calendar = normalizeBattleCalendar(calendarInput);
+  const duration = Math.max(0, Math.ceil(seconds));
+  if (duration === 0) return '此刻';
+  const secondsPerKe = calendar?.secondsPerKe ?? 900;
+  if (duration < secondsPerKe) return '少顷';
+  const ke = Math.ceil(duration / secondsPerKe);
+  if (ke < 8) return `${ke === 2 ? '两' : CHINESE_NUMERALS[ke - 1] ?? ke}刻`;
+  const shichen = Math.ceil(duration / 7200);
+  if (shichen < 12) return `${shichen === 2 ? '两' : CHINESE_NUMERALS[shichen - 1] ?? shichen}个时辰`;
+  const days = Math.ceil(duration / 86400);
+  return days === 1 ? '一日内' : `${days === 2 ? '两' : CHINESE_NUMERALS[days - 1] ?? days}日内`;
+}
+
+export function buildHistoricalEstimate(calendar, currentSimTime, targetSimTime) {
+  if (!calendar || !Number.isFinite(targetSimTime)) return null;
+  const remainingSeconds = Math.max(0, Math.ceil(targetSimTime - currentSimTime));
+  return {
+    targetSimTime,
+    timeLabel: formatHistoricalTime(calendar, targetSimTime),
+    durationLabel: formatHistoricalDuration(calendar, remainingSeconds),
+    precision: 'approximate',
+  };
+}
