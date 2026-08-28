@@ -78,7 +78,20 @@ export function createCommanderReplayState({ friendlyUnits = [], selectedUnitId 
     eventCount: 0,
     timeline: [],
     lastEventType: '',
+    replayTrajectories: [],
   };
+}
+
+function appendReplayTrajectoryPoint(state, unitId, areaId, simTime) {
+  if (!unitId || !areaId) return;
+  let trajectory = state.replayTrajectories.find((item) => item.unitId === unitId);
+  if (!trajectory) {
+    trajectory = { unitId, kind: 'replay-trajectory', confidence: 'high', areaIds: [], points: [] };
+    state.replayTrajectories.push(trajectory);
+  }
+  if (trajectory.areaIds.at(-1) === areaId) return;
+  trajectory.areaIds.push(areaId);
+  trajectory.points.push({ areaId, simTime });
 }
 
 function updateUnitArea(state, unitId, areaId) {
@@ -137,18 +150,21 @@ export function applyCommanderReplayEvent(state, event) {
       break;
     case 'unit_departed':
       if (!next.order.unitId || next.order.unitId === payload.unitId) next.order = { ...next.order, departedAt: event.simTime };
+      appendReplayTrajectoryPoint(next, payload.unitId, payload.areaId, event.simTime);
       break;
     case 'route_segment_entered':
       if (!next.order.unitId || next.order.unitId === payload.unitId) next.order = { ...next.order, currentRouteSegmentIndex: payload.routeSegmentIndex ?? null };
       break;
     case 'unit_reached_waypoint':
       updateUnitArea(next, payload.unitId, payload.areaId ?? '');
+      appendReplayTrajectoryPoint(next, payload.unitId, payload.areaId, event.simTime);
       break;
     case 'unit_encamped':
       updateUnitArea(next, payload.unitId, payload.areaId ?? '');
       break;
     case 'unit_arrived':
       updateUnitArea(next, payload.unitId, payload.areaId ?? payload.targetAreaId ?? '');
+      appendReplayTrajectoryPoint(next, payload.unitId, payload.areaId ?? payload.targetAreaId, event.simTime);
       if (!next.order.unitId || next.order.unitId === payload.unitId) next.order = { ...next.order, ...payload, status: 'completed' };
       break;
     case 'unit_entered_terrain':

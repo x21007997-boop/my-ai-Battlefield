@@ -1788,6 +1788,11 @@ func _exit_replay() -> void:
 	pending_scout = {}
 	pending_observations = []
 	outcome = {}
+	var route_layers_value = scenario.get("routeLayers", {})
+	if route_layers_value is Dictionary:
+		var route_layers: Dictionary = route_layers_value
+		route_layers.erase("replayTrajectory")
+		scenario["routeLayers"] = route_layers
 	objectives = scenario.get("objectives", []).duplicate(true)
 	var replay_session_value = scenario.get("commanderSession", {})
 	if replay_session_value is Dictionary:
@@ -1837,9 +1842,40 @@ func _apply_replay_state(replay_state: Dictionary) -> void:
 	if replay_commander_id != "":
 		selected_commander_id = replay_commander_id
 	selected_target_area_id = str(replay_state.get("selectedTargetAreaId", selected_target_area_id))
+	_apply_replay_trajectory_layers(replay_state.get("replayTrajectories", []))
 	log_lines = []
 	for event in replay_state.get("timeline", []):
 		_add_log(_replay_event_text(event))
+
+func _apply_replay_trajectory_layers(trajectories_value) -> void:
+	var route_layers_value = scenario.get("routeLayers", {})
+	var route_layers: Dictionary = route_layers_value.duplicate(true) if route_layers_value is Dictionary else {}
+	var rendered_trajectories: Array = []
+	if trajectories_value is Array:
+		for trajectory_value in trajectories_value:
+			if not trajectory_value is Dictionary:
+				continue
+			var trajectory: Dictionary = trajectory_value
+			var points: Array = []
+			for area_id_value in trajectory.get("areaIds", []):
+				var position: Dictionary = {}
+				for area_value in scenario.get("areas", []):
+					if area_value is Dictionary and str(area_value.get("id", "")) == str(area_id_value):
+						var raw_position = area_value.get("position", {})
+						position = raw_position if raw_position is Dictionary else {}
+						break
+				if position is Dictionary:
+					points.append(position.duplicate(true))
+			if points.size() >= 2:
+				rendered_trajectories.append({
+					"id": "replay-trajectory-%s" % str(trajectory.get("unitId", "unit")),
+					"unitId": trajectory.get("unitId", ""),
+					"kind": "replay-trajectory",
+					"confidence": "high",
+					"points": points,
+				})
+	route_layers["replayTrajectory"] = rendered_trajectories
+	scenario["routeLayers"] = route_layers
 
 func _replay_event_text(event: Dictionary) -> String:
 	var payload: Dictionary = event.get("payload", {})

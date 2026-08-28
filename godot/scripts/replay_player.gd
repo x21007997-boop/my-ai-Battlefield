@@ -70,7 +70,38 @@ func _initial_state(selected_unit_id: String) -> Dictionary:
 		"eventCount": 0,
 		"timeline": [],
 		"lastEventType": "",
+		"replayTrajectories": [],
 	}
+
+func _append_replay_trajectory_point(unit_id: String, area_id: String, sim_time: int) -> void:
+	if unit_id == "" or area_id == "":
+		return
+	var trajectories: Array = state.get("replayTrajectories", [])
+	var trajectory_index := -1
+	for index in range(trajectories.size()):
+		if str(trajectories[index].get("unitId", "")) == unit_id:
+			trajectory_index = index
+			break
+	if trajectory_index < 0:
+		trajectories.append({
+			"unitId": unit_id,
+			"kind": "replay-trajectory",
+			"confidence": "high",
+			"areaIds": [],
+			"points": [],
+		})
+		trajectory_index = trajectories.size() - 1
+	var trajectory: Dictionary = trajectories[trajectory_index].duplicate(true)
+	var area_ids: Array = trajectory.get("areaIds", [])
+	if not area_ids.is_empty() and str(area_ids[-1]) == area_id:
+		return
+	area_ids.append(area_id)
+	var points: Array = trajectory.get("points", [])
+	points.append({"areaId": area_id, "simTime": sim_time})
+	trajectory["areaIds"] = area_ids
+	trajectory["points"] = points
+	trajectories[trajectory_index] = trajectory
+	state["replayTrajectories"] = trajectories
 
 func _apply_event(event: Dictionary) -> void:
 	var payload: Dictionary = event.get("payload", {})
@@ -118,8 +149,16 @@ func _apply_event(event: Dictionary) -> void:
 			if resumed_order.is_empty() or str(resumed_order.get("id", "")) == str(payload.get("orderId", "")):
 				resumed_order["executionResumeAt"] = null
 				state["order"] = resumed_order
+		"unit_departed":
+			_append_replay_trajectory_point(str(payload.get("unitId", "")), str(payload.get("areaId", "")), int(event.get("simTime", 0)))
+		"unit_reached_waypoint":
+			var waypoint_area_id := str(payload.get("areaId", ""))
+			_update_unit_area(str(payload.get("unitId", "")), waypoint_area_id)
+			_append_replay_trajectory_point(str(payload.get("unitId", "")), waypoint_area_id, int(event.get("simTime", 0)))
 		"unit_arrived":
-			_update_unit_area(str(payload.get("unitId", "")), str(payload.get("areaId", payload.get("targetAreaId", ""))))
+			var arrival_area_id := str(payload.get("areaId", payload.get("targetAreaId", "")))
+			_update_unit_area(str(payload.get("unitId", "")), arrival_area_id)
+			_append_replay_trajectory_point(str(payload.get("unitId", "")), arrival_area_id, int(event.get("simTime", 0)))
 			var arrived_order: Dictionary = state.get("order", {})
 			if arrived_order.is_empty() or str(arrived_order.get("unitId", "")) == str(payload.get("unitId", "")):
 				arrived_order.merge(payload, true)

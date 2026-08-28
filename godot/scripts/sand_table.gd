@@ -152,6 +152,7 @@ func _draw_commander_route_layers() -> void:
 	var all_routes: Array = []
 	all_routes.append_array(layers.get("friendly", []))
 	all_routes.append_array(layers.get("suspectedEnemy", []))
+	all_routes.append_array(layers.get("replayTrajectory", []))
 	for route_value in all_routes:
 		if not route_value is Dictionary:
 			continue
@@ -163,7 +164,7 @@ func _draw_commander_route_layers() -> void:
 		if points.size() < 2:
 			continue
 		var kind := str(route.get("kind", "planned-friendly"))
-		var color := CINNABAR if kind == "suspected-enemy" else JADE
+		var color := Color("#c9a65b") if kind == "replay-trajectory" else CINNABAR if kind == "suspected-enemy" else JADE
 		var alpha := 0.42 if kind in ["presumed-friendly", "suspected-enemy"] else 0.72
 		for index in range(points.size() - 1):
 			if kind in ["planned-friendly", "presumed-friendly", "suspected-enemy"]:

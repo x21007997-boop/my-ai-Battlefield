@@ -17,6 +17,7 @@ function snapshot() {
       { id: 'game-event-0002', schemaVersion: 1, simTime: 0, type: 'commander_target_selected', payload: { areaId: 'dan-river-valley' } },
       { id: 'game-event-0003', schemaVersion: 1, simTime: 0, type: 'order_issued', payload: { unitId: 'qin-main', targetAreaId: 'dan-river-valley', completeAt: 4 } },
       { id: 'game-event-0004', schemaVersion: 1, simTime: 3, type: 'order_delivered', payload: { unitId: 'qin-main', targetAreaId: 'dan-river-valley' } },
+      { id: 'game-event-0004a', schemaVersion: 1, simTime: 3, type: 'unit_departed', payload: { unitId: 'qin-main', areaId: 'qin-west-camp' } },
       { id: 'game-event-0005', schemaVersion: 1, simTime: 4, type: 'unit_arrived', payload: { unitId: 'qin-main', areaId: 'dan-river-valley' } },
       { id: 'game-event-0006', schemaVersion: 1, simTime: 5, type: 'observation_queued', payload: { reportedAreaId: 'zhao-main-camp', arrivesAt: 8 } },
       { id: 'game-event-0007', schemaVersion: 1, simTime: 8, type: 'report_arrived', payload: { reportId: 'report-0001', reportedAreaId: 'zhao-main-camp', confidence: 'medium', expiresAt: 20 } },
@@ -34,6 +35,24 @@ test('rebuilds commander state at a selected replay time', () => {
   assert.equal(state.order.status, 'completed');
   assert.equal(state.reportedSignals.length, 0);
   assert.equal(state.selectedTargetAreaId, 'dan-river-valley');
+});
+
+test('replay reconstructs friendly movement trajectories from commander-safe events', () => {
+  const state = replayCommanderEvents(snapshot(), {
+    friendlyUnits: [{ id: 'qin-main', areaId: 'qin-west-camp' }],
+    untilTime: 4,
+  });
+  assert.deepEqual(state.replayTrajectories, [{
+    unitId: 'qin-main',
+    kind: 'replay-trajectory',
+    confidence: 'high',
+    areaIds: ['qin-west-camp', 'dan-river-valley'],
+    points: [
+      { areaId: 'qin-west-camp', simTime: 3 },
+      { areaId: 'dan-river-valley', simTime: 4 },
+    ],
+  }]);
+  assert.equal(JSON.stringify(state.replayTrajectories).includes('actualAreaId'), false);
 });
 
 test('replay applies reports without exposing actual positions', () => {
