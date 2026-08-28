@@ -59,6 +59,8 @@ export interface BattleArea {
     capacity?: string | null;
     concealment?: string | null;
     baggageAccess?: string | null;
+    geometryStatus?: string | null;
+    points?: BattlePosition[];
     terrainTransitions?: TerrainTransition[];
   }>;
   locationStatus?: string | null;

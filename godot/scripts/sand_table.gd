@@ -69,6 +69,7 @@ func _draw() -> void:
 	draw_rect(MAP_RECT, Color("#e7d6b1"))
 	_draw_vector_paper()
 	_draw_terrain_features()
+	_draw_routes()
 	draw_rect(MAP_RECT, Color("#76543d"), false, 3.0)
 	draw_rect(MAP_RECT.grow(-10), Color(0.18, 0.12, 0.08, 0.15), false, 1.0)
 
@@ -120,6 +121,27 @@ func _draw_vector_paper() -> void:
 	for x in range(0, 14):
 		var line_x := MAP_RECT.position.x + 92.0 + float(x) * 92.0
 		draw_line(Vector2(line_x, MAP_RECT.position.y + 10.0), Vector2(line_x, MAP_RECT.end.y - 10.0), Color(0.36, 0.29, 0.20, 0.035), 1.0)
+
+func _draw_routes() -> void:
+	for route_value in scenario.get("routes", []):
+		if not route_value is Dictionary:
+			continue
+		var route: Dictionary = route_value
+		var points := PackedVector2Array()
+		for raw_point in route.get("points", []):
+			if raw_point is Dictionary:
+				points.append(_terrain_point(raw_point))
+		if points.size() < 2:
+			continue
+		var road_type := str(route.get("roadType", "road"))
+		var width := 2.2 if road_type in ["camp-road", "supply-road", "valley-road"] else 1.5
+		var route_color := Color(INK, 0.28) if road_type != "mountain-path" else Color(MOUNTAIN, 0.34)
+		draw_polyline(points, Color(Color("#ead5aa"), 0.42), width + 3.0, true)
+		if road_type == "mountain-path":
+			for index in range(points.size() - 1):
+				draw_dashed_line(points[index], points[index + 1], route_color, width, 8.0)
+		else:
+			draw_polyline(points, route_color, width, true)
 
 func _terrain_point(raw_point: Dictionary) -> Vector2:
 	return MAP_RECT.position + Vector2(
@@ -432,6 +454,17 @@ func _report_radius_normalized(level: String) -> float:
 
 func _order_path_points(commander_order: Dictionary, origin_id: String, target_id: String) -> PackedVector2Array:
 	var points := PackedVector2Array()
+	for segment_value in commander_order.get("routeSegments", []):
+		if not segment_value is Dictionary:
+			continue
+		for raw_point in segment_value.get("points", []):
+			if not raw_point is Dictionary:
+				continue
+			var route_point := _terrain_point(raw_point)
+			if points.is_empty() or points[points.size() - 1] != route_point:
+				points.append(route_point)
+	if not points.is_empty():
+		return points
 	for area_id in commander_order.get("route", []):
 		var point := _area_point(str(area_id))
 		if point != Vector2.ZERO:

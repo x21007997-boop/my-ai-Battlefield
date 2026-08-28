@@ -80,7 +80,10 @@ function buildRoutes(areas) {
         concealment: neighbor.concealment ?? null,
         baggageAccess: neighbor.baggageAccess ?? null,
         terrainTransitions: (neighbor.terrainTransitions ?? []).map((transition) => ({ ...transition })),
-        points: [from, to],
+        geometryStatus: neighbor.geometryStatus ?? null,
+        points: (neighbor.points ?? []).map(validPoint).filter(Boolean).length >= 2
+          ? neighbor.points.map(validPoint).filter(Boolean)
+          : [from, to],
       });
     });
   });
@@ -154,6 +157,8 @@ export function buildCommanderMapModel(world, {
       capacity: neighbor.capacity ?? null,
       concealment: neighbor.concealment ?? null,
       baggageAccess: neighbor.baggageAccess ?? null,
+      geometryStatus: neighbor.geometryStatus ?? null,
+      points: (neighbor.points ?? []).map(validPoint).filter(Boolean),
       terrainTransitions: (neighbor.terrainTransitions ?? []).map((transition) => ({ ...transition })),
     })),
   }));

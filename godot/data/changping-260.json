@@ -88,6 +88,21 @@
           "capacity": "army-column",
           "concealment": "low",
           "baggageAccess": "full",
+          "geometryStatus": "scenario_assumption",
+          "points": [
+            {
+              "x": 22,
+              "y": 48
+            },
+            {
+              "x": 30,
+              "y": 46
+            },
+            {
+              "x": 40,
+              "y": 43
+            }
+          ],
           "terrainTransitions": []
         },
         {
@@ -103,6 +118,25 @@
           "capacity": "formation",
           "concealment": "medium",
           "baggageAccess": "limited",
+          "geometryStatus": "scenario_assumption",
+          "points": [
+            {
+              "x": 22,
+              "y": 48
+            },
+            {
+              "x": 34,
+              "y": 53
+            },
+            {
+              "x": 45,
+              "y": 61
+            },
+            {
+              "x": 54,
+              "y": 58
+            }
+          ],
           "terrainTransitions": [
             {
               "featureId": "dan-river",
@@ -147,6 +181,21 @@
           "capacity": "army-column",
           "concealment": "low",
           "baggageAccess": "full",
+          "geometryStatus": "scenario_assumption",
+          "points": [
+            {
+              "x": 40,
+              "y": 43
+            },
+            {
+              "x": 30,
+              "y": 46
+            },
+            {
+              "x": 22,
+              "y": 48
+            }
+          ],
           "terrainTransitions": []
         },
         {
@@ -162,6 +211,21 @@
           "capacity": "formation",
           "concealment": "medium",
           "baggageAccess": "limited",
+          "geometryStatus": "scenario_assumption",
+          "points": [
+            {
+              "x": 40,
+              "y": 43
+            },
+            {
+              "x": 48,
+              "y": 39
+            },
+            {
+              "x": 60,
+              "y": 37
+            }
+          ],
           "terrainTransitions": []
         }
       ]
@@ -190,6 +254,25 @@
           "capacity": "formation",
           "concealment": "medium",
           "baggageAccess": "limited",
+          "geometryStatus": "scenario_assumption",
+          "points": [
+            {
+              "x": 54,
+              "y": 58
+            },
+            {
+              "x": 45,
+              "y": 61
+            },
+            {
+              "x": 34,
+              "y": 53
+            },
+            {
+              "x": 22,
+              "y": 48
+            }
+          ],
           "terrainTransitions": [
             {
               "featureId": "dan-river",
@@ -221,6 +304,21 @@
           "capacity": "army-column",
           "concealment": "low",
           "baggageAccess": "full",
+          "geometryStatus": "scenario_assumption",
+          "points": [
+            {
+              "x": 54,
+              "y": 58
+            },
+            {
+              "x": 57,
+              "y": 49
+            },
+            {
+              "x": 60,
+              "y": 37
+            }
+          ],
           "terrainTransitions": []
         },
         {
@@ -236,6 +334,25 @@
           "capacity": "detachment",
           "concealment": "high",
           "baggageAccess": "none",
+          "geometryStatus": "scenario_assumption",
+          "points": [
+            {
+              "x": 54,
+              "y": 58
+            },
+            {
+              "x": 62,
+              "y": 62
+            },
+            {
+              "x": 70,
+              "y": 61
+            },
+            {
+              "x": 76,
+              "y": 58
+            }
+          ],
           "terrainTransitions": [
             {
               "featureId": "eastern-ridge",
@@ -280,6 +397,21 @@
           "capacity": "formation",
           "concealment": "medium",
           "baggageAccess": "limited",
+          "geometryStatus": "scenario_assumption",
+          "points": [
+            {
+              "x": 60,
+              "y": 37
+            },
+            {
+              "x": 48,
+              "y": 39
+            },
+            {
+              "x": 40,
+              "y": 43
+            }
+          ],
           "terrainTransitions": []
         },
         {
@@ -295,6 +427,21 @@
           "capacity": "army-column",
           "concealment": "low",
           "baggageAccess": "full",
+          "geometryStatus": "scenario_assumption",
+          "points": [
+            {
+              "x": 60,
+              "y": 37
+            },
+            {
+              "x": 57,
+              "y": 49
+            },
+            {
+              "x": 54,
+              "y": 58
+            }
+          ],
           "terrainTransitions": []
         },
         {
@@ -310,6 +457,21 @@
           "capacity": "army-column",
           "concealment": "low",
           "baggageAccess": "full",
+          "geometryStatus": "scenario_assumption",
+          "points": [
+            {
+              "x": 60,
+              "y": 37
+            },
+            {
+              "x": 68,
+              "y": 33
+            },
+            {
+              "x": 79,
+              "y": 29
+            }
+          ],
           "terrainTransitions": []
         }
       ]
@@ -338,6 +500,21 @@
           "capacity": "army-column",
           "concealment": "low",
           "baggageAccess": "full",
+          "geometryStatus": "scenario_assumption",
+          "points": [
+            {
+              "x": 79,
+              "y": 29
+            },
+            {
+              "x": 68,
+              "y": 33
+            },
+            {
+              "x": 60,
+              "y": 37
+            }
+          ],
           "terrainTransitions": []
         },
         {
@@ -353,6 +530,25 @@
           "capacity": "detachment",
           "concealment": "high",
           "baggageAccess": "none",
+          "geometryStatus": "scenario_assumption",
+          "points": [
+            {
+              "x": 79,
+              "y": 29
+            },
+            {
+              "x": 83,
+              "y": 40
+            },
+            {
+              "x": 81,
+              "y": 50
+            },
+            {
+              "x": 76,
+              "y": 58
+            }
+          ],
           "terrainTransitions": [
             {
               "featureId": "eastern-ridge",
@@ -397,6 +593,25 @@
           "capacity": "detachment",
           "concealment": "high",
           "baggageAccess": "none",
+          "geometryStatus": "scenario_assumption",
+          "points": [
+            {
+              "x": 76,
+              "y": 58
+            },
+            {
+              "x": 70,
+              "y": 61
+            },
+            {
+              "x": 62,
+              "y": 62
+            },
+            {
+              "x": 54,
+              "y": 58
+            }
+          ],
           "terrainTransitions": [
             {
               "featureId": "eastern-ridge",
@@ -428,6 +643,25 @@
           "capacity": "detachment",
           "concealment": "high",
           "baggageAccess": "none",
+          "geometryStatus": "scenario_assumption",
+          "points": [
+            {
+              "x": 76,
+              "y": 58
+            },
+            {
+              "x": 81,
+              "y": 50
+            },
+            {
+              "x": 83,
+              "y": 40
+            },
+            {
+              "x": 79,
+              "y": 29
+            }
+          ],
           "terrainTransitions": [
             {
               "featureId": "eastern-ridge",
@@ -468,10 +702,15 @@
       "concealment": "low",
       "baggageAccess": "full",
       "terrainTransitions": [],
+      "geometryStatus": "scenario_assumption",
       "points": [
         {
           "x": 22,
           "y": 48
+        },
+        {
+          "x": 30,
+          "y": 46
         },
         {
           "x": 40,
@@ -513,10 +752,19 @@
           "status": "scenario_assumption"
         }
       ],
+      "geometryStatus": "scenario_assumption",
       "points": [
         {
           "x": 22,
           "y": 48
+        },
+        {
+          "x": 34,
+          "y": 53
+        },
+        {
+          "x": 45,
+          "y": 61
         },
         {
           "x": 54,
@@ -542,10 +790,15 @@
       "concealment": "medium",
       "baggageAccess": "limited",
       "terrainTransitions": [],
+      "geometryStatus": "scenario_assumption",
       "points": [
         {
           "x": 40,
           "y": 43
+        },
+        {
+          "x": 48,
+          "y": 39
         },
         {
           "x": 60,
@@ -571,10 +824,15 @@
       "concealment": "low",
       "baggageAccess": "full",
       "terrainTransitions": [],
+      "geometryStatus": "scenario_assumption",
       "points": [
         {
           "x": 54,
           "y": 58
+        },
+        {
+          "x": 57,
+          "y": 49
         },
         {
           "x": 60,
@@ -616,10 +874,19 @@
           "status": "scenario_assumption"
         }
       ],
+      "geometryStatus": "scenario_assumption",
       "points": [
         {
           "x": 54,
           "y": 58
+        },
+        {
+          "x": 62,
+          "y": 62
+        },
+        {
+          "x": 70,
+          "y": 61
         },
         {
           "x": 76,
@@ -645,10 +912,15 @@
       "concealment": "low",
       "baggageAccess": "full",
       "terrainTransitions": [],
+      "geometryStatus": "scenario_assumption",
       "points": [
         {
           "x": 60,
           "y": 37
+        },
+        {
+          "x": 68,
+          "y": 33
         },
         {
           "x": 79,
@@ -690,10 +962,19 @@
           "status": "scenario_assumption"
         }
       ],
+      "geometryStatus": "scenario_assumption",
       "points": [
         {
           "x": 79,
           "y": 29
+        },
+        {
+          "x": 83,
+          "y": 40
+        },
+        {
+          "x": 81,
+          "y": 50
         },
         {
           "x": 76,
@@ -1510,6 +1791,21 @@
               "capacity": "army-column",
               "concealment": "low",
               "baggageAccess": "full",
+              "geometryStatus": "scenario_assumption",
+              "points": [
+                {
+                  "x": 22,
+                  "y": 48
+                },
+                {
+                  "x": 30,
+                  "y": 46
+                },
+                {
+                  "x": 40,
+                  "y": 43
+                }
+              ],
               "terrainTransitions": []
             },
             {
@@ -1527,6 +1823,25 @@
               "capacity": "formation",
               "concealment": "medium",
               "baggageAccess": "limited",
+              "geometryStatus": "scenario_assumption",
+              "points": [
+                {
+                  "x": 22,
+                  "y": 48
+                },
+                {
+                  "x": 34,
+                  "y": 53
+                },
+                {
+                  "x": 45,
+                  "y": 61
+                },
+                {
+                  "x": 54,
+                  "y": 58
+                }
+              ],
               "terrainTransitions": [
                 {
                   "featureId": "dan-river",
@@ -1573,6 +1888,21 @@
               "capacity": "army-column",
               "concealment": "low",
               "baggageAccess": "full",
+              "geometryStatus": "scenario_assumption",
+              "points": [
+                {
+                  "x": 40,
+                  "y": 43
+                },
+                {
+                  "x": 30,
+                  "y": 46
+                },
+                {
+                  "x": 22,
+                  "y": 48
+                }
+              ],
               "terrainTransitions": []
             },
             {
@@ -1590,6 +1920,21 @@
               "capacity": "formation",
               "concealment": "medium",
               "baggageAccess": "limited",
+              "geometryStatus": "scenario_assumption",
+              "points": [
+                {
+                  "x": 40,
+                  "y": 43
+                },
+                {
+                  "x": 48,
+                  "y": 39
+                },
+                {
+                  "x": 60,
+                  "y": 37
+                }
+              ],
               "terrainTransitions": []
             }
           ]
@@ -1620,6 +1965,25 @@
               "capacity": "formation",
               "concealment": "medium",
               "baggageAccess": "limited",
+              "geometryStatus": "scenario_assumption",
+              "points": [
+                {
+                  "x": 54,
+                  "y": 58
+                },
+                {
+                  "x": 45,
+                  "y": 61
+                },
+                {
+                  "x": 34,
+                  "y": 53
+                },
+                {
+                  "x": 22,
+                  "y": 48
+                }
+              ],
               "terrainTransitions": [
                 {
                   "featureId": "dan-river",
@@ -1653,6 +2017,21 @@
               "capacity": "army-column",
               "concealment": "low",
               "baggageAccess": "full",
+              "geometryStatus": "scenario_assumption",
+              "points": [
+                {
+                  "x": 54,
+                  "y": 58
+                },
+                {
+                  "x": 57,
+                  "y": 49
+                },
+                {
+                  "x": 60,
+                  "y": 37
+                }
+              ],
               "terrainTransitions": []
             },
             {
@@ -1670,6 +2049,25 @@
               "capacity": "detachment",
               "concealment": "high",
               "baggageAccess": "none",
+              "geometryStatus": "scenario_assumption",
+              "points": [
+                {
+                  "x": 54,
+                  "y": 58
+                },
+                {
+                  "x": 62,
+                  "y": 62
+                },
+                {
+                  "x": 70,
+                  "y": 61
+                },
+                {
+                  "x": 76,
+                  "y": 58
+                }
+              ],
               "terrainTransitions": [
                 {
                   "featureId": "eastern-ridge",
@@ -1716,6 +2114,21 @@
               "capacity": "formation",
               "concealment": "medium",
               "baggageAccess": "limited",
+              "geometryStatus": "scenario_assumption",
+              "points": [
+                {
+                  "x": 60,
+                  "y": 37
+                },
+                {
+                  "x": 48,
+                  "y": 39
+                },
+                {
+                  "x": 40,
+                  "y": 43
+                }
+              ],
               "terrainTransitions": []
             },
             {
@@ -1733,6 +2146,21 @@
               "capacity": "army-column",
               "concealment": "low",
               "baggageAccess": "full",
+              "geometryStatus": "scenario_assumption",
+              "points": [
+                {
+                  "x": 60,
+                  "y": 37
+                },
+                {
+                  "x": 57,
+                  "y": 49
+                },
+                {
+                  "x": 54,
+                  "y": 58
+                }
+              ],
               "terrainTransitions": []
             },
             {
@@ -1750,6 +2178,21 @@
               "capacity": "army-column",
               "concealment": "low",
               "baggageAccess": "full",
+              "geometryStatus": "scenario_assumption",
+              "points": [
+                {
+                  "x": 60,
+                  "y": 37
+                },
+                {
+                  "x": 68,
+                  "y": 33
+                },
+                {
+                  "x": 79,
+                  "y": 29
+                }
+              ],
               "terrainTransitions": []
             }
           ]
@@ -1780,6 +2223,21 @@
               "capacity": "army-column",
               "concealment": "low",
               "baggageAccess": "full",
+              "geometryStatus": "scenario_assumption",
+              "points": [
+                {
+                  "x": 79,
+                  "y": 29
+                },
+                {
+                  "x": 68,
+                  "y": 33
+                },
+                {
+                  "x": 60,
+                  "y": 37
+                }
+              ],
               "terrainTransitions": []
             },
             {
@@ -1797,6 +2255,25 @@
               "capacity": "detachment",
               "concealment": "high",
               "baggageAccess": "none",
+              "geometryStatus": "scenario_assumption",
+              "points": [
+                {
+                  "x": 79,
+                  "y": 29
+                },
+                {
+                  "x": 83,
+                  "y": 40
+                },
+                {
+                  "x": 81,
+                  "y": 50
+                },
+                {
+                  "x": 76,
+                  "y": 58
+                }
+              ],
               "terrainTransitions": [
                 {
                   "featureId": "eastern-ridge",
@@ -1843,6 +2320,25 @@
               "capacity": "detachment",
               "concealment": "high",
               "baggageAccess": "none",
+              "geometryStatus": "scenario_assumption",
+              "points": [
+                {
+                  "x": 76,
+                  "y": 58
+                },
+                {
+                  "x": 70,
+                  "y": 61
+                },
+                {
+                  "x": 62,
+                  "y": 62
+                },
+                {
+                  "x": 54,
+                  "y": 58
+                }
+              ],
               "terrainTransitions": [
                 {
                   "featureId": "eastern-ridge",
@@ -1876,6 +2372,25 @@
               "capacity": "detachment",
               "concealment": "high",
               "baggageAccess": "none",
+              "geometryStatus": "scenario_assumption",
+              "points": [
+                {
+                  "x": 76,
+                  "y": 58
+                },
+                {
+                  "x": 81,
+                  "y": 50
+                },
+                {
+                  "x": 83,
+                  "y": 40
+                },
+                {
+                  "x": 79,
+                  "y": 29
+                }
+              ],
               "terrainTransitions": [
                 {
                   "featureId": "eastern-ridge",
@@ -1916,10 +2431,15 @@
           "concealment": "low",
           "baggageAccess": "full",
           "terrainTransitions": [],
+          "geometryStatus": "scenario_assumption",
           "points": [
             {
               "x": 22,
               "y": 48
+            },
+            {
+              "x": 30,
+              "y": 46
             },
             {
               "x": 40,
@@ -1961,10 +2481,19 @@
               "status": "scenario_assumption"
             }
           ],
+          "geometryStatus": "scenario_assumption",
           "points": [
             {
               "x": 22,
               "y": 48
+            },
+            {
+              "x": 34,
+              "y": 53
+            },
+            {
+              "x": 45,
+              "y": 61
             },
             {
               "x": 54,
@@ -1990,10 +2519,15 @@
           "concealment": "medium",
           "baggageAccess": "limited",
           "terrainTransitions": [],
+          "geometryStatus": "scenario_assumption",
           "points": [
             {
               "x": 40,
               "y": 43
+            },
+            {
+              "x": 48,
+              "y": 39
             },
             {
               "x": 60,
@@ -2019,10 +2553,15 @@
           "concealment": "low",
           "baggageAccess": "full",
           "terrainTransitions": [],
+          "geometryStatus": "scenario_assumption",
           "points": [
             {
               "x": 54,
               "y": 58
+            },
+            {
+              "x": 57,
+              "y": 49
             },
             {
               "x": 60,
@@ -2064,10 +2603,19 @@
               "status": "scenario_assumption"
             }
           ],
+          "geometryStatus": "scenario_assumption",
           "points": [
             {
               "x": 54,
               "y": 58
+            },
+            {
+              "x": 62,
+              "y": 62
+            },
+            {
+              "x": 70,
+              "y": 61
             },
             {
               "x": 76,
@@ -2093,10 +2641,15 @@
           "concealment": "low",
           "baggageAccess": "full",
           "terrainTransitions": [],
+          "geometryStatus": "scenario_assumption",
           "points": [
             {
               "x": 60,
               "y": 37
+            },
+            {
+              "x": 68,
+              "y": 33
             },
             {
               "x": 79,
@@ -2138,10 +2691,19 @@
               "status": "scenario_assumption"
             }
           ],
+          "geometryStatus": "scenario_assumption",
           "points": [
             {
               "x": 79,
               "y": 29
+            },
+            {
+              "x": 83,
+              "y": 40
+            },
+            {
+              "x": 81,
+              "y": 50
             },
             {
               "x": 76,

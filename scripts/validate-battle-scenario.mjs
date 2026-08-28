@@ -287,6 +287,7 @@ if (!errors.length) {
   areaIds.forEach((areaId) => {
     if (!terrainIds.has(areaId)) add(`terrain.json: 缺少区域 ${areaId} 的地形定义`);
   });
+  const areaById = Object.fromEntries(areas.map((area) => [area.id, area]));
   routes.forEach((edge) => {
     if (!areaIds.has(edge.from) || !areaIds.has(edge.to)) add(`routes.json:${edge.id}: from 或 to 引用了不存在的区域`);
     if (edge.travelSeconds !== undefined && !positiveNumber(edge.travelSeconds)) add(`routes.json:${edge.id}: 兼容字段 travelSeconds 必须是正数`);
@@ -299,6 +300,19 @@ if (!errors.length) {
     if (!['low', 'medium', 'high'].includes(edge.concealment)) add(`routes.json:${edge.id}: concealment 无效`);
     if (!['full', 'limited', 'none'].includes(edge.baggageAccess)) add(`routes.json:${edge.id}: baggageAccess 无效`);
     if (!edge.surface) add(`routes.json:${edge.id}: 缺少 surface`);
+    if (!['historical_fact', 'historical_estimate', 'scenario_assumption', 'simulation_variable'].includes(edge.geometryStatus)) add(`routes.json:${edge.id}: geometryStatus 无效`);
+    if (!Array.isArray(edge.points) || edge.points.length < 2) add(`routes.json:${edge.id}: points 至少需要起点和终点`);
+    (edge.points ?? []).forEach((point) => {
+      if (!Number.isFinite(point?.x) || !Number.isFinite(point?.y) || point.x < 0 || point.x > 100 || point.y < 0 || point.y > 100) {
+        add(`routes.json:${edge.id}: points 必须是 0-100 范围内的 x/y 坐标`);
+      }
+    });
+    const fromPosition = areaById[edge.from]?.position;
+    const toPosition = areaById[edge.to]?.position;
+    const firstPoint = edge.points?.[0];
+    const lastPoint = edge.points?.[edge.points.length - 1];
+    if (fromPosition && firstPoint && (firstPoint.x !== fromPosition.x || firstPoint.y !== fromPosition.y)) add(`routes.json:${edge.id}: points 起点必须与 from 区域坐标一致`);
+    if (toPosition && lastPoint && (lastPoint.x !== toPosition.x || lastPoint.y !== toPosition.y)) add(`routes.json:${edge.id}: points 终点必须与 to 区域坐标一致`);
     if (edge.distanceStatus === 'scenario_assumption' && edge.historicalClaim === true) add(`routes.json:${edge.id}: 剧本假设路线不能标记为 historicalClaim=true`);
     (edge.terrainTransitions ?? []).forEach((transition) => {
       if (!terrainFeatureIds.has(transition.featureId)) add(`routes.json:${edge.id}: terrainTransitions 引用了不存在的地形特征 ${transition.featureId}`);

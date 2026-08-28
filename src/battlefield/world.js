@@ -50,6 +50,8 @@ function normalizeArea(area) {
         capacity: neighbor.capacity ?? null,
         concealment: neighbor.concealment ?? null,
         baggageAccess: neighbor.baggageAccess ?? null,
+        geometryStatus: neighbor.geometryStatus ?? null,
+        points: clone(neighbor.points ?? []),
         terrainTransitions: clone(neighbor.terrainTransitions ?? []),
       };
     }),

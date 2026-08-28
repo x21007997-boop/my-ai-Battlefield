@@ -1,6 +1,6 @@
 {
   "edges": [
-    { "id": "route-north-valley", "from": "north", "to": "valley", "travelSeconds": 3, "distanceLi": 3, "distanceUncertainty": 0.1, "distanceStatus": "scenario_assumption", "roadType": "valley-road", "surface": "packed-earth", "grade": "gentle", "capacity": "formation", "concealment": "low", "baggageAccess": "full" },
-    { "id": "route-valley-ridge", "from": "valley", "to": "ridge", "travelSeconds": 4, "distanceLi": 4, "distanceUncertainty": 0.1, "distanceStatus": "scenario_assumption", "roadType": "mountain-path", "surface": "rocky-track", "grade": "steep", "capacity": "detachment", "concealment": "high", "baggageAccess": "none" }
+    { "id": "route-north-valley", "from": "north", "to": "valley", "points": [{ "x": 25, "y": 30 }, { "x": 38, "y": 43 }, { "x": 52, "y": 55 }], "geometryStatus": "scenario_assumption", "travelSeconds": 3, "distanceLi": 3, "distanceUncertainty": 0.1, "distanceStatus": "scenario_assumption", "roadType": "valley-road", "surface": "packed-earth", "grade": "gentle", "capacity": "formation", "concealment": "low", "baggageAccess": "full" },
+    { "id": "route-valley-ridge", "from": "valley", "to": "ridge", "points": [{ "x": 52, "y": 55 }, { "x": 65, "y": 42 }, { "x": 78, "y": 28 }], "geometryStatus": "scenario_assumption", "travelSeconds": 4, "distanceLi": 4, "distanceUncertainty": 0.1, "distanceStatus": "scenario_assumption", "roadType": "mountain-path", "surface": "rocky-track", "grade": "steep", "capacity": "detachment", "concealment": "high", "baggageAccess": "none" }
   ]
 }

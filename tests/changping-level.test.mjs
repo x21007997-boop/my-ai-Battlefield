@@ -23,8 +23,13 @@ test('Changping level keeps route estimates playable in both directions', () => 
   assert.equal(riverRoute.baggageAccess, 'limited');
   assert.equal(world.terrainFeatures.find((feature) => feature.id === 'dan-river').type, 'river');
   assert.equal(riverRoute.terrainTransitions[0].transitionType, 'river-crossing');
+  assert.equal(riverRoute.points.length, 4);
+  assert.deepEqual(riverRoute.points[0], world.areas['qin-west-camp'].position);
+  const reversedRiverRoute = world.areas['dan-river-valley'].neighbors.find((item) => item.id === 'qin-west-camp');
+  assert.deepEqual(reversedRiverRoute.points, [...riverRoute.points].reverse());
   const issued = command(world, { type: 'move', unitId: 'qin-main', targetAreaId: 'dan-river-valley' });
   assert.equal(issued.world.orders[0].routeSegments[0].travelTimeSource, 'mobility-model');
+  assert.deepEqual(issued.world.orders[0].routeSegments[0].points, riverRoute.points);
   assert.notEqual(issued.world.orders[0].routeSegments[0].travelSeconds, riverRoute.travelSeconds);
 });
 

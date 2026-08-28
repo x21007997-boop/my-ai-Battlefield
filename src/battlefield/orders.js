@@ -102,6 +102,8 @@ export function findRoute(areas, fromAreaId, toAreaId, { traveler = {}, environm
           capacity: edge.capacity ?? null,
           concealment: edge.concealment ?? null,
           baggageAccess: edge.baggageAccess ?? null,
+          geometryStatus: edge.geometryStatus ?? null,
+          points: clone(edge.points ?? []),
           terrainTransitions: edge.terrainTransitions ?? [],
         }],
       };
@@ -159,6 +161,8 @@ export function findRouteCandidates(areas, fromAreaId, toAreaId, {
         capacity: edge.capacity ?? null,
         concealment: edge.concealment ?? null,
         baggageAccess: edge.baggageAccess ?? null,
+        geometryStatus: edge.geometryStatus ?? null,
+        points: clone(edge.points ?? []),
         terrainTransitions: edge.terrainTransitions ?? [],
       }];
       const nextAreaIds = [...areaIds, nextId];

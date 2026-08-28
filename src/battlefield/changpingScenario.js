@@ -78,6 +78,7 @@ function routeDefinition(from, to) {
   if (!reverse) return null;
   return {
     ...reverse,
+    points: [...(reverse.points ?? [])].reverse(),
     terrainTransitions: (reverse.terrainTransitions ?? []).map((transition) => ({
       ...transition,
       startProgress: 1 - transition.endProgress,
@@ -109,6 +110,8 @@ function buildChangpingGamePackage() {
           capacity: route?.capacity ?? null,
           concealment: route?.concealment ?? null,
           baggageAccess: route?.baggageAccess ?? null,
+          geometryStatus: route?.geometryStatus ?? null,
+          points: route?.points ?? [],
           terrainTransitions: route?.terrainTransitions ?? [],
         };
       }),
