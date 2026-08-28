@@ -70,6 +70,7 @@ func _draw() -> void:
 	_draw_vector_paper()
 	_draw_terrain_features()
 	_draw_routes()
+	_draw_commander_route_layers()
 	draw_rect(MAP_RECT, Color("#76543d"), false, 3.0)
 	draw_rect(MAP_RECT.grow(-10), Color(0.18, 0.12, 0.08, 0.15), false, 1.0)
 
@@ -142,6 +143,33 @@ func _draw_routes() -> void:
 				draw_dashed_line(points[index], points[index + 1], route_color, width, 8.0)
 		else:
 			draw_polyline(points, route_color, width, true)
+
+func _draw_commander_route_layers() -> void:
+	var layers_value = scenario.get("routeLayers", {})
+	if not layers_value is Dictionary:
+		return
+	var layers: Dictionary = layers_value
+	var all_routes: Array = []
+	all_routes.append_array(layers.get("friendly", []))
+	all_routes.append_array(layers.get("suspectedEnemy", []))
+	for route_value in all_routes:
+		if not route_value is Dictionary:
+			continue
+		var route: Dictionary = route_value
+		var points := PackedVector2Array()
+		for raw_point in route.get("points", []):
+			if raw_point is Dictionary:
+				points.append(_terrain_point(raw_point))
+		if points.size() < 2:
+			continue
+		var kind := str(route.get("kind", "planned-friendly"))
+		var color := CINNABAR if kind == "suspected-enemy" else JADE
+		var alpha := 0.42 if kind in ["presumed-friendly", "suspected-enemy"] else 0.72
+		for index in range(points.size() - 1):
+			if kind in ["planned-friendly", "presumed-friendly", "suspected-enemy"]:
+				draw_dashed_line(points[index], points[index + 1], Color(color, alpha), 3.0, 11.0 if kind != "presumed-friendly" else 5.0)
+			else:
+				draw_line(points[index], points[index + 1], Color(color, alpha), 3.0, true)
 
 func _terrain_point(raw_point: Dictionary) -> Vector2:
 	return MAP_RECT.position + Vector2(

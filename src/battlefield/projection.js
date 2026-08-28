@@ -110,6 +110,64 @@ function buildLandmarks(areas, mapMarkers = []) {
     .filter(Boolean);
 }
 
+function orderRoutePoints(order, areaById) {
+  const points = [];
+  (order.routeSegments ?? []).forEach((segment) => {
+    const segmentPoints = (segment.points ?? []).map(validPoint).filter(Boolean);
+    segmentPoints.forEach((point) => {
+      const previous = points[points.length - 1];
+      if (!previous || previous.x !== point.x || previous.y !== point.y) points.push(point);
+    });
+  });
+  if (points.length >= 2) return points;
+  return (order.route ?? []).map((areaId) => validPoint(areaById[areaId]?.position)).filter(Boolean);
+}
+
+function buildRouteLayers(world, belief, side, areaById) {
+  const friendly = world.orders
+    .filter((order) => world.units?.[order.unitId]?.side === side && ['transmitting', 'executing'].includes(order.status))
+    .map((order) => {
+      const unit = world.units[order.unitId];
+      const lost = unit?.communication === 'lost' || unit?.communication === 'silent';
+      return {
+        id: `friendly-route-${order.id}`,
+        orderId: order.id,
+        unitId: order.unitId,
+        kind: order.status === 'transmitting' ? 'planned-friendly' : lost ? 'presumed-friendly' : 'confirmed-friendly',
+        confidence: order.status === 'transmitting' ? 'medium' : lost ? 'low' : 'high',
+        points: orderRoutePoints(order, areaById),
+      };
+    })
+    .filter((route) => route.points.length >= 2);
+
+  const enemyByTarget = (belief.reports ?? [])
+    .filter((report) => report.status === 'active' && areaById[report.areaId]?.position)
+    .reduce((groups, report) => {
+      groups[report.targetUnitId] ??= [];
+      groups[report.targetUnitId].push(report);
+      return groups;
+    }, /** @type {Record<string, any[]>} */ ({}));
+  const suspectedEnemy = Object.entries(enemyByTarget).flatMap(([targetUnitId, reports]) => {
+    const ordered = [...reports].sort((left, right) => (left.observedAt ?? left.receivedAt ?? 0) - (right.observedAt ?? right.receivedAt ?? 0));
+    const points = ordered.map((report) => validPoint(areaById[report.areaId]?.position)).filter(Boolean)
+      .filter((point, index, values) => index === 0 || point.x !== values[index - 1].x || point.y !== values[index - 1].y);
+    if (points.length < 2) return [];
+    return [{ id: `enemy-route-${targetUnitId}`, targetUnitId, kind: 'suspected-enemy', confidence: ordered.at(-1)?.confidence ?? 'low', points }];
+  });
+  return {
+    schemaVersion: 1,
+    friendly,
+    suspectedEnemy,
+    styles: {
+      'planned-friendly': 'dashed-jade',
+      'confirmed-friendly': 'solid-jade',
+      'presumed-friendly': 'dotted-jade-faded',
+      'suspected-enemy': 'dashed-cinnabar-faded',
+      'replay-trajectory': 'solid-gold-faded',
+    },
+  };
+}
+
 function normalizeReportUncertainty(sighting, areaById) {
   const uncertainty = sighting.uncertainty ?? {};
   const candidateAreaIds = (uncertainty.candidateAreaIds ?? [sighting.areaId])
@@ -259,6 +317,7 @@ export function buildCommanderMapModel(world, {
     landmarks: buildLandmarks(world.areas, mapMarkers),
     friendlyUnits,
     reportedEnemySignals,
+    routeLayers: buildRouteLayers(world, belief, side, areaById),
     disclosure: {
       side,
       rawEnemyUnitsIncluded: false,

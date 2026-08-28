@@ -190,6 +190,7 @@ const clientScenario = {
   // simulation. Commander-facing map/session projections below remain fuzzy.
   areas: runtimeAreas,
   routes: commanderSession.map.routes,
+  routeLayers: commanderSession.map.routeLayers,
   landmarks: commanderSession.map.landmarks,
   terrainFeatures: commanderSession.map.terrainFeatures,
   friendlyUnits,

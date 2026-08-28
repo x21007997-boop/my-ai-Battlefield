@@ -8,6 +8,7 @@ import { BATTLEFIELD_CONFIG } from './config.js';
 import { BATTLE_ERROR_CODES, battleError } from './errors.js';
 import { buildCommandDeliveryPlan, commanderFor, playerCommanderId, resolveCommandRecipient } from './commandChain.js';
 import { interpretCommanderInstruction } from './instructionInterpreter.js';
+import { buildCommanderRouteOptions } from './routePlanner.js';
 
 export const COMMANDER_GATEWAY_SCHEMA_VERSION = BATTLEFIELD_CONFIG.schemaVersions.commanderGateway;
 
@@ -77,6 +78,12 @@ export function applyCommanderCommand(world, command, {
   if (world.status === 'ended' && command.type !== 'snapshot') return { world, accepted: false, ...battleError(BATTLE_ERROR_CODES.WORLD_ENDED, '战役已经结束，不能继续下达命令。') };
 
   if (command.type === 'snapshot') return { world, accepted: true, result: null, error: null };
+  if (command.type === 'plan_routes') {
+    if (!ownsUnit(world, side, command.unitId)) return { world, accepted: false, ...battleError(BATTLE_ERROR_CODES.UNIT_NOT_OWNED, '只能为本方部队规划路线。', { unitId: command.unitId, side }) };
+    const options = buildCommanderRouteOptions(world, { side, unitId: command.unitId, targetAreaId: command.targetAreaId });
+    if (options.length === 0) return { world, accepted: false, ...battleError(BATTLE_ERROR_CODES.ROUTE_UNREACHABLE, '当前没有可用的认知路线。', { unitId: command.unitId, targetAreaId: command.targetAreaId }) };
+    return { world, accepted: true, result: { unitId: command.unitId, targetAreaId: command.targetAreaId, options }, error: null };
+  }
   if (command.type === 'free_order' || command.type === 'instruction') {
     const commandText = typeof command.text === 'string' ? command.text : typeof command.rawText === 'string' ? command.rawText : '';
     const interpreted = interpretCommanderInstruction(world, {

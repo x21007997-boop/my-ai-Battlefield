@@ -49,6 +49,7 @@ export { DECEPTION_SCHEMA_VERSION, issueDeception, resolvePendingDeceptions } fr
 export { BATTLE_RESOLUTION_SCHEMA_VERSION, buildCommanderResolutionSnapshot, evaluateBattleOutcome } from './resolution.js';
 export { BATTLE_REVIEW_SCHEMA_VERSION, buildCommanderObjectiveSnapshot, buildCommanderReview } from './review.js';
 export { BATTLEFIELD_MAP_COORDINATE_SYSTEM, BATTLEFIELD_MAP_SCHEMA_VERSION, buildCommanderMapModel } from './projection.js';
+export { buildCommanderRouteOptions } from './routePlanner.js';
 export { createBattleWorldFromScenario } from './scenario.js';
 export {
   COMMANDER_REPLAY_SCHEMA_VERSION,

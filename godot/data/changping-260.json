@@ -983,6 +983,18 @@
       ]
     }
   ],
+  "routeLayers": {
+    "schemaVersion": 1,
+    "friendly": [],
+    "suspectedEnemy": [],
+    "styles": {
+      "planned-friendly": "dashed-jade",
+      "confirmed-friendly": "solid-jade",
+      "presumed-friendly": "dotted-jade-faded",
+      "suspected-enemy": "dashed-cinnabar-faded",
+      "replay-trajectory": "solid-gold-faded"
+    }
+  },
   "landmarks": [
     {
       "id": "qin-west-camp-marker",
@@ -2926,6 +2938,18 @@
         }
       ],
       "reportedEnemySignals": [],
+      "routeLayers": {
+        "schemaVersion": 1,
+        "friendly": [],
+        "suspectedEnemy": [],
+        "styles": {
+          "planned-friendly": "dashed-jade",
+          "confirmed-friendly": "solid-jade",
+          "presumed-friendly": "dotted-jade-faded",
+          "suspected-enemy": "dashed-cinnabar-faded",
+          "replay-trajectory": "solid-gold-faded"
+        }
+      },
       "disclosure": {
         "side": "player",
         "rawEnemyUnitsIncluded": false,

@@ -33,6 +33,7 @@ var review: Dictionary = {}
 var log_lines: Array[String] = []
 var selected_unit_id := ""
 var selected_target_area_id := ""
+var route_options: Array = []
 var panning := false
 var event_log: BattlefieldEventLog
 var replay_player: BattlefieldReplayPlayer
@@ -198,6 +199,11 @@ func _on_engine_response(operation: String, response: Dictionary) -> void:
 	if response_session_id != "":
 		_save_session_id(response_session_id)
 	_apply_engine_session(session)
+	var response_result: Dictionary = response.get("result", {}) if response.get("result", {}) is Dictionary else {}
+	if response_result.get("options", null) is Array:
+		route_options = response_result.get("options", []).duplicate(true)
+		if not route_options.is_empty():
+			_set_feedback("参谋已呈上%d条可行路线，可比较里程、时辰与风险。" % route_options.size(), "success")
 	var response_events: Array = response.get("events", [])
 	for event in response_events:
 		_add_log(_replay_event_text(event))
@@ -216,8 +222,7 @@ func _on_engine_response(operation: String, response: Dictionary) -> void:
 	elif not response.get("accepted", true):
 		_set_feedback("操作未执行：%s" % str(response.get("error", "内核拒绝了这次操作。")), "error")
 	elif operation == "command":
-		var result: Dictionary = response.get("result", {}) if response.get("result", {}) is Dictionary else {}
-		var event_type := str(response_events.back().get("type", "")) if not response_events.is_empty() else str(result.get("type", ""))
+		var event_type := str(response_events.back().get("type", "")) if not response_events.is_empty() else str(response_result.get("type", ""))
 		if event_type != "":
 			match event_type:
 				"order_issued": _set_feedback("命令已接收：部队进入传递状态。", "success")
@@ -229,7 +234,7 @@ func _on_engine_response(operation: String, response: Dictionary) -> void:
 				"reconnaissance_issued": _set_feedback("侦察已接收：斥候正在准备，资源已扣除。", "success")
 				"reconnaissance_command_delivered": _set_feedback("侦察军令抵达：前线副将开始整备斥候。", "success")
 				"reconnaissance_exposed": _set_feedback("侦察受阻：斥候行迹暴露，回报可信度下降。", "error")
-				"deception_issued": _set_feedback("计策已接收：正在准备投放，资源已扣除。" if str(result.get("status", "")) == "preparing" else "计策已接收：敌方将依据自己的认知行动。", "success")
+				"deception_issued": _set_feedback("计策已接收：正在准备投放，资源已扣除。" if str(response_result.get("status", "")) == "preparing" else "计策已接收：敌方将依据自己的认知行动。", "success")
 				"deception_command_delivered": _set_feedback("计策军令抵达：前线开始准备投放。", "success")
 				"deception_exposed": _set_feedback("计策暴露：敌方可能已经识破，后续误导可信度下降。", "error")
 				"strategy_reliability_reduced": _set_feedback("情报链可信度下降：后续同类行动更容易被识破。", "error")
@@ -354,7 +359,7 @@ func _apply_engine_session(session: Dictionary) -> void:
 	if not map.is_empty():
 		friendly_units = map.get("friendlyUnits", []).duplicate(true)
 		reported_signals = map.get("reportedEnemySignals", []).duplicate(true)
-		for key in ["areas", "routes", "landmarks"]:
+		for key in ["areas", "routes", "routeLayers", "landmarks"]:
 			if map.has(key):
 				scenario[key] = map[key]
 	if selected_commander_id == "" or _commander_by_id(selected_commander_id).is_empty():
@@ -1668,9 +1673,12 @@ func _on_area_selected(area_id: String) -> void:
 	if replay_mode:
 		return
 	selected_target_area_id = area_id
+	route_options = []
 	event_log.append(sim_time, "commander_target_selected", {"areaId": area_id})
 	_add_log("目标区域已选：%s。" % _area_name(area_id))
 	_set_feedback("目标已选：%s。点击机动按钮后命令才会提交。" % _area_name(area_id), "info")
+	if engine_connected and engine_gateway != null and not engine_gateway.busy() and selected_unit_id != "":
+		engine_gateway.send_command({"type": "plan_routes", "unitId": selected_unit_id, "targetAreaId": area_id})
 	_refresh()
 
 func _area_name(area_id: String) -> String:
@@ -1678,6 +1686,27 @@ func _area_name(area_id: String) -> String:
 		if area.get("id", "") == area_id:
 			return str(area.get("name", area_id))
 	return area_id
+
+func _route_options_text() -> String:
+	if route_options.is_empty():
+		return ""
+	var lines: Array[String] = ["", "参谋路线："]
+	for index in range(min(2, route_options.size())):
+		var option_value = route_options[index]
+		if not option_value is Dictionary:
+			continue
+		var option: Dictionary = option_value
+		var distance_value = option.get("distanceEstimate", {})
+		var arrival_value = option.get("arrivalEstimate", {})
+		var supply_value = option.get("supplyPressure", {})
+		var exposure_value = option.get("exposureRisk", {})
+		var distance := str(distance_value.get("label", "里程待估")) if distance_value is Dictionary else "里程待估"
+		var duration := str(arrival_value.get("durationLabel", "时辰待估")) if arrival_value is Dictionary else "时辰待估"
+		var supply := str(supply_value.get("label", "未知")) if supply_value is Dictionary else "未知"
+		var exposure := str(exposure_value.get("label", "未知")) if exposure_value is Dictionary else "未知"
+		var marker := "荐" if bool(option.get("recommended", false)) else str(index + 1)
+		lines.append("[%s] %s · %s · 补给%s/暴露%s" % [marker, distance, duration, supply, exposure])
+	return "\n".join(lines)
 
 func _set_zoom(value: float) -> void:
 	var next_zoom: float = clamp(value, 0.75, 1.8)
@@ -1949,7 +1978,7 @@ func _refresh() -> void:
 	var selected_unit_index: int = _unit_index(selected_unit_id)
 	var selected_unit_name: String = friendly_units[selected_unit_index].get("name", "未选择") if selected_unit_index >= 0 else "未选择"
 	var selected_target_name: String = _area_name(selected_target_area_id) if selected_target_area_id != "" else "未选择"
-	selection_label.text = "当前部队：%s\n目标区域：%s\n接收军官：%s · %s" % [selected_unit_name, selected_target_name, _commander_name(selected_commander_id), _commander_location_text(selected_commander_id)]
+	selection_label.text = "当前部队：%s\n目标区域：%s\n接收军官：%s · %s%s" % [selected_unit_name, selected_target_name, _commander_name(selected_commander_id), _commander_location_text(selected_commander_id), _route_options_text()]
 	run_button.text = "暂停实时推演" if running else "开始实时推演"
 	if replay_mode:
 		run_button.text = "暂停回放" if running else "播放回放"
