@@ -246,16 +246,24 @@ func _draw_order_feedback() -> void:
 	var target_id := str(active_order.get("targetAreaId", ""))
 	if target_id == "":
 		return
-	if str(active_order.get("type", "move")) == "hold":
-		_draw_status_pulse(_area_point(origin_id), Color("#76a48a"), "坚守中")
-		return
-	if str(active_order.get("status", "")) == "blocked":
+	var status := str(active_order.get("status", ""))
+	if status == "blocked":
 		_draw_status_pulse(_area_point(origin_id), Color("#b86756"), "被封锁")
+		return
+	var terminal_label := _terminal_order_label(status)
+	if terminal_label != "":
+		var terminal_color := Color("#b86756") if status in ["refused", "rejected"] else Color("#8d7a65")
+		_draw_status_pulse(_area_point(origin_id), terminal_color, terminal_label)
+		return
+	if str(active_order.get("type", "move")) == "hold":
+		var hold_color := Color("#d8a95f") if status == "transmitting" else Color("#b8d2a4") if status == "completed" else Color("#76a48a")
+		_draw_status_pulse(_area_point(origin_id), hold_color, _hold_order_label(status))
 		return
 	var points := _order_path_points(active_order, origin_id, target_id)
 	if points.size() < 1:
 		return
-	var status := str(active_order.get("status", ""))
+	if status not in ["transmitting", "executing", "completed"]:
+		return
 	var task_label := str(active_order.get("taskLabel", ""))
 	var accent := Color("#d8a95f") if status == "transmitting" else Color("#76a48a")
 	var officer_waiting := int(active_order.get("executionResumeAt", -1)) > current_sim_time
@@ -305,6 +313,20 @@ func _terrain_action_word(terrain_type: String) -> String:
 		"river": return "渡河"
 		"mountain": return "翻山"
 		_: return "通过"
+
+func _terminal_order_label(status: String) -> String:
+	match status:
+		"refused": return "副将拒绝"
+		"rejected": return "命令驳回"
+		"expired": return "军令失效"
+		"cancelled": return "军令取消"
+		_: return ""
+
+func _hold_order_label(status: String) -> String:
+	match status:
+		"transmitting": return "坚守传令中"
+		"completed": return "坚守完成"
+		_: return "坚守中"
 
 func _draw_pending_observations() -> void:
 	for pending in pending_observations:
@@ -379,8 +401,15 @@ func _draw_transient_notices() -> void:
 		if point == Vector2.ZERO:
 			continue
 		var kind := str(notice.get("kind", "info"))
-		var color := CINNABAR if kind == "report_expired" else GOLD
+		var color := _notice_color(kind)
 		_draw_status_pulse(point + Vector2(0, 34), color, str(notice.get("label", "战场状态变化")))
+
+func _notice_color(kind: String) -> Color:
+	if kind in ["report_expired", "order_refused", "order_blocked", "order_rejected"]:
+		return CINNABAR
+	if kind in ["order_completed", "execution_resumed", "session_resumed"]:
+		return JADE
+	return GOLD
 
 func _report_radius_normalized(level: String) -> float:
 	match level:

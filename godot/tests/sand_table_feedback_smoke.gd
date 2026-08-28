@@ -40,7 +40,23 @@ func _init() -> void:
 
 	assert(main.sand_table._movement_terrain_label(main.order) == "渡河中")
 	assert(main.sand_table._report_status_text(main.reported_signals[0]) == "低可信 · 将失效 6秒")
+	assert(main.sand_table._terminal_order_label("refused") == "副将拒绝")
+	assert(main.sand_table._terminal_order_label("rejected") == "命令驳回")
+	assert(main.sand_table._terminal_order_label("expired") == "军令失效")
+	assert(main.sand_table._terminal_order_label("cancelled") == "军令取消")
+	assert(main.sand_table._hold_order_label("transmitting") == "坚守传令中")
+	assert(main.sand_table._hold_order_label("executing") == "坚守中")
+	assert(main.sand_table._hold_order_label("completed") == "坚守完成")
 	assert(main.sand_table.transient_notices.size() == 1)
+
+	var visual_order_status := OS.get_environment("VISUAL_ORDER_STATUS")
+	if visual_order_status != "":
+		main.order["status"] = visual_order_status
+		main.order["currentTerrain"] = null
+		if visual_order_status == "refused":
+			main.order["officerFeedback"] = "前线副将判断兵力不足，拒绝冒进"
+			main.map_notices = []
+		main._refresh()
 	print("Godot sand-table feedback smoke test passed")
 
 	var hold_seconds := float(OS.get_environment("VISUAL_FIXTURE_HOLD_SECONDS"))

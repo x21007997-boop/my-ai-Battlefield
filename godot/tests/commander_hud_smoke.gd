@@ -37,6 +37,31 @@ func _init() -> void:
 	main._refresh()
 	assert(main.map_notices.size() == 1)
 	assert(main.sand_table.transient_notices[0].get("label", "") == "情报失效")
+	main.map_notices = []
+	main.order = {
+		"status": "refused",
+		"type": "move",
+		"unitId": "qin-main",
+		"originAreaId": "qin-west-camp",
+		"targetAreaId": "dan-river-valley",
+		"recipientCommanderId": "bai-qi",
+		"officerFeedback": "兵力不足，拒绝冒进",
+	}
+	main._refresh()
+	assert(main.command_state_label.text.contains("副将拒绝"))
+	assert(main.guide_label.text.contains("军令未执行"))
+	main._apply_runtime_event_feedback({"type": "officer_delay_completed", "payload": {"unitId": "qin-main"}})
+	assert(main.feedback_label.text.contains("恢复执行"))
+	assert(main.map_notices[0].get("label", "") == "恢复执行")
+	main.order["status"] = "completed"
+	main._refresh()
+	assert(main.command_state_label.text.contains("已完成"))
+	assert(main.guide_label.text.contains("下一道军令"))
+	main.map_notices = []
+	main._show_session_resumed_feedback()
+	main._refresh()
+	assert(main.feedback_label.text.contains("已恢复上一局战局"))
+	assert(main.sand_table.transient_notices[0].get("label", "") == "战局已恢复")
 	main._on_speed_selected(2)
 	assert(main.simulation_speed == 5)
 

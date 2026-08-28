@@ -205,9 +205,7 @@ func _on_engine_response(operation: String, response: Dictionary) -> void:
 		_set_feedback("战役已结束：%s。可导出或载入本局回放。" % str(outcome.get("title", outcome.get("result", "战役结束"))), "success")
 	elif operation == "start_session":
 		if response.get("resumed", false):
-			session_was_resumed = true
-			_add_log("已恢复上一局战局：当前进度与前线认知已载入。")
-			_set_feedback("已恢复上一局战局：命令与侦察链路就绪。", "success")
+			_show_session_resumed_feedback()
 		elif response.get("resumeRequested", false):
 			session_was_resumed = false
 			_add_log("上一局存档未找到，已建立新的长平战局。")
@@ -236,14 +234,29 @@ func _on_engine_response(operation: String, response: Dictionary) -> void:
 				"deception_exposed": _set_feedback("计策暴露：敌方可能已经识破，后续误导可信度下降。", "error")
 				"strategy_reliability_reduced": _set_feedback("情报链可信度下降：后续同类行动更容易被识破。", "error")
 				_: _set_feedback("操作已接收，战场状态正在刷新。", "success")
-	for event in response_events:
-		_apply_runtime_event_feedback(event)
+	if operation != "start_session":
+		for event in response_events:
+			_apply_runtime_event_feedback(event)
 	_refresh()
 
 func _apply_runtime_event_feedback(event: Dictionary) -> void:
 	var payload_value = event.get("payload", {})
 	var payload: Dictionary = payload_value if payload_value is Dictionary else event
 	match str(event.get("type", "")):
+		"order_delivered":
+			_set_feedback("命令已经抵达部队，开始执行。", "success")
+		"officer_decision":
+			if str(payload.get("decision", "")) == "refused":
+				_set_feedback(_officer_decision_feedback(event), "error")
+		"officer_delay_completed":
+			_add_map_notice("execution_resumed", _order_event_area(payload), "恢复执行", 10)
+			_set_feedback("副将整备完成，部队已经恢复执行。", "success")
+		"order_completed":
+			_set_feedback("当前军令已经执行完成。", "success")
+		"unit_arrived":
+			_set_feedback("部队已抵达%s。" % _area_name(str(payload.get("areaId", payload.get("targetAreaId", "")))), "success")
+		"order_cancelled":
+			_set_feedback("军令已经取消：%s" % str(payload.get("reason", "不再执行")), "info")
 		"report_arrived":
 			var area_id := str(payload.get("reportedAreaId", payload.get("areaId", "")))
 			_set_feedback("前线情报抵达：%s（%s，%s）。" % [_area_name(area_id), _confidence_label(str(payload.get("confidence", "unknown"))), _uncertainty_label(payload)], "success")
@@ -270,6 +283,27 @@ func _on_engine_request_failed(_operation: String, message: String) -> void:
 	_add_log("通用内核未连接：%s" % message)
 	_set_feedback("实时内核连接失败：%s" % message, "error")
 	_refresh()
+
+func _show_session_resumed_feedback() -> void:
+	session_was_resumed = true
+	_add_log("已恢复上一局战局：当前进度与前线认知已载入。")
+	_add_map_notice("session_resumed", _selected_unit_area(), "战局已恢复", 12)
+	_set_feedback("已恢复上一局战局：命令与侦察链路就绪。", "success")
+
+func _selected_unit_area() -> String:
+	var unit_index := _unit_index(selected_unit_id)
+	return str(friendly_units[unit_index].get("areaId", "")) if unit_index >= 0 else ""
+
+func _order_event_area(payload: Dictionary) -> String:
+	for key in ["areaId", "targetAreaId", "originAreaId", "reportedAreaId"]:
+		var area_id := str(payload.get(key, ""))
+		if area_id != "":
+			return area_id
+	var unit_id := str(payload.get("unitId", order.get("unitId", "")))
+	var unit_index := _unit_index(unit_id)
+	if unit_index >= 0:
+		return str(friendly_units[unit_index].get("areaId", ""))
+	return str(order.get("originAreaId", order.get("targetAreaId", "")))
 
 func _load_saved_session_id() -> String:
 	var file := FileAccess.open(SESSION_SAVE_PATH, FileAccess.READ)
@@ -1670,6 +1704,7 @@ func _exit_replay() -> void:
 		selected_commander_id = player_commander_id
 	selected_target_area_id = ""
 	reported_signals = []
+	map_notices = []
 	order = {}
 	pending_scout = {}
 	pending_observations = []
@@ -1938,6 +1973,11 @@ func _guide_text() -> String:
 	var order_status := str(order.get("status", "")) if not order.is_empty() else ""
 	if order_status in ["transmitting", "executing"]:
 		return "军令已下达：继续推进时间，观察传令、行军和副将回报"
+	match order_status:
+		"completed": return "军令已完成：选择部队和目标，继续下达下一道军令"
+		"refused", "rejected": return "军令未执行：查看副将反馈，调整接收军官或重新下令"
+		"expired", "cancelled": return "军令已失效：重新确认部队、目标和接收军官"
+		"blocked": return "机动受阻：查看地形和前线反馈，调整路线或任务"
 	if _pending_observation_count() > 0 or _preparing_strategy_count() > 0:
 		return "前线正在回传：继续推进时间，等待可能失真的情报抵达"
 	if selected_target_area_id != "":
@@ -1994,6 +2034,7 @@ func _order_status_text(status: String) -> String:
 		"refused": return "副将拒绝"
 		"rejected": return "已驳回"
 		"expired": return "已失效"
+		"cancelled": return "已取消"
 		"awaiting_report": return "等待前线报告"
 		"blocked": return "被封锁"
 		_: return status if status != "" else "暂无军令"
@@ -2005,6 +2046,8 @@ func _command_state_text() -> String:
 		return "军令状态\n尚未下达军令\n交给%s · %s" % [pending_recipient, pending_mode]
 	var order_type := str(order.get("taskLabel", "")) if order.get("taskType", "") != "" else ("坚守" if order.get("type", "move") == "hold" else "机动")
 	var status := _order_status_text(str(order.get("status", "")))
+	if int(order.get("executionResumeAt", -1)) > sim_time:
+		status = "等待副将整备"
 	var recipient_name := _commander_name(str(order.get("recipientCommanderId", selected_commander_id)))
 	var communication_mode := str(order.get("communicationMode", _command_delivery_mode()))
 	var chain_summary := "交给%s · %s" % [recipient_name, "传令兵在途" if communication_mode == "messenger" and status == "传令中" else ("当面传令" if communication_mode == "direct" else "常规链路")]
