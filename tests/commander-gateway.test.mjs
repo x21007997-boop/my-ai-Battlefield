@@ -42,8 +42,8 @@ test('gateway accepts player commands and returns safe event deltas', () => {
   assert.equal(issued.response.session.ownOrders[0].status, 'transmitting');
   assert.equal(issued.response.session.ownOrders[0].originAreaId, 'west');
   assert.deepEqual(issued.response.session.ownOrders[0].route, ['west', 'east']);
-  assert.equal(issued.response.session.ownOrders[0].totalTravelSeconds, 1);
-  assert.equal(issued.response.session.ownOrders[0].remainingTravelSeconds, 1);
+  assert.equal(issued.response.session.ownOrders[0].totalTravelSeconds, undefined);
+  assert.equal(issued.response.session.ownOrders[0].remainingTravelSeconds, undefined);
   assert.equal(issued.response.session.ownOrders[0].rawText, '让我方主力向东侧机动');
   assert.equal(issued.response.events[0].type, 'order_issued');
   assert.equal(issued.response.events[0].payload.unitId, 'player');
@@ -56,7 +56,7 @@ test('gateway accepts player commands and returns safe event deltas', () => {
   assert.equal(advanced.accepted, true);
   assert.equal(advanced.response.session.map.friendlyUnits[0].areaId, 'east');
   assert.equal(advanced.response.session.ownOrders[0].status, 'completed');
-  assert.equal(advanced.response.session.ownOrders[0].remainingTravelSeconds, 0);
+  assert.equal(advanced.response.session.ownOrders[0].remainingTravelSeconds, undefined);
   assert.equal(advanced.response.events[0].type, 'order_delivered');
 });
 

@@ -454,10 +454,12 @@
       "id": "route-qin-west-camp-western-gate",
       "fromAreaId": "qin-west-camp",
       "toAreaId": "western-gate",
-      "travelSeconds": 90,
       "routeId": "route-qin-camp-western-gate",
-      "distanceLi": 8,
-      "distanceUncertainty": 0.25,
+      "distanceEstimate": {
+        "label": "约五至十里",
+        "precision": "approximate-range",
+        "basisStatus": "scenario_assumption"
+      },
       "distanceStatus": "scenario_assumption",
       "roadType": "camp-road",
       "surface": "packed-earth",
@@ -481,10 +483,12 @@
       "id": "route-dan-river-valley-qin-west-camp",
       "fromAreaId": "qin-west-camp",
       "toAreaId": "dan-river-valley",
-      "travelSeconds": 150,
       "routeId": "route-qin-camp-dan-valley",
-      "distanceLi": 14,
-      "distanceUncertainty": 0.3,
+      "distanceEstimate": {
+        "label": "约五至二十里",
+        "precision": "approximate-range",
+        "basisStatus": "scenario_assumption"
+      },
       "distanceStatus": "scenario_assumption",
       "roadType": "river-valley-track",
       "surface": "mixed-earth-ford",
@@ -524,10 +528,12 @@
       "id": "route-western-gate-zhao-main-camp",
       "fromAreaId": "western-gate",
       "toAreaId": "zhao-main-camp",
-      "travelSeconds": 150,
       "routeId": "route-western-gate-zhao-camp",
-      "distanceLi": 16,
-      "distanceUncertainty": 0.35,
+      "distanceEstimate": {
+        "label": "约十至二十五里",
+        "precision": "approximate-range",
+        "basisStatus": "scenario_assumption"
+      },
       "distanceStatus": "scenario_assumption",
       "roadType": "pass-road",
       "surface": "stony-earth",
@@ -551,10 +557,12 @@
       "id": "route-dan-river-valley-zhao-main-camp",
       "fromAreaId": "dan-river-valley",
       "toAreaId": "zhao-main-camp",
-      "travelSeconds": 120,
       "routeId": "route-dan-valley-zhao-camp",
-      "distanceLi": 12,
-      "distanceUncertainty": 0.3,
+      "distanceEstimate": {
+        "label": "约五至二十里",
+        "precision": "approximate-range",
+        "basisStatus": "scenario_assumption"
+      },
       "distanceStatus": "scenario_assumption",
       "roadType": "valley-road",
       "surface": "packed-earth",
@@ -578,10 +586,12 @@
       "id": "route-dan-river-valley-east-highland",
       "fromAreaId": "dan-river-valley",
       "toAreaId": "east-highland",
-      "travelSeconds": 150,
       "routeId": "route-dan-valley-east-highland",
-      "distanceLi": 18,
-      "distanceUncertainty": 0.4,
+      "distanceEstimate": {
+        "label": "约十至三十里",
+        "precision": "approximate-range",
+        "basisStatus": "scenario_assumption"
+      },
       "distanceStatus": "scenario_assumption",
       "roadType": "mountain-path",
       "surface": "rocky-track",
@@ -621,10 +631,12 @@
       "id": "route-zhao-main-camp-zhao-relief-route",
       "fromAreaId": "zhao-main-camp",
       "toAreaId": "zhao-relief-route",
-      "travelSeconds": 120,
       "routeId": "route-zhao-camp-relief",
-      "distanceLi": 15,
-      "distanceUncertainty": 0.35,
+      "distanceEstimate": {
+        "label": "约五至二十五里",
+        "precision": "approximate-range",
+        "basisStatus": "scenario_assumption"
+      },
       "distanceStatus": "scenario_assumption",
       "roadType": "supply-road",
       "surface": "packed-earth",
@@ -648,10 +660,12 @@
       "id": "route-east-highland-zhao-relief-route",
       "fromAreaId": "zhao-relief-route",
       "toAreaId": "east-highland",
-      "travelSeconds": 180,
       "routeId": "route-relief-east-highland",
-      "distanceLi": 20,
-      "distanceUncertainty": 0.4,
+      "distanceEstimate": {
+        "label": "约十至三十里",
+        "precision": "approximate-range",
+        "basisStatus": "scenario_assumption"
+      },
       "distanceStatus": "scenario_assumption",
       "roadType": "mountain-path",
       "surface": "rocky-track",
@@ -1483,10 +1497,12 @@
           "neighbors": [
             {
               "id": "western-gate",
-              "travelSeconds": 90,
               "routeId": "route-qin-camp-western-gate",
-              "distanceLi": 8,
-              "distanceUncertainty": 0.25,
+              "distanceEstimate": {
+                "label": "约五至十里",
+                "precision": "approximate-range",
+                "basisStatus": "scenario_assumption"
+              },
               "distanceStatus": "scenario_assumption",
               "roadType": "camp-road",
               "surface": "packed-earth",
@@ -1498,10 +1514,12 @@
             },
             {
               "id": "dan-river-valley",
-              "travelSeconds": 150,
               "routeId": "route-qin-camp-dan-valley",
-              "distanceLi": 14,
-              "distanceUncertainty": 0.3,
+              "distanceEstimate": {
+                "label": "约五至二十里",
+                "precision": "approximate-range",
+                "basisStatus": "scenario_assumption"
+              },
               "distanceStatus": "scenario_assumption",
               "roadType": "river-valley-track",
               "surface": "mixed-earth-ford",
@@ -1542,10 +1560,12 @@
           "neighbors": [
             {
               "id": "qin-west-camp",
-              "travelSeconds": 90,
               "routeId": "route-qin-camp-western-gate",
-              "distanceLi": 8,
-              "distanceUncertainty": 0.25,
+              "distanceEstimate": {
+                "label": "约五至十里",
+                "precision": "approximate-range",
+                "basisStatus": "scenario_assumption"
+              },
               "distanceStatus": "scenario_assumption",
               "roadType": "camp-road",
               "surface": "packed-earth",
@@ -1557,10 +1577,12 @@
             },
             {
               "id": "zhao-main-camp",
-              "travelSeconds": 150,
               "routeId": "route-western-gate-zhao-camp",
-              "distanceLi": 16,
-              "distanceUncertainty": 0.35,
+              "distanceEstimate": {
+                "label": "约十至二十五里",
+                "precision": "approximate-range",
+                "basisStatus": "scenario_assumption"
+              },
               "distanceStatus": "scenario_assumption",
               "roadType": "pass-road",
               "surface": "stony-earth",
@@ -1585,10 +1607,12 @@
           "neighbors": [
             {
               "id": "qin-west-camp",
-              "travelSeconds": 150,
               "routeId": "route-qin-camp-dan-valley",
-              "distanceLi": 14,
-              "distanceUncertainty": 0.3,
+              "distanceEstimate": {
+                "label": "约五至二十里",
+                "precision": "approximate-range",
+                "basisStatus": "scenario_assumption"
+              },
               "distanceStatus": "scenario_assumption",
               "roadType": "river-valley-track",
               "surface": "mixed-earth-ford",
@@ -1616,10 +1640,12 @@
             },
             {
               "id": "zhao-main-camp",
-              "travelSeconds": 120,
               "routeId": "route-dan-valley-zhao-camp",
-              "distanceLi": 12,
-              "distanceUncertainty": 0.3,
+              "distanceEstimate": {
+                "label": "约五至二十里",
+                "precision": "approximate-range",
+                "basisStatus": "scenario_assumption"
+              },
               "distanceStatus": "scenario_assumption",
               "roadType": "valley-road",
               "surface": "packed-earth",
@@ -1631,10 +1657,12 @@
             },
             {
               "id": "east-highland",
-              "travelSeconds": 150,
               "routeId": "route-dan-valley-east-highland",
-              "distanceLi": 18,
-              "distanceUncertainty": 0.4,
+              "distanceEstimate": {
+                "label": "约十至三十里",
+                "precision": "approximate-range",
+                "basisStatus": "scenario_assumption"
+              },
               "distanceStatus": "scenario_assumption",
               "roadType": "mountain-path",
               "surface": "rocky-track",
@@ -1675,10 +1703,12 @@
           "neighbors": [
             {
               "id": "western-gate",
-              "travelSeconds": 150,
               "routeId": "route-western-gate-zhao-camp",
-              "distanceLi": 16,
-              "distanceUncertainty": 0.35,
+              "distanceEstimate": {
+                "label": "约十至二十五里",
+                "precision": "approximate-range",
+                "basisStatus": "scenario_assumption"
+              },
               "distanceStatus": "scenario_assumption",
               "roadType": "pass-road",
               "surface": "stony-earth",
@@ -1690,10 +1720,12 @@
             },
             {
               "id": "dan-river-valley",
-              "travelSeconds": 120,
               "routeId": "route-dan-valley-zhao-camp",
-              "distanceLi": 12,
-              "distanceUncertainty": 0.3,
+              "distanceEstimate": {
+                "label": "约五至二十里",
+                "precision": "approximate-range",
+                "basisStatus": "scenario_assumption"
+              },
               "distanceStatus": "scenario_assumption",
               "roadType": "valley-road",
               "surface": "packed-earth",
@@ -1705,10 +1737,12 @@
             },
             {
               "id": "zhao-relief-route",
-              "travelSeconds": 120,
               "routeId": "route-zhao-camp-relief",
-              "distanceLi": 15,
-              "distanceUncertainty": 0.35,
+              "distanceEstimate": {
+                "label": "约五至二十五里",
+                "precision": "approximate-range",
+                "basisStatus": "scenario_assumption"
+              },
               "distanceStatus": "scenario_assumption",
               "roadType": "supply-road",
               "surface": "packed-earth",
@@ -1733,10 +1767,12 @@
           "neighbors": [
             {
               "id": "zhao-main-camp",
-              "travelSeconds": 120,
               "routeId": "route-zhao-camp-relief",
-              "distanceLi": 15,
-              "distanceUncertainty": 0.35,
+              "distanceEstimate": {
+                "label": "约五至二十五里",
+                "precision": "approximate-range",
+                "basisStatus": "scenario_assumption"
+              },
               "distanceStatus": "scenario_assumption",
               "roadType": "supply-road",
               "surface": "packed-earth",
@@ -1748,10 +1784,12 @@
             },
             {
               "id": "east-highland",
-              "travelSeconds": 180,
               "routeId": "route-relief-east-highland",
-              "distanceLi": 20,
-              "distanceUncertainty": 0.4,
+              "distanceEstimate": {
+                "label": "约十至三十里",
+                "precision": "approximate-range",
+                "basisStatus": "scenario_assumption"
+              },
               "distanceStatus": "scenario_assumption",
               "roadType": "mountain-path",
               "surface": "rocky-track",
@@ -1792,10 +1830,12 @@
           "neighbors": [
             {
               "id": "dan-river-valley",
-              "travelSeconds": 150,
               "routeId": "route-dan-valley-east-highland",
-              "distanceLi": 18,
-              "distanceUncertainty": 0.4,
+              "distanceEstimate": {
+                "label": "约十至三十里",
+                "precision": "approximate-range",
+                "basisStatus": "scenario_assumption"
+              },
               "distanceStatus": "scenario_assumption",
               "roadType": "mountain-path",
               "surface": "rocky-track",
@@ -1823,10 +1863,12 @@
             },
             {
               "id": "zhao-relief-route",
-              "travelSeconds": 180,
               "routeId": "route-relief-east-highland",
-              "distanceLi": 20,
-              "distanceUncertainty": 0.4,
+              "distanceEstimate": {
+                "label": "约十至三十里",
+                "precision": "approximate-range",
+                "basisStatus": "scenario_assumption"
+              },
               "distanceStatus": "scenario_assumption",
               "roadType": "mountain-path",
               "surface": "rocky-track",
@@ -1860,10 +1902,12 @@
           "id": "route-qin-west-camp-western-gate",
           "fromAreaId": "qin-west-camp",
           "toAreaId": "western-gate",
-          "travelSeconds": 90,
           "routeId": "route-qin-camp-western-gate",
-          "distanceLi": 8,
-          "distanceUncertainty": 0.25,
+          "distanceEstimate": {
+            "label": "约五至十里",
+            "precision": "approximate-range",
+            "basisStatus": "scenario_assumption"
+          },
           "distanceStatus": "scenario_assumption",
           "roadType": "camp-road",
           "surface": "packed-earth",
@@ -1887,10 +1931,12 @@
           "id": "route-dan-river-valley-qin-west-camp",
           "fromAreaId": "qin-west-camp",
           "toAreaId": "dan-river-valley",
-          "travelSeconds": 150,
           "routeId": "route-qin-camp-dan-valley",
-          "distanceLi": 14,
-          "distanceUncertainty": 0.3,
+          "distanceEstimate": {
+            "label": "约五至二十里",
+            "precision": "approximate-range",
+            "basisStatus": "scenario_assumption"
+          },
           "distanceStatus": "scenario_assumption",
           "roadType": "river-valley-track",
           "surface": "mixed-earth-ford",
@@ -1930,10 +1976,12 @@
           "id": "route-western-gate-zhao-main-camp",
           "fromAreaId": "western-gate",
           "toAreaId": "zhao-main-camp",
-          "travelSeconds": 150,
           "routeId": "route-western-gate-zhao-camp",
-          "distanceLi": 16,
-          "distanceUncertainty": 0.35,
+          "distanceEstimate": {
+            "label": "约十至二十五里",
+            "precision": "approximate-range",
+            "basisStatus": "scenario_assumption"
+          },
           "distanceStatus": "scenario_assumption",
           "roadType": "pass-road",
           "surface": "stony-earth",
@@ -1957,10 +2005,12 @@
           "id": "route-dan-river-valley-zhao-main-camp",
           "fromAreaId": "dan-river-valley",
           "toAreaId": "zhao-main-camp",
-          "travelSeconds": 120,
           "routeId": "route-dan-valley-zhao-camp",
-          "distanceLi": 12,
-          "distanceUncertainty": 0.3,
+          "distanceEstimate": {
+            "label": "约五至二十里",
+            "precision": "approximate-range",
+            "basisStatus": "scenario_assumption"
+          },
           "distanceStatus": "scenario_assumption",
           "roadType": "valley-road",
           "surface": "packed-earth",
@@ -1984,10 +2034,12 @@
           "id": "route-dan-river-valley-east-highland",
           "fromAreaId": "dan-river-valley",
           "toAreaId": "east-highland",
-          "travelSeconds": 150,
           "routeId": "route-dan-valley-east-highland",
-          "distanceLi": 18,
-          "distanceUncertainty": 0.4,
+          "distanceEstimate": {
+            "label": "约十至三十里",
+            "precision": "approximate-range",
+            "basisStatus": "scenario_assumption"
+          },
           "distanceStatus": "scenario_assumption",
           "roadType": "mountain-path",
           "surface": "rocky-track",
@@ -2027,10 +2079,12 @@
           "id": "route-zhao-main-camp-zhao-relief-route",
           "fromAreaId": "zhao-main-camp",
           "toAreaId": "zhao-relief-route",
-          "travelSeconds": 120,
           "routeId": "route-zhao-camp-relief",
-          "distanceLi": 15,
-          "distanceUncertainty": 0.35,
+          "distanceEstimate": {
+            "label": "约五至二十五里",
+            "precision": "approximate-range",
+            "basisStatus": "scenario_assumption"
+          },
           "distanceStatus": "scenario_assumption",
           "roadType": "supply-road",
           "surface": "packed-earth",
@@ -2054,10 +2108,12 @@
           "id": "route-east-highland-zhao-relief-route",
           "fromAreaId": "zhao-relief-route",
           "toAreaId": "east-highland",
-          "travelSeconds": 180,
           "routeId": "route-relief-east-highland",
-          "distanceLi": 20,
-          "distanceUncertainty": 0.4,
+          "distanceEstimate": {
+            "label": "约十至三十里",
+            "precision": "approximate-range",
+            "basisStatus": "scenario_assumption"
+          },
           "distanceStatus": "scenario_assumption",
           "roadType": "mountain-path",
           "surface": "rocky-track",

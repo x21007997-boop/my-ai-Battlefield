@@ -1,5 +1,6 @@
 import { viewBelief } from './perception.js';
 import { BATTLEFIELD_CONFIG } from './config.js';
+import { buildDistanceEstimate } from './commanderEstimate.js';
 
 export const BATTLEFIELD_MAP_SCHEMA_VERSION = BATTLEFIELD_CONFIG.schemaVersions.map;
 export const BATTLEFIELD_MAP_COORDINATE_SYSTEM = BATTLEFIELD_CONFIG.coordinateSystem;
@@ -69,10 +70,8 @@ function buildRoutes(areas) {
         id: `route-${key.replaceAll('::', '-')}`,
         fromAreaId: area.id,
         toAreaId: neighbor.id,
-        travelSeconds: neighbor.travelSeconds,
         routeId: neighbor.routeId ?? null,
-        distanceLi: neighbor.distanceLi ?? null,
-        distanceUncertainty: neighbor.distanceUncertainty ?? null,
+        distanceEstimate: buildDistanceEstimate(neighbor.distanceLi, neighbor.distanceUncertainty, neighbor.distanceStatus),
         distanceStatus: neighbor.distanceStatus ?? null,
         roadType: neighbor.roadType ?? null,
         surface: neighbor.surface ?? null,
@@ -146,10 +145,8 @@ export function buildCommanderMapModel(world, {
     evidenceGrade: area.evidenceGrade,
     neighbors: (area.neighbors ?? []).map((neighbor) => ({
       id: neighbor.id,
-      travelSeconds: neighbor.travelSeconds,
       routeId: neighbor.routeId ?? null,
-      distanceLi: neighbor.distanceLi ?? null,
-      distanceUncertainty: neighbor.distanceUncertainty ?? null,
+      distanceEstimate: buildDistanceEstimate(neighbor.distanceLi, neighbor.distanceUncertainty, neighbor.distanceStatus),
       distanceStatus: neighbor.distanceStatus ?? null,
       roadType: neighbor.roadType ?? null,
       surface: neighbor.surface ?? null,
@@ -193,7 +190,6 @@ export function buildCommanderMapModel(world, {
           lastTerrainTransition: activeOrder.lastTerrainTransition ?? null,
           officerDecision: activeOrder.officerDecision ?? null,
           officerFeedback: activeOrder.officerFeedback ?? null,
-          executionResumeAt: activeOrder.executionResumeAt ?? null,
           executionRate: activeOrder.executionRate ?? 1,
           tacticalPosture: activeOrder.tacticalPosture ?? null,
           officerWaiting: activeOrder.executionResumeAt != null && activeOrder.executionResumeAt > world.simTime,

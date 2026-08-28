@@ -266,7 +266,7 @@ func _draw_order_feedback() -> void:
 		return
 	var task_label := str(active_order.get("taskLabel", ""))
 	var accent := Color("#d8a95f") if status == "transmitting" else Color("#76a48a")
-	var officer_waiting := int(active_order.get("executionResumeAt", -1)) > current_sim_time
+	var officer_waiting := bool(active_order.get("officerWaiting", false)) or int(active_order.get("executionResumeAt", -1)) > current_sim_time
 	for index in range(points.size() - 1):
 		if status == "transmitting":
 			draw_dashed_line(points[index], points[index + 1], Color(accent, 0.9), 4.0, 10.0)

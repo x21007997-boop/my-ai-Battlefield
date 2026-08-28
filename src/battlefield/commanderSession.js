@@ -5,6 +5,7 @@ import { buildCommanderResolutionSnapshot } from './resolution.js';
 import { BATTLEFIELD_CONFIG } from './config.js';
 import { commanderProjection, playerCommanderId } from './commandChain.js';
 import { buildHistoricalEstimate, formatHistoricalDuration, formatHistoricalTime, projectHistoricalTime } from './calendar.js';
+import { buildArrivalWindow, routeDistanceEstimate, sanitizeRouteSegment } from './commanderEstimate.js';
 
 export const COMMANDER_SESSION_SCHEMA_VERSION = BATTLEFIELD_CONFIG.schemaVersions.commanderSession;
 
@@ -47,14 +48,12 @@ export function buildCommanderSessionSnapshot(world, {
       originAreaId: order.originAreaId ?? null,
       status: order.status,
       issuedAt: order.issuedAt,
-      deliverAt: order.deliverAt,
       deliveredAt: order.deliveredAt ?? null,
       completedAt: order.completedAt ?? null,
       route: [...(order.route ?? [])],
-      routeSegments: JSON.parse(JSON.stringify(order.routeSegments ?? [])),
+      routeSegments: (order.routeSegments ?? []).map(sanitizeRouteSegment),
       terrainTransitions: JSON.parse(JSON.stringify(order.terrainTransitions ?? [])),
-      totalTravelSeconds: order.totalTravelSeconds ?? order.remainingTravelSeconds ?? 0,
-      remainingTravelSeconds: order.remainingTravelSeconds ?? 0,
+      distanceEstimate: routeDistanceEstimate(order.routeSegments ?? []),
       movementProgress: order.movementProgress ?? 0,
       currentTerrain: order.currentTerrain ?? null,
       lastTerrainTransition: order.lastTerrainTransition ?? null,
@@ -69,16 +68,16 @@ export function buildCommanderSessionSnapshot(world, {
       blockReason: order.blockReason ?? null,
       officerDecision: order.officerDecision ? JSON.parse(JSON.stringify(order.officerDecision)) : null,
       officerFeedback: order.officerFeedback ?? null,
-      executionDelaySeconds: order.executionDelaySeconds ?? 0,
-      executionResumeAt: order.executionResumeAt ?? null,
+      officerWaiting: order.executionResumeAt != null && order.executionResumeAt > world.simTime,
       executionPace: order.executionPace ?? null,
       executionRate: order.executionRate ?? 1,
       tacticalPosture: order.tacticalPosture ?? null,
-      deliveryEstimate: buildHistoricalEstimate(world.calendar, world.simTime, order.deliverAt),
-      movementEstimate: buildHistoricalEstimate(
+      deliveryEstimate: buildArrivalWindow(world.calendar, world.simTime, Math.max(0, order.deliverAt - world.simTime), 0.2),
+      movementEstimate: buildArrivalWindow(
         world.calendar,
         world.simTime,
-        world.simTime + Math.ceil((order.remainingTravelSeconds ?? 0) / Math.max(0.1, Number(order.executionRate ?? 1))),
+        Math.ceil((order.remainingTravelSeconds ?? 0) / Math.max(0.1, Number(order.executionRate ?? 1))),
+        Math.max(0.2, ...(order.routeSegments ?? []).map((segment) => Number(segment.distanceUncertainty ?? 0.25))),
       ),
     }));
   const ownObservations = world.observations

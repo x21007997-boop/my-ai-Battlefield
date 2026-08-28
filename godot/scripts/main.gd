@@ -2083,7 +2083,7 @@ func _command_state_text() -> String:
 		return "军令状态\n尚未下达军令\n交给%s · %s" % [pending_recipient, pending_mode]
 	var order_type := str(order.get("taskLabel", "")) if order.get("taskType", "") != "" else ("坚守" if order.get("type", "move") == "hold" else "机动")
 	var status := _order_status_text(str(order.get("status", "")))
-	if int(order.get("executionResumeAt", -1)) > sim_time:
+	if bool(order.get("officerWaiting", false)) or int(order.get("executionResumeAt", -1)) > sim_time:
 		status = "等待副将整备"
 	var recipient_name := _commander_name(str(order.get("recipientCommanderId", selected_commander_id)))
 	var communication_mode := str(order.get("communicationMode", _command_delivery_mode()))
@@ -2092,7 +2092,6 @@ func _command_state_text() -> String:
 	if order.get("type", "move") == "hold":
 		var hold_feedback := str(order.get("officerFeedback", ""))
 		return "军令状态\n%s · %s\n%s%s" % [order_type, status, chain_summary, "\n" + hold_feedback if hold_feedback != "" else ""]
-	var remaining := int(order.get("remainingTravelSeconds", 0))
 	var progress := "目标：%s" % target if target != "未知区域" else "目标尚未确认"
 	var current_terrain_value = order.get("currentTerrain", {})
 	var current_terrain: Dictionary = current_terrain_value if current_terrain_value is Dictionary else {}
@@ -2103,8 +2102,12 @@ func _command_state_text() -> String:
 		var last_terrain: Dictionary = last_terrain_value if last_terrain_value is Dictionary else {}
 		if not last_terrain.is_empty():
 			progress += " · 已%s" % _terrain_action_word(str(last_terrain.get("terrainType", "")))
-	if status == "执行中" and remaining > 0:
-		progress += " · 约%s" % _format_duration(remaining)
+	if status == "执行中":
+		var movement_estimate_value = order.get("movementEstimate", {})
+		var movement_estimate: Dictionary = movement_estimate_value if movement_estimate_value is Dictionary else {}
+		var duration_label := str(movement_estimate.get("durationLabel", ""))
+		if duration_label != "":
+			progress += " · %s" % duration_label
 	var feedback := str(order.get("officerFeedback", ""))
 	if feedback != "":
 		progress += "\n" + feedback

@@ -168,6 +168,8 @@ const friendlyUnits = commanderSession.map.friendlyUnits.map((unit) => {
     name: definition.name ?? unit.name,
   };
 });
+const commanderAreaNames = Object.fromEntries(commanderSession.map.areas.map((area) => [area.id, area.name]));
+const runtimeAreas = areas.map((area) => ({ ...area, name: commanderAreaNames[area.id] ?? area.name }));
 const commanderScout = Object.fromEntries(
   Object.entries(simulationParameters.scout ?? {}).filter(([key]) => key !== 'actualAreaId'),
 );
@@ -185,7 +187,9 @@ const clientScenario = {
     coordinateSystem: presentation.map.coordinateSystem,
     bounds: presentation.map.bounds,
   },
-  areas: commanderSession.map.areas,
+  // The formal client keeps a private structured graph for local/offline
+  // simulation. Commander-facing map/session projections below remain fuzzy.
+  areas: runtimeAreas,
   routes: commanderSession.map.routes,
   landmarks: commanderSession.map.landmarks,
   terrainFeatures: commanderSession.map.terrainFeatures,
